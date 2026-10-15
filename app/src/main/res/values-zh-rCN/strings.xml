@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">东方饭联地图</string>
+
+    <!-- 隐私政策弹框 -->
+    <string name="privacy_dialog_title">隐私政策</string>
+    <string name="privacy_dialog_content">欢迎使用%1$s。\n\n为了向你提供地图浏览、附近店铺与路线规划服务，我们需要在取得你的同意后，收集必要的设备信息与位置信息。\n\n本应用使用高德地图 SDK 提供地图与定位能力，高德将依据其隐私政策处理相关数据。\n\n请阅读并同意以下条款后继续使用：</string>
+    <string name="privacy_terms_user_agreement">《用户协议》</string>
+    <string name="privacy_terms_privacy_policy">《隐私政策》</string>
+    <string name="privacy_action_decline">不同意</string>
+    <string name="privacy_action_agree">同意并继续</string>
+
+    <!-- 定位权限 -->
+    <string name="location_permission_title">需要定位权限</string>
+    <string name="location_permission_guide">定位到当前位置需要使用位置信息权限。请到「设置 → 应用 → 权限 → 位置信息」中开启后重试。</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_go_to_settings">去设置</string>
+
+    <!-- 定位 -->
+    <string name="location_locating">正在定位</string>
+    <string name="location_error_permission">定位权限被拒绕。可以在系统设置中允许访问位置，或继续手动浏览地图选点。</string>
+    <string name="location_error_services">设备定位服务未开启，请在系统设置中打开定位后重试。</string>
+    <string name="location_error_failed">暂时无法获取当前位置，请稍后重试。</string>
+
+    <!-- 地图外壳 -->
+    <string name="map_search_hint">搜店名，或说说现在想吃什么</string>
+    <string name="map_account_guest">未登录</string>
+    <string name="action_more">更多</string>
+    <string name="action_favorites">收藏</string>
+    <string name="action_add">添加</string>
+    <string name="action_along_route">顺路吃</string>
+    <string name="action_locate">定位</string>
+    <string name="action_search">搜索</string>
+
+    <!-- 地点卡片 -->
+    <string name="place_card_close">关闭</string>
+    <string name="place_card_open_details">[在详情中查看更多]</string>
+    <string name="place_card_category">分类: %1$s</string>
+    <string name="place_card_per_person_cost">人均 ¥%1$d</string>
+    <string name="place_card_last_modified">最近修改：%1$s</string>
+    <string name="place_action_navigate">导航</string>
+    <string name="place_action_share">分享</string>
+    <string name="place_action_edit">编辑</string>
+
+    <!-- 评价档位，与社区均分分档一一对应 -->
+    <string name="rating_tier_strong_yes">强烈推荐</string>
+    <string name="rating_tier_above_average">均线之上</string>
+    <string name="rating_tier_below_average">均线之下</string>
+    <string name="rating_tier_strong_no">强烈拒绝</string>
+    <string name="rating_summary">%1$s %2$s · %3$d 人评价</string>
+    <string name="rating_summary_empty">暂无评价</string>
+    <string name="rating_action_rate">去评价</string>
+</resources>
