@@ -29,11 +29,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.data.model.MapBounds
 import cc.dinnerparty.compose.ui.view.component.AmapView
-import cc.dinnerparty.compose.ui.view.component.MapAnchor
 import cc.dinnerparty.compose.ui.view.component.MapBottomBar
 import cc.dinnerparty.compose.ui.view.component.MapFloatingActions
 import cc.dinnerparty.compose.ui.view.component.MapSearchBar
-import cc.dinnerparty.compose.ui.view.component.PlaceCard
+import cc.dinnerparty.compose.ui.view.component.PlaceCardDialog
 import cc.dinnerparty.compose.ui.view.component.toMapMarker
 import cc.dinnerparty.compose.ui.viewmodel.MapViewModel
 import cc.dinnerparty.compose.utils.LocationClient
@@ -138,9 +137,6 @@ fun MainView(modifier: Modifier = Modifier) {
         val nodes = uiState.visibleNodes
         val markers = remember(nodes) { nodes.mapNotNull { it.toMapMarker() } }
         val selectedPlace = uiState.selectedPlace
-        val selectedMarker = remember(markers, selectedPlace) {
-            markers.firstOrNull { it.id == selectedPlace?.id }
-        }
 
         val density = LocalDensity.current.density
         val publishViewport: (AMap) -> Unit = { map ->
@@ -161,23 +157,16 @@ fun MainView(modifier: Modifier = Modifier) {
             logoBottomMargin = BottomOverlayHeight,
             markers = markers,
             userLocation = userLocation,
-            anchor = if (selectedPlace != null && selectedMarker != null) {
-                MapAnchor(
-                    markerId = selectedMarker.id,
-                    position = selectedMarker.position,
-                    content = {
-                        PlaceCard(
-                            place = selectedPlace,
-                            onClose = viewModel::clearSelection
-                        )
-                    }
-                )
-            } else {
-                null
-            },
+            selectedMarkerId = selectedPlace?.id,
             onMarkerClick = { marker ->
                 if (marker.clusterCount == null) {
                     viewModel.selectPlace(marker.id)
+                    // 把点中的地点移到地图中心
+                    amap?.animateCamera(
+                        CameraUpdateFactory.newLatLng(marker.position),
+                        MarkerCenterDurationMs,
+                        null,
+                    )
                 } else {
                     // 放大到聚合散开的级别
                     amap?.let { map ->
@@ -232,6 +221,14 @@ fun MainView(modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxWidth()
             )
         }
+
+        PlaceCardDialog(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            place = uiState.selectedPlace,
+            onDismissRequest = viewModel::clearSelection,
+        )
     }
 
     if (showLocationPermissionGuide) {
@@ -275,6 +272,9 @@ private const val LocateZoom = 18f
 
 /** 相机飞到定位点的时长。 */
 private const val LocateDurationMs = 400L
+
+/** 点开地点时相机移到地图中心的时长。 */
+private const val MarkerCenterDurationMs = 300L
 
 /** 地图当前可见的经纬度范围。 */
 private fun AMap.visibleBounds(): MapBounds? {

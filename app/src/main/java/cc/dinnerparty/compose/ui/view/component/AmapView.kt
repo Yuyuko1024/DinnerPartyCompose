@@ -1,7 +1,6 @@
 package cc.dinnerparty.compose.ui.view.component
 
 import android.content.Context
-import android.graphics.Point
 import android.os.Bundle
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -18,7 +17,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -31,7 +29,6 @@ import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
 import com.amap.api.maps.AMap
 import com.amap.api.maps.MapsInitializer
 import com.amap.api.maps.TextureMapView
-import com.amap.api.maps.model.CameraPosition
 import com.amap.api.maps.model.LatLng
 import com.amap.api.maps.model.Marker
 import com.amap.api.maps.model.MarkerOptions
@@ -39,23 +36,11 @@ import com.amap.api.location.AMapLocationClient
 import com.moriafly.salt.ui.SaltTheme
 
 /**
- * 锚定在地图坐标上的浮层，位置跟着 [position] 走。
- *
- * @param markerId 对应的标记 id。
- * @param position 锚点经纬度。
- */
-data class MapAnchor(
-    val markerId: Long,
-    val position: LatLng,
-    val content: @Composable () -> Unit,
-)
-
-/**
  * 高德地图（3D 版 + TextureMapView），内部完成隐私合规声明。
  *
  * @param logoBottomMargin 「高德地图」Logo 需抬升的高度。
  * @param markers 地图上的地点标记，列表变化时全量重绘。
- * @param anchor 锚定在地图坐标正上方的浮层。
+ * @param selectedMarkerId 选中标记的 id，选中的标记名字加粗并压在最上层。
  * @param userLocation 用户当前位置，非空时画「我的位置」蓝点。
  * @param onMarkerClick 标记点击回调。
  * @param onMapClick 地图空白处点击回调。
@@ -67,7 +52,7 @@ fun AmapView(
     logoBottomMargin: Dp = 0.dp,
     markers: List<MapMarker> = emptyList(),
     userLocation: LatLng? = null,
-    anchor: MapAnchor? = null,
+    selectedMarkerId: Long? = null,
     onMarkerClick: (MapMarker) -> Unit = {},
     onMapClick: () -> Unit = {},
     onMapReady: (AMap) -> Unit = {}
@@ -160,9 +145,9 @@ fun AmapView(
         )
 
         // 标记增量更新
-        LaunchedEffect(aMap, markers, anchor?.markerId, renderer) {
+        LaunchedEffect(aMap, markers, selectedMarkerId, renderer) {
             val map = aMap ?: return@LaunchedEffect
-            val selectedId = anchor?.markerId
+            val selectedId = selectedMarkerId
             val alive = HashSet<Long>(markers.size)
 
             for (marker in markers) {
@@ -228,48 +213,6 @@ fun AmapView(
                 shown.position = userLocation
             }
         }
-
-        val map = aMap
-        if (map != null) {
-            anchor?.let { AnchoredOverlay(aMap = map, anchor = it) }
-        }
-    }
-}
-
-/** 把 [MapAnchor] 的内容摆到它坐标的正上方，相机一变就重新投影。 */
-@Composable
-private fun AnchoredOverlay(aMap: AMap, anchor: MapAnchor) {
-    val screenPoint = remember(aMap) { mutableStateOf<Point?>(null) }
-    val gapPx = with(LocalDensity.current) { CardAnchorGap.roundToPx() }
-
-    DisposableEffect(aMap, anchor.position) {
-        val position = anchor.position
-        val project = { screenPoint.value = aMap.projection?.toScreenLocation(position) }
-        val listener = object : AMap.OnCameraChangeListener {
-            override fun onCameraChange(cameraPosition: CameraPosition?) = project()
-            override fun onCameraChangeFinish(cameraPosition: CameraPosition?) = project()
-        }
-        aMap.addOnCameraChangeListener(listener)
-        project()
-        onDispose { aMap.removeOnCameraChangeListener(listener) }
-    }
-
-    Layout(content = anchor.content, modifier = Modifier.fillMaxSize()) { measurables, constraints ->
-        val placeable = measurables.first().measure(constraints.copy(minWidth = 0, minHeight = 0))
-        val point = screenPoint.value
-        if (point == null) {
-            // 还没投影出屏幕坐标，这一帧先不画
-            layout(0, 0) {}
-        } else {
-            layout(constraints.maxWidth, constraints.maxHeight) {
-                val maxX = (constraints.maxWidth - placeable.width).coerceAtLeast(0)
-                val maxY = (constraints.maxHeight - placeable.height).coerceAtLeast(0)
-                placeable.place(
-                    x = (point.x - placeable.width / 2).coerceIn(0, maxX),
-                    y = (point.y - placeable.height - gapPx).coerceIn(0, maxY)
-                )
-            }
-        }
     }
 }
 
@@ -281,9 +224,6 @@ fun agreeAmapPrivacy(context: Context) {
     AMapLocationClient.updatePrivacyShow(context, true, true)
     AMapLocationClient.updatePrivacyAgree(context, true)
 }
-
-/** 卡片下沿与标记尖底之间的距离。 */
-private val CardAnchorGap = 53.dp
 
 /** 已经挂在地图上的一个标记。 */
 private class RenderedMarker(

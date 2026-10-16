@@ -1,5 +1,8 @@
 package cc.dinnerparty.compose.ui.view.component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -7,13 +10,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -30,7 +36,10 @@ import androidx.compose.material.icons.outlined.SentimentVeryDissatisfied
 import androidx.compose.material.icons.outlined.SentimentVerySatisfied
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,24 +67,38 @@ import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.noRippleClickable
 import java.util.Locale
 
-/** 地点卡片，位置由 [AmapView] 锚定在地图坐标正上方。 */
+/** 地点卡片浮层，从底部滑入滑出。 */
 @Composable
-fun PlaceCard(
-    place: Place,
+fun PlaceCardDialog(
     modifier: Modifier = Modifier,
-    onClose: () -> Unit = {}
+    place: Place?,
+    onDismissRequest: () -> Unit
 ) {
+    // 滑出动画期间保留卡片内容
+    var content by remember { mutableStateOf(place) }
+    if (place != null) content = place
+
+    AnimatedVisibility(
+        visible = place != null,
+        enter = slideInVertically { it },
+        exit = slideOutVertically { it },
+        modifier = modifier
+    ) {
+        content?.let { PlaceCard(place = it, onClose = onDismissRequest) }
+    }
+}
+
+/** 卡片内容。 */
+@Composable
+private fun PlaceCard(place: Place, onClose: () -> Unit) {
     val semanticColors = dinnerPartySemanticColors()
 
     Column(
-        modifier = modifier
-            .fillMaxWidth(CardWidthRatio)
-            .widthIn(max = CardMaxWidth)
+        modifier = Modifier
+            .fillMaxWidth()
             .clip(CardShape)
             .background(SaltTheme.colors.subBackground)
-            .border(1.dp, SaltTheme.colors.stroke, CardShape)
-            // 拦截卡片上的点按
-            .noRippleClickable { }
+            .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(CardPadding)
     ) {
         PlaceCardTitle(name = place.name.orEmpty(), onClose = onClose)
@@ -94,7 +117,7 @@ private fun PlaceCardTitle(name: String, onClose: () -> Unit) {
             text = name,
             modifier = Modifier.weight(1f),
             color = SaltTheme.colors.text,
-            fontSize = 14.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -333,18 +356,15 @@ private fun ratingTierColor(tier: RatingTier, colors: DinnerPartySemanticColors)
 /** 固定一位小数 */
 private fun formatAverage(average: Double): String = String.format(Locale.US, "%.1f", average)
 
-private val CardShape = RoundedCornerShape(12.dp)
+private val CardShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
 private val RatingRowShape = RoundedCornerShape(8.dp)
 private val ActionButtonShape = RoundedCornerShape(8.dp)
 
-private val CardPadding = 10.dp
+private val CardPadding = 16.dp
 private val CardGap = 6.dp
 private val CloseButtonSize = 24.dp
 private val RatingRowMinHeight = 40.dp
 private val ActionButtonMinSize = 44.dp
-
-private const val CardWidthRatio = 0.92f
-private val CardMaxWidth = 320.dp
 
 /** 简介预览的字数上限 */
 private const val DescriptionLimit = 80
