@@ -13,5 +13,6 @@
 .kotlin
 .externalNativeBuild
 .cxx
+.idea/
 local.properties
 /DEVELOPMENT_PLAN.md

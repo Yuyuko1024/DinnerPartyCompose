@@ -3,6 +3,7 @@ package cc.dinnerparty.compose.ui.view.component
 import android.content.Context
 import android.graphics.Point
 import android.os.Bundle
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -95,6 +96,16 @@ fun AmapView(
 
     val mapView = remember(context) {
         TextureMapView(context).apply { onCreate(Bundle()) }
+    }
+
+    // 深色模式下换成高德内置的夜视图。
+    //
+    // 用内置的 MAP_TYPE_NIGHT，不走自定义样式文件：它零素材、不用去控制台配置，
+    // 代价是夜视图没有 3D 建筑物（官方文档明说）——对「看哪儿有饭吃」这个用途无所谓。
+    // 主题一律跟随系统，所以这里直接读系统亮暗，和 DinnerPartyTheme 用的是同一个来源。
+    val isDarkTheme = isSystemInDarkTheme()
+    LaunchedEffect(aMap, isDarkTheme) {
+        aMap?.mapType = if (isDarkTheme) AMap.MAP_TYPE_NIGHT else AMap.MAP_TYPE_NORMAL
     }
 
     DisposableEffect(mapView, lifecycleOwner) {

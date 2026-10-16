@@ -1,15 +1,19 @@
 package cc.dinnerparty.compose
 
 import android.os.Bundle
+import android.view.Window
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
 import cc.dinnerparty.compose.data.SettingsDataStore
 import cc.dinnerparty.compose.ui.screen.PrivacyConsentDialog
 import cc.dinnerparty.compose.ui.theme.DinnerPartyTheme
@@ -29,12 +33,29 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DinnerPartyTheme {
+                StatusBarAppearance(window)
                 AppRoot(
                     settings = settings,
                     onDeclinePrivacy = { finish() }
                 )
             }
         }
+    }
+}
+
+/**
+ * 状态栏前景（图标、时间那一行）跟地图反着走：地图切夜视图时用浅色图标，浅色地图时用深色图标。
+ *
+ * 背景不动，始终是 edge-to-edge 透出底下的地图，所以能调的只有前景亮暗这一个属性。
+ * 这里显式设置而不是吃 `enableEdgeToEdge()` 的默认值，是为了把「跟地图反着来」这条规则收在一处：
+ * 将来地图若有了自己的明暗开关（比如可手动切样式），只改这里一处就够。
+ */
+@Composable
+private fun StatusBarAppearance(window: Window) {
+    val isDarkTheme = isSystemInDarkTheme()
+    LaunchedEffect(isDarkTheme) {
+        WindowCompat.getInsetsController(window, window.decorView)
+            .isAppearanceLightStatusBars = !isDarkTheme
     }
 }
 
