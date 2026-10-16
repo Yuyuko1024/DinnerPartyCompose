@@ -14,5 +14,6 @@
 .externalNativeBuild
 .cxx
 .idea/
+docs/
 local.properties
 /DEVELOPMENT_PLAN.md
