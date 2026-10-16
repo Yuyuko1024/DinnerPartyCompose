@@ -23,7 +23,6 @@ fun MapFloatingActions(
     modifier: Modifier = Modifier,
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
-    onAlongRouteClick: () -> Unit = {}
 ) {
     Column(
         modifier = modifier,
@@ -36,11 +35,6 @@ fun MapFloatingActions(
                 if (locating) R.string.location_locating else R.string.action_locate
             ),
             onClick = onLocateClick
-        )
-        CircleIconButton(
-            imageVector = Icons.AutoMirrored.Outlined.DirectionsWalk,
-            contentDescription = stringResource(R.string.action_along_route),
-            onClick = onAlongRouteClick
         )
     }
 }
