@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -96,6 +97,7 @@ private fun PlaceCard(place: Place, onClose: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .consumeTouchEvents()
             .clip(CardShape)
             .background(SaltTheme.colors.subBackground)
             .windowInsetsPadding(WindowInsets.navigationBars)
@@ -117,7 +119,7 @@ private fun PlaceCardTitle(name: String, onClose: () -> Unit) {
             text = name,
             modifier = Modifier.weight(1f),
             color = SaltTheme.colors.text,
-            fontSize = 20.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -355,6 +357,15 @@ private fun ratingTierColor(tier: RatingTier, colors: DinnerPartySemanticColors)
 
 /** 固定一位小数 */
 private fun formatAverage(average: Double): String = String.format(Locale.US, "%.1f", average)
+
+/** 吃掉落在组件上的触摸事件，避免穿透到下层。 */
+private fun Modifier.consumeTouchEvents(): Modifier = pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            awaitPointerEvent().changes.forEach { it.consume() }
+        }
+    }
+}
 
 private val CardShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
 private val RatingRowShape = RoundedCornerShape(8.dp)
