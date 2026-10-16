@@ -58,15 +58,7 @@ import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.noRippleClickable
 import java.util.Locale
 
-/**
- * 地点卡片：点开一个 POI 之后弹出的那块内容。
- *
- * 对应 Web `map/MapUI.jsx` 的 `renderPlaceCard`，宽度、间距、字号都照抄。
- * 卡片本身不管自己在哪，位置由 [AmapView] 锚定在地图坐标正上方。
- *
- * 操作按钮目前只有外观：导航要等高德 Navi、分享 / 收藏 / 编辑要等登录与对应接口，
- * 这一轮先不挂点击事件，也就不用一堆点了没反应的占位回调。
- */
+/** 地点卡片，位置由 [AmapView] 锚定在地图坐标正上方。 */
 @Composable
 fun PlaceCard(
     place: Place,
@@ -77,13 +69,12 @@ fun PlaceCard(
 
     Column(
         modifier = modifier
-            // Web 是 min(92vw, 320px)
             .fillMaxWidth(CardWidthRatio)
             .widthIn(max = CardMaxWidth)
             .clip(CardShape)
             .background(SaltTheme.colors.subBackground)
             .border(1.dp, SaltTheme.colors.stroke, CardShape)
-            // 卡片上的点按不要穿透到地图，否则点卡片会顺手把卡片关掉
+            // 拦截卡片上的点按
             .noRippleClickable { }
             .padding(CardPadding)
     ) {
@@ -126,8 +117,7 @@ private fun PlaceCardTitle(name: String, onClose: () -> Unit) {
 }
 
 /**
- * 简介。超过 [DescriptionLimit] 字就截断跟省略号，并在后面挂一句提示去详情看——
- * 和 Web 一样只是在正文后面接一段淡色文字，不单独占一行。
+ * 简介。超过 [DescriptionLimit] 字就截断加省略号，后面接一句淡色提示。
  */
 @Composable
 private fun PlaceCardDescription(description: String?) {
@@ -163,7 +153,7 @@ private fun PlaceCardMeta(category: String?, perPersonCost: Int?) {
     Spacer(modifier = Modifier.height(6.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            // 分类缺失时 Web 也是显示一个短横
+            // 分类缺失时显示一个短横
             text = stringResource(R.string.place_card_category, category ?: "-"),
             color = SaltTheme.colors.subText,
             fontSize = 12.sp,
@@ -181,7 +171,7 @@ private fun PlaceCardMeta(category: String?, perPersonCost: Int?) {
     }
 }
 
-/** 评价摘要行：「强烈推荐 4.0 · 1 人评价」，右边是「去评价」入口（本轮仅外观）。 */
+/** 评价摘要行，右侧是「去评价」入口。 */
 @Composable
 private fun PlaceCardRating(place: Place, semanticColors: DinnerPartySemanticColors) {
     val average = place.ratingAverageOrNull()
@@ -266,7 +256,7 @@ private fun PlaceCardActions() {
             contentDescription = stringResource(R.string.place_action_share),
             label = stringResource(R.string.place_action_share)
         )
-        // 后面三个只出图标，和 Web 一致（省得一行塞不下）
+        // 后面三个只出图标
         PlaceCardAction(
             icon = Icons.Outlined.FavoriteBorder,
             contentDescription = stringResource(R.string.action_favorites)
@@ -316,7 +306,7 @@ private fun PlaceCardAction(
     }
 }
 
-/** 档位词；没有档位（没人评价）时返回 null，交给调用方换文案。 */
+/** 档位词，无档位时返回 null。 */
 @Composable
 private fun ratingTierLabel(tier: RatingTier?): String? = when (tier) {
     null -> null
@@ -340,7 +330,7 @@ private fun ratingTierColor(tier: RatingTier, colors: DinnerPartySemanticColors)
     RatingTier.STRONG_NO -> colors.danger
 }
 
-/** 固定一位小数；Web 用的是 `toFixed(1)`，也永远是小数点 */
+/** 固定一位小数 */
 private fun formatAverage(average: Double): String = String.format(Locale.US, "%.1f", average)
 
 private val CardShape = RoundedCornerShape(12.dp)
@@ -356,7 +346,7 @@ private val ActionButtonMinSize = 44.dp
 private const val CardWidthRatio = 0.92f
 private val CardMaxWidth = 320.dp
 
-/** Web 的简介预览上限 */
+/** 简介预览的字数上限 */
 private const val DescriptionLimit = 80
 
 private val Whitespace = Regex("\\s+")

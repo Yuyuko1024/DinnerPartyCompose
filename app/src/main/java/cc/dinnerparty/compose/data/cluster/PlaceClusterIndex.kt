@@ -14,42 +14,34 @@ import kotlin.math.tan
 /**
  * 地图点聚合索引。
  *
- * 缩小时地图上几百个标记会糊成一片，谁也点不着。做法和 Web 端一致
- * （`map/cluster/engine.js`，那边用的是 supercluster）：把地点投到 Web 墨卡托平面，
- * 然后**从最细的一级往上**逐级按网格合并——每一级的格子边长是下一级的两倍，
- * 于是粗一级的气泡必定完整包含细一级的若干气泡，形成一棵层级树。
- *
- * 这棵层级树是「点一下该放到哪一级」的依据：聚合气泡记得自己是在哪一级被合并出来的，
- * 再细一级的网格里它就散了（见 [expansionZoom]）。只按当前屏幕做单层聚合给不出这个信息。
- *
- * 用网格而不是两两比距离：网格是 O(n)、边界稳定；两两比是 O(n²)，几百个点就开始吃力。
- * 代价是正好落在相邻格子里的两个点不会合并——Web 端同样如此，观感上没人分得出来。
- *
- * 几点约定：
- * - **坐标是 GCJ-02**（高德给的、后端存的都是），全程不做坐标系转换，投影只为了算格子。
- * - **只索引有 id 又有经纬度的地点**。没有 id 的点点击了也打不开详情，没有坐标的点根本画不出来。
- * - 本类只做纯计算，不碰任何高德对象，所以和在什么地图上画没有关系。
+ * 把地点投到 Web 墨卡托平面，从最细的一级往上逐级按网格合并，得到一棵层级树。
+ * 只索引有 id 又有经纬度的地点。
  */
 class PlaceClusterIndex(
     places: List<Place>,
-    radiusPx: Double = DEFAULT_RADIUS_PX,
+    /** 地图能达到的最大缩放级别，聚合只做到它的上一级。 */
+    private val mapMaxZoom: Int,
+    /** 聚合半径，单位屏幕像素，同时是格子边长。 */
+    radiusPx: Double,
     private val minZoom: Int = DEFAULT_MIN_ZOOM,
-    private val maxZoom: Int = DEFAULT_MAX_ZOOM,
 ) {
 
-    /** 参与索引的地点。节点的 [Node.placeIndex] 指向这个列表。 */
+    /** 参与索引的地点。 */
     private val source: List<Place>
 
-    /** 最细一级的节点。超过 [maxZoom] 时直接用它。 */
+    /** 单点，也就是 [exitZoom] 及以上的节点。 */
     private val leaves: List<Node>
 
-    /** `levels[zoom]` 是这一级下地图上应该显示的全部节点。 */
+    /** `levels[zoom]` 是这一级下应该显示的全部节点，只有 `minZoom..exitZoom - 1` 有值。 */
     private val levels: Array<List<Node>>
 
-    /** 按聚合 id 反查节点，用来回答 [expansionZoom] 和 [members]。 */
+    /** 从这一级起不再聚合，直接出单点。 */
+    private val exitZoom = mapMaxZoom - 1
+
+    /** 按聚合 id 反查节点。 */
     private val clustersById: Map<Long, Node>
 
-    /** 世界坐标单位下的聚合半径，见 [Node] 与 [cellSizeAt] 的说明。 */
+    /** 聚合半径换算到世界坐标下的长度。 */
     private val worldRadius = radiusPx / TILE_SIZE
 
     init {
@@ -64,14 +56,17 @@ class PlaceClusterIndex(
         }
         leaves = projected
 
-        val built = Array(maxZoom + 1) { emptyList<Node>() }
+        val built = Array(mapMaxZoom + 1) { emptyList<Node>() }
         val byId = HashMap<Long, Node>()
-        var current: List<Node> = projected
         var nextId = CLUSTER_ID_BASE
 
-        // 从最细的一级往粗合并：格子边长每级翻倍，某个气泡是在哪一级被合并出来的就记在
-        // Node.zoom 上，那就是「点开它该放到哪一级」的依据。
-        for (zoom in maxZoom downTo minZoom) {
+        // 退出聚合的那一级和它以上都是单点
+        built[exitZoom] = projected
+        built[mapMaxZoom] = projected
+
+        // 从退出聚合的下一级开始往粗合并
+        var current: List<Node> = projected
+        for (zoom in (exitZoom - 1) downTo minZoom) {
             val cell = cellSizeAt(zoom)
             val buckets = LinkedHashMap<Long, MutableList<Node>>()
             for (node in current) {
@@ -81,7 +76,7 @@ class PlaceClusterIndex(
             val merged = ArrayList<Node>(buckets.size)
             for (bucket in buckets.values) {
                 if (bucket.size == 1) {
-                    // 这一格里只有自己，位置不动、直接升到粗一级，仍然代表原来那些地点
+                    // 这一格里只有自己，直接升到粗一级
                     merged += bucket[0]
                     continue
                 }
@@ -89,7 +84,7 @@ class PlaceClusterIndex(
                 var sumY = 0.0
                 var count = 0
                 for (node in bucket) {
-                    // 按地点数加权，让气泡落在「人多」的那一侧，而不是被一个孤立点拽偏
+                    // 按地点数加权求中心
                     sumX += node.x * node.count
                     sumY += node.y * node.count
                     count += node.count
@@ -123,13 +118,13 @@ class PlaceClusterIndex(
         if (leaves.isEmpty()) return emptyList()
 
         val level = zoom.roundToInt().let { z ->
-            // 放到最细一级之上就不该再有聚合了，直接给叶子
-            if (z > maxZoom) leaves else levels[z.coerceIn(minZoom, maxZoom)]
+            // 到了退出聚合的级别就直接展开成单点
+            if (z >= exitZoom) leaves else levels[z.coerceAtLeast(minZoom)]
         }
 
         val minX = worldX(bounds.minLng)
         val maxX = worldX(bounds.maxLng)
-        // 墨卡托的 y 轴朝下：纬度越高 y 越小，所以视野北边（maxLat）给的是下界
+        // 墨卡托 y 轴朝下，北边对应 y 的下界
         val minY = worldY(bounds.maxLat)
         val maxY = worldY(bounds.minLat)
 
@@ -139,16 +134,7 @@ class PlaceClusterIndex(
             .toList()
     }
 
-    /**
-     * 点开这个聚合之后，相机应该放到哪一级。
-     *
-     * 就是它**被合并出来时的级别 + 1**：再细一级的网格里这批地点不再同格，气泡会被它的
-     * 下一层取代。不要理解成「一路拆到单点」——那样几十个地点会一次点击直接冲到最大级别
-     * （米级），而 Web 端是一次点击展开下一层，再点再展开。
-     *
-     * 返回值可能大于 [maxZoom]，表示放到最细一级也拆不开（几个地点坐标重合或贴得太近），
-     * 调用方自己决定怎么办。
-     */
+    /** 聚合散开所需的缩放级别，即它被合并出来时的级别加一。 */
     fun expansionZoom(clusterId: Long): Int =
         clustersById[clusterId]?.let { it.zoom + 1 } ?: minZoom
 
@@ -162,7 +148,7 @@ class PlaceClusterIndex(
         }
     }
 
-    /** 网格边长（世界坐标单位）。世界宽度是 1，所以这里也等于「占整个世界宽度的几分之几」。 */
+    /** 网格边长（世界坐标单位）。 */
     private fun cellSizeAt(zoom: Int): Double = worldRadius / (1 shl zoom)
 
     private fun cellKey(node: Node, cell: Double): Long {
@@ -171,24 +157,17 @@ class PlaceClusterIndex(
         return (column shl 32) or (row and 0xffffffffL)
     }
 
-    /**
-     * 层级树上的一个节点：要么是一个地点，要么是一组地点。
-     *
-     * 坐标是**世界坐标**（0~1 的墨卡托平面），不是经纬度——聚类只在平面距离上有意义。
-     */
+    /** 层级树上的一个节点，坐标为世界坐标（0~1 的墨卡托平面）。 */
     private class Node(
         val x: Double,
         val y: Double,
-        /** 这个节点代表多少个地点。叶子恒为 1。 */
+        /** 这个节点代表多少个地点；叶子恒为 1。 */
         val count: Int,
         /** 叶子在 [source] 里的下标；聚合点为 -1。 */
         val placeIndex: Int,
         /** 聚合 id；叶子为 -1。 */
         val id: Long = -1L,
-        /**
-         * 这个聚合是在哪一级被合并出来的。它决定 [expansionZoom]：
-         * 再细一级它就散了，所以点开时相机应该放到这一级 + 1。
-         */
+        /** 这个聚合被合并出来时的级别。 */
         val zoom: Int = 0,
     )
 }
@@ -196,27 +175,13 @@ class PlaceClusterIndex(
 /** 世界墨卡托的瓦片边长，和高德一致。 */
 private const val TILE_SIZE = 256.0
 
-/** 墨卡托能表示的最大纬度，再往极地方向 y 会发散。 */
+/** 墨卡托能表示的最大纬度。 */
 private const val MAX_MERCATOR_LAT = 85.05112877
 
-/**
- * 聚合半径，单位是屏幕像素（而不是 `dp`）。
- *
- * 与 Web `map/cluster/engine.js` 的 `radiusPx = 68` 保持一致：那边已经按这个值调过疏密，
- * 改成别的值手机上看起来会不一样。
- */
-private const val DEFAULT_RADIUS_PX = 68.0
-
-/** 高德地图的缩放范围就是 3~20，索引跟着它建，多建了也没机会用到。 */
+/** 索引的起点级别。 */
 private const val DEFAULT_MIN_ZOOM = 3
-private const val DEFAULT_MAX_ZOOM = 20
 
-/**
- * 聚合 id 的起点。
- *
- * 地点 id 是数据库自增主键，很小；聚合 id 只是本地序号。两者各自会被当作标记的键放进同一张表，
- * 所以聚合 id 从一个不可能与地点 id 撞车的大数开始。
- */
+/** 聚合 id 的起点，大于所有地点 id。 */
 private const val CLUSTER_ID_BASE = 1L shl 40
 
 /** 经度 → 世界坐标 x，范围 0~1。 */

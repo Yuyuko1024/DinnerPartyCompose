@@ -15,17 +15,11 @@ import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.dialog.YesNoDialog
 import com.moriafly.salt.ui.noRippleClickable
 
-// TODO 站点还没有这两个页面，路径先按下面的约定写死；上线或改地址时只改这里。
+// 用户协议与隐私政策地址
 private const val USER_AGREEMENT_URL = "https://www.dinnerparty.cc/agreement"
 private const val PRIVACY_POLICY_URL = "https://www.dinnerparty.cc/privacy"
 
-/**
- * 首次启动的隐私政策同意弹框。
- *
- * 用户同意之前不能创建任何地图对象（高德合规要求，见 `agreeAmapPrivacy`），
- * 所以这个弹框是进地图的硬门禁：外部点击和返回键都不允许关掉，
- * 想用只能点「同意并继续」，不想用就点「不同意」退出。
- */
+/** 首次启动的隐私政策同意弹框。外部点击和返回键都关不掉，只能选同意或退出。 */
 @Composable
 fun PrivacyConsentDialog(
     onAgree: () -> Unit,
@@ -58,7 +52,7 @@ fun PrivacyConsentDialog(
     )
 }
 
-/** 条款链接。设备上没有浏览器等可处理的应用时静默失败，不打断用户。 */
+/** 条款链接，打开失败时静默忽略。 */
 @Composable
 private fun PolicyLink(text: String, onClick: () -> Unit) {
     Text(
@@ -68,7 +62,7 @@ private fun PolicyLink(text: String, onClick: () -> Unit) {
     )
 }
 
-/** `openUri` 在没有应用能处理该 uri 时会抛异常，这里吞掉——打不开条款不该让 App 崩。 */
+/** 捕获 `openUri` 抛出的异常。 */
 private fun UriHandler.openUriSafely(uri: String) {
     runCatching { openUri(uri) }
 }

@@ -27,17 +27,10 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
-/** 搜索条高度，对应 Web `.fm-map-search__input` 的 44px。 */
+/** 搜索条高度。 */
 private val SearchBarHeight = 44.dp
 
-/**
- * 地图页搜索条：左侧胶囊输入框 + 右侧主色圆形搜索按钮。
- *
- * 对应 Web 端 `.fm-map-search__input` 与 `.fm-map-search__submit`。
- * 目前仅呈现视觉框架，未接入输入状态与搜索逻辑。
- *
- * @param placeholder 留空则用默认提示文案。
- */
+/** 地图页搜索条，左侧胶囊输入框加右侧圆形搜索按钮。 */
 @UnstableSaltUiApi
 @Composable
 fun MapSearchBar(

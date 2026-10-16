@@ -6,12 +6,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * 聚合算法的回归测试。
- *
- * 聚合错了在手机上很难看出来——要么全糊成一团、要么该聚的没聚，两种都像「是不是没做」。
- * 这里把几件必须成立的事钉死，省得每次改常数都要装包到手机上肉眼比。
- */
+/** 聚合算法的回归测试。 */
 class PlaceClusterIndexTest {
 
     @Test
@@ -34,38 +29,30 @@ class PlaceClusterIndexTest {
         val expansion = index.expansionZoom(group.id)
         assertTrue("只能往里放大", expansion > 6)
 
-        // 「放到这一级气泡就换成下一层」是点气泡时的全部依据，说错了用户体验就是点了没用
+        // 放到这一级，气泡应该换成下一层
         val atExpansion = index.query(EVERYTHING, expansion.toFloat())
         assertEquals(2, atExpansion.count { it is MapClusterNode.Single })
     }
 
-    /**
-     * 回归：一小撮坐标几乎重合的点，不该把整个聚合的展开级别拖到最大级别。
-     *
-     * 之前是「一路拆到单点」的写法——只要聚合里含有这样一对点，点一下气泡就会直接冲到米级。
-     * Web 端（supercluster）算的是「这个气泡是在哪一级合并出来的」，再细一级就展开。
-     */
+    /** 一小撮坐标几乎重合的点，不该把整个聚合的展开级别拖到最大级别。 */
     @Test
     fun near_duplicate_points_do_not_drag_expansion_to_max_zoom() {
-        val index = PlaceClusterIndex(provincePlaces())
+        val index = PlaceClusterIndex(provincePlaces(), mapMaxZoom = MaxZoom, radiusPx = RadiusPx)
         val group = index.query(EVERYTHING, zoom = 5f)
             .filterIsInstance<MapClusterNode.Group>()
             .maxByOrNull { it.count }!!
 
         assertEquals(17, group.count)
 
-        // 这一片铺开约 5km，合并出来在第 8 级，所以展开级别是 9；
-        // 「一路拆到单点」的写法会被那对重合点拖到 21
+        // 这一片铺开约 5km，展开级别应该远小于上限
         val expansion = index.expansionZoom(group.id)
-        assertTrue("展开级别被拖到了最大级别：$expansion", expansion <= 12)
+        assertTrue("展开级别被拖到了退出聚合那一级：$expansion", expansion < MaxZoom - 1)
     }
 
-    /**
-     * 点开气泡的整体契约：一次点击看到更细的一层，反复点最终全部散成单点。
-     */
+    /** 一次点击看到更细的一层，反复点最终全部散成单点。 */
     @Test
     fun clicking_a_cluster_shows_a_finer_level_each_time() {
-        val index = PlaceClusterIndex(provincePlaces())
+        val index = PlaceClusterIndex(provincePlaces(), mapMaxZoom = MaxZoom, radiusPx = RadiusPx)
         var level = 5
         var shown = index.query(EVERYTHING, level.toFloat()).size
         var clicks = 0
@@ -97,15 +84,51 @@ class PlaceClusterIndexTest {
         assertEquals(2, nodes.count { it is MapClusterNode.Single })
     }
 
+    /** 隔几米的两家店，到退出聚合的级别必须分开。 */
     @Test
-    fun identical_coordinates_never_split() {
+    fun neighbouring_places_split_at_the_exit_level() {
+        // 常州，东西相差 0.0001°，约 9.5m
+        val index = PlaceClusterIndex(
+            listOf(place(1, 119.9750, 31.8110), place(2, 119.9751, 31.8110)),
+            mapMaxZoom = MaxZoom,
+            radiusPx = RadiusPx,
+        )
+
+        // 退出聚合的那一级和地图极限都给单点
+        listOf(MaxZoom - 1, MaxZoom).forEach { zoom ->
+            val nodes = index.query(EVERYTHING, zoom = zoom.toFloat())
+            assertEquals(2, nodes.size)
+            assertTrue(
+                "第 $zoom 级上不应该再有聚合",
+                nodes.all { it is MapClusterNode.Single },
+            )
+        }
+    }
+
+    /** 半径调大之后，同一个缩放级别下的气泡应该更少。 */
+    @Test
+    fun larger_radius_produces_fewer_bubbles() {
+        val places = provincePlaces()
+        val small = PlaceClusterIndex(places, mapMaxZoom = MaxZoom, radiusPx = 68.0)
+        val large = PlaceClusterIndex(places, mapMaxZoom = MaxZoom, radiusPx = RadiusPx)
+
+        val smallCount = small.query(EVERYTHING, zoom = 12f).size
+        val largeCount = large.query(EVERYTHING, zoom = 12f).size
+
+        assertTrue("半径变大后气泡应该更少：$smallCount → $largeCount", largeCount < smallCount)
+    }
+
+    /** 坐标完全相同的两个地点，到退出聚合那一级会变成两个重叠在一起的单点。 */
+    @Test
+    fun identical_coordinates_become_overlapping_singles_at_exit_level() {
         val index = indexOf(place(1, 113.0, 23.0), place(2, 113.0, 23.0))
         val group = index.query(EVERYTHING, zoom = 6f)
             .filterIsInstance<MapClusterNode.Group>()
             .single()
 
-        // 大于最大级别表示放到最细一级也拆不开，调用方得自己决定怎么办
-        assertTrue(index.expansionZoom(group.id) > MaxZoom)
+        // 展开级别最多就到退出聚合那一级
+        assertEquals(MaxZoom - 1, index.expansionZoom(group.id))
+        assertEquals(2, index.query(EVERYTHING, zoom = (MaxZoom - 1).toFloat()).size)
     }
 
     @Test
@@ -116,7 +139,7 @@ class PlaceClusterIndexTest {
             Place(name = "没有 id", longitude = 113.0, latitude = 23.0),
         )
 
-        // 一条脏数据不该让整屏标记都没了
+        // 无效地点被跳过
         assertEquals(1, index.query(EVERYTHING, zoom = 6f).size)
     }
 
@@ -139,14 +162,11 @@ class PlaceClusterIndexTest {
 private fun place(id: Long, longitude: Double, latitude: Double) =
     Place(id = id, name = "p$id", longitude = longitude, latitude = latitude)
 
-private fun indexOf(vararg places: Place) = PlaceClusterIndex(places.toList())
+private fun indexOf(vararg places: Place) =
+    PlaceClusterIndex(places.toList(), mapMaxZoom = MaxZoom, radiusPx = RadiusPx)
 
 /**
- * 一片铺开约 5km 的普通地点，再加上同一家店被录了两遍、坐标只差十几厘米的一对。
- *
- * 这对近重合点是关键：它要到最细的级别才会分开，所以「一路拆到单点」的实现会被它把
- * 整个聚合的展开级别拖到最大级别。两个点的纬度相同、只差一点点经度，保证它们在每一级
- * 都落在同一格里，不会因为卡在格子边界上而偶然错开。
+ * 一片铺开约 5km 的地点，外加一对坐标几乎重合的点。
  */
 private fun provincePlaces(): List<Place> {
     val places = ArrayList<Place>()
@@ -164,5 +184,8 @@ private fun provincePlaces(): List<Place> {
 /** 高德地图的缩放级别上限。 */
 private const val MaxZoom = 20
 
-/** 包住整个地球的视野，免得测试被视野边界干扰。 */
+/** 测试用的聚合半径（屏幕像素）。 */
+private const val RadiusPx = 412.0
+
+/** 包住整个地球的视野。 */
 private val EVERYTHING = MapBounds(minLng = -180.0, minLat = -85.0, maxLng = 180.0, maxLat = 85.0)

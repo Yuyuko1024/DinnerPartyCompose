@@ -42,7 +42,7 @@
     <string name="place_action_share">分享</string>
     <string name="place_action_edit">编辑</string>
 
-    <!-- 评价档位，与社区均分分档一一对应 -->
+    <!-- 评价档位 -->
     <string name="rating_tier_strong_yes">强烈推荐</string>
     <string name="rating_tier_above_average">均线之上</string>
     <string name="rating_tier_below_average">均线之下</string>

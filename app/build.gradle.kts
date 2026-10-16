@@ -18,7 +18,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // 高德 3D 地图 AAR 里 arm64-v8a / armeabi-v7a 各带一套 .so，本项目只发布 arm64。
+        // 只发布 arm64-v8a
         ndk {
             abiFilters += "arm64-v8a"
         }
@@ -39,7 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
-        // 网络日志只在 debug 打开，靠 BuildConfig.DEBUG 判断
+        // 生成 BuildConfig
         buildConfig = true
     }
 }
@@ -48,28 +48,26 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
-    // MD3 outline 图标集（Icons.Outlined.*）。版本由上面的 Compose BOM 统一管理。
-    // 该库已停止更新、被 BOM 固定在 1.7.8，属正常现象。
+    // MD3 outline 图标集（Icons.Outlined.*）
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
-    // 本地设置持久化。取代 SharedPreferences：读写走 Flow / 挂起函数，不需要自己切线程。
+    // 本地设置持久化
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     // collectAsStateWithLifecycle / viewModel()
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.salt.ui)
-    // 网络：Retrofit + OkHttp + Gson。后端全部是 JSON，用 Gson 转换器即可。
+    // 网络：Retrofit + OkHttp + Gson
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.gson)
-    // 高德地图 3D（Map 11.3.100 + Search 9.8.1 + Location 11.3.101）。
-    // 官方只以 AAR 分发、不上 maven，所以直接引用 app/libs 下的本地文件。
+    // 高德地图 3D，直接引用 app/libs 下的本地 AAR
     implementation(files("libs/AMap3DMap_11.3.100_AMapSearch_9.8.1_AMapLocation_11.3.101_20260924.aar"))
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

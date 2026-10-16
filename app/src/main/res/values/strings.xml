@@ -41,7 +41,7 @@
     <string name="place_action_share">Share</string>
     <string name="place_action_edit">Edit</string>
 
-    <!-- Rating tiers, mirroring the community average bands -->
+    <!-- Rating tiers -->
     <string name="rating_tier_strong_yes">Strongly recommended</string>
     <string name="rating_tier_above_average">Above par</string>
     <string name="rating_tier_below_average">Below par</string>

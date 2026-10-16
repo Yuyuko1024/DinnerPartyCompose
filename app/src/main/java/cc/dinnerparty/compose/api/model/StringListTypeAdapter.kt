@@ -6,15 +6,6 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
 
-/**
- * `Place.exterior_images` / `menu_images` 的专用解析器。
- *
- * 后端把图片列表存在 TEXT 列里，值本身是 JSON 数组字符串，例如 `["https://.../a.jpg"]`；
- * 库里还混着历史脏数据（半截 JSON、`garbage` 之类，见后端 `tests/media/test_image_storage.js`）。
- *
- * 所以这里把「JSON 字符串」「JSON 数组」「坏值」三种情况都吃掉，坏值一律当空列表，
- * 不让一条脏数据把整个地点列表解析崩掉。
- */
 internal class StringListTypeAdapter : TypeAdapter<List<String>?>() {
 
     override fun write(out: JsonWriter, value: List<String>?) {

@@ -36,20 +36,11 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.noRippleClickable
 
-/** 单个底栏条目的高度（Web `.fm-map-toolbar` 里按钮 `min-height:58`）。 */
+/** 单个底栏条目的高度。 */
 private val BottomBarItemHeight = 58.dp
 
 /**
- * 地图页底部操作栏。
- *
- * 对应 Web 端 `.fm-map-toolbar`：顶边 1px 描边 + 表面色背景，
- * 5 个等宽条目——更多 / 收藏 / 添加 / 顺路吃 / 账号。
- * 其中「添加」恒用主色（Web 中它是常驻强调项，非选中态）。
- *
- * 目前只有视觉骨架，回调均为空实现，等接口接入后再填逻辑。
- *
- * 应用是 edge-to-edge 的，所以背景自身一直铺到屏幕最底边（盖住系统导航栏那块），
- * 只让内容条避开导航栏——否则底边会露出一条地图。
+ * 地图页底部操作栏，含更多 / 收藏 / 添加 / 顺路吃 / 账号五个条目，其中「添加」恒用主色。
  *
  * @param accountName 留空则显示未登录文案。
  */
@@ -148,7 +139,7 @@ private fun RowScope.BottomBarItem(
     }
 }
 
-/** 账号条目：圆形头像 + 用户名，头像资源接入前用 Person 图标占位。 */
+/** 账号条目，圆形头像加用户名。 */
 @Composable
 private fun RowScope.AccountItem(
     text: String,

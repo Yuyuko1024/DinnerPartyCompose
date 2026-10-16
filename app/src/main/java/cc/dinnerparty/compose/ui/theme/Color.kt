@@ -5,24 +5,7 @@ import com.moriafly.salt.ui.darkSaltColors
 import com.moriafly.salt.ui.lightSaltColors
 
 /**
- * 品牌色板。
- *
- * 数值直接取自 www.dinnerparty.cc 首页内联样式里的 CSS 设计令牌
- * （`:root` 对应亮色，`:root[data-theme=dark]` 对应暗色），
- * 保证 App 与 Web 两端视觉一致，且后续改色只需对照同一份令牌。
- *
- * SaltUI 的 `SaltColors` 槽位与前端语义一一对应：
- *
- * | SaltUI        | CSS 令牌               |
- * |:--            |:--                     |
- * | highlight     | --color-primary        |
- * | text          | --color-text-primary   |
- * | subText       | --color-text-secondary |
- * | background    | --color-bg-base        |
- * | subBackground | --color-bg-surface     |
- * | popup         | --color-bg-overlay     |
- * | stroke        | --color-border         |
- * | onHighlight   | 主色上的前景色（白）     |
+ * 品牌色板
  */
 
 /** 亮色：`--color-bg-base #F9F8FA` / `--color-primary #E2789F`。 */
@@ -50,13 +33,7 @@ val DinnerPartyDarkColors = darkSaltColors(
 )
 
 /**
- * 语义色：评价四档各自代表的「好 / 一般 / 差 / 避雷」。
- *
- * SaltUI 的 `SaltColors` 只有主色与灰阶，没有成功 / 警告 / 危险槽位，
- * 而评价档位、避雷标记都要用它们，所以单独列一份。
- *
- * 数值同样取自 Web `index.html` 的 `--color-success / --color-warning / --color-danger`，
- * [aboveAverage] 用的是 `--theme-primary`，在 App 里即 `--color-primary`。
+ * 语义色
  */
 data class DinnerPartySemanticColors(
     /** 强烈推荐 */
@@ -65,11 +42,10 @@ data class DinnerPartySemanticColors(
     val aboveAverage: Color,
     /** 均线之下 */
     val belowAverage: Color,
-    /** 强烈拒绝，也就是「避雷」 */
+    /** 避雷 */
     val danger: Color,
 )
 
-/** 亮色语义色：`#3D9970` / `#E2789F` / `#E67E22` / `#D9534F`。 */
 val DinnerPartyLightSemanticColors = DinnerPartySemanticColors(
     strongYes = Color(0xFF3D9970),
     aboveAverage = Color(0xFFE2789F),
@@ -77,7 +53,6 @@ val DinnerPartyLightSemanticColors = DinnerPartySemanticColors(
     danger = Color(0xFFD9534F),
 )
 
-/** 暗色语义色：`#5CD698` / `#FF8FB1` / `#FFB049` / `#FF6B6B`。 */
 val DinnerPartyDarkSemanticColors = DinnerPartySemanticColors(
     strongYes = Color(0xFF5CD698),
     aboveAverage = Color(0xFFFF8FB1),

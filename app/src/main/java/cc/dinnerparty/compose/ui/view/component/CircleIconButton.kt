@@ -18,12 +18,7 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.noRippleClickable
 
 /**
- * 圆形图标按钮，地图页各处的悬浮操作按钮共用。
- *
- * 默认外观对应 Web 端 `.fm-map-account` 一类玻璃圆形按钮：
- * 表面色 + 1dp 描边；主色实心按钮（如搜索）把 [borderColor] 传 `null` 即可。
- *
- * Web 参考：`.fm-map-search__submit` 44×44、`border-radius:50%`。
+ * 圆形图标按钮，地图页各处悬浮操作按钮共用。
  */
 @Composable
 fun CircleIconButton(

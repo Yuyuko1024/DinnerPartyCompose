@@ -8,14 +8,7 @@ import cc.dinnerparty.compose.api.model.Category
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.data.model.MapBounds
 
-/**
- * 地点数据入口。
- *
- * 直接对外返回接口 DTO：目前接口字段就是界面要用的字段，
- * 中间再套一层领域模型只是白拷一遍，等真出现裁剪 / 聚合需求时再引。
- *
- * 不需要 `withContext(Dispatchers.IO)`——Retrofit 的 `suspend` 方法自己在 IO 线程上执行。
- */
+/** 地点数据入口，直接返回接口 DTO。 */
 class PlaceRepo {
 
     private val placeApi: PlaceApi by lazy { ApiClient.createService(PlaceApi::class.java) }
@@ -34,6 +27,6 @@ class PlaceRepo {
     /** 单个地点详情。 */
     suspend fun getPlace(id: Long): Place = apiCall { placeApi.getPlace(id) }
 
-    /** 全部分类，用于筛选。 */
+    /** 全部分类。 */
     suspend fun getCategories(): List<Category> = apiCall { categoryApi.getCategories() }
 }

@@ -8,16 +8,12 @@ import org.junit.runner.RunWith
 
 import org.junit.Assert.*
 
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
+/** Android 设备上的插桩测试示例。 */
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
-        // Context of the app under test.
+        // 被测应用的 Context
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("cc.dinnerparty.compose", appContext.packageName)
     }

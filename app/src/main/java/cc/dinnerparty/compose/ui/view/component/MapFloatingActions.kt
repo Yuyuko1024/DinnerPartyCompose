@@ -14,12 +14,9 @@ import androidx.compose.ui.unit.dp
 import cc.dinnerparty.compose.R
 
 /**
- * 地图页右侧悬浮操作按钮组：定位 / 顺路吃。
+ * 地图页右侧悬浮操作按钮组，含定位与顺路吃。
  *
- * 定位按钮已经在用（申请位置权限），顺路吃还是空实现，等路线接口接入后再填逻辑。
- *
- * @param locating 正在定位。此时按钮换成实心图标、把「定位」读成「正在定位」，
- *   让用户知道那一下点击有反应——定位本身要等好几秒。
+ * @param locating 正在定位，按钮换成实心图标、无障碍文案改为「正在定位」。
  */
 @Composable
 fun MapFloatingActions(
