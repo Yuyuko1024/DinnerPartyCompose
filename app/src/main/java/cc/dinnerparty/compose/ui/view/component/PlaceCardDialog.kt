@@ -119,7 +119,7 @@ private fun PlaceCardTitle(name: String, onClose: () -> Unit) {
             text = name,
             modifier = Modifier.weight(1f),
             color = SaltTheme.colors.text,
-            fontSize = 14.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
