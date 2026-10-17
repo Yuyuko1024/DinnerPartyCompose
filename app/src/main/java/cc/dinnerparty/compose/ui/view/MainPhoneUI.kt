@@ -6,13 +6,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cc.dinnerparty.compose.api.model.Place
+import cc.dinnerparty.compose.ui.view.component.AboutContent
 import cc.dinnerparty.compose.ui.view.component.MapBottomBar
 import cc.dinnerparty.compose.ui.view.component.MapFloatingActions
+import cc.dinnerparty.compose.ui.view.component.MapMenuList
 import cc.dinnerparty.compose.ui.view.component.MapSearchBar
+import cc.dinnerparty.compose.ui.view.component.PhoneSheet
 import cc.dinnerparty.compose.ui.view.component.PlaceCardDialog
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
@@ -29,6 +37,17 @@ fun MainPhoneUI(
     place: Place? = null,
     onDismissPlaceCard: () -> Unit = {}
 ) {
+    // 菜单浮层是否展开
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    // 关于浮层是否展开
+    var aboutExpanded by remember { mutableStateOf(false) }
+
+    // 打开地点卡片时收起菜单
+    LaunchedEffect(place) {
+        if (place != null) menuExpanded = false
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -46,7 +65,8 @@ fun MainPhoneUI(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
             )
             MapBottomBar(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                onMoreClick = { menuExpanded = true }
             )
         }
 
@@ -57,6 +77,26 @@ fun MainPhoneUI(
             place = place,
             onDismissRequest = onDismissPlaceCard
         )
+
+        PhoneSheet(
+            visible = menuExpanded,
+            onDismissRequest = { menuExpanded = false },
+            modal = true
+        ) {
+            MapMenuList(
+                modifier = Modifier.padding(vertical = 8.dp),
+                onDismiss = { menuExpanded = false },
+                onAboutClick = { aboutExpanded = true }
+            )
+        }
+
+        PhoneSheet(
+            visible = aboutExpanded,
+            onDismissRequest = { aboutExpanded = false },
+            modal = true
+        ) {
+            AboutContent(onClose = { aboutExpanded = false })
+        }
     }
 }
 

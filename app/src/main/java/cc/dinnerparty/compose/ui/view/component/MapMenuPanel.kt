@@ -50,39 +50,59 @@ fun MapMenuPanel(
         exit = slideOutHorizontally { it } + fadeOut(),
         modifier = modifier
     ) {
-        val actions = padMenuActions(
-            onRandomClick = {
-                onRandomClick()
-                onDismissRequest()
-            },
-            onDiningClick = {
-                onDiningClick()
-                onDismissRequest()
-            },
-            onExportPostClick = {
-                onExportPostClick()
-                onDismissRequest()
-            },
-            onSettingsClick = {
-                onSettingsClick()
-                onDismissRequest()
-            },
-            onAboutClick = {
-                onAboutClick()
-                onDismissRequest()
-            }
-        )
-
-        Column(
+        MapMenuList(
             modifier = Modifier
                 .width(PanelWidth)
                 .clip(PanelShape)
                 .background(SaltTheme.colors.subBackground)
                 .border(1.dp, SaltTheme.colors.stroke, PanelShape)
-                .padding(vertical = 8.dp)
-        ) {
-            actions.forEach { action -> MapMenuItem(action) }
+                .padding(vertical = 8.dp),
+            onDismiss = onDismissRequest,
+            onRandomClick = onRandomClick,
+            onDiningClick = onDiningClick,
+            onExportPostClick = onExportPostClick,
+            onSettingsClick = onSettingsClick,
+            onAboutClick = onAboutClick
+        )
+    }
+}
+
+/** 菜单项列表，点任一项先收起再执行对应操作。 */
+@Composable
+internal fun MapMenuList(
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit = {},
+    onRandomClick: () -> Unit = {},
+    onDiningClick: () -> Unit = {},
+    onExportPostClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onAboutClick: () -> Unit = {}
+) {
+    val actions = padMenuActions(
+        onRandomClick = {
+            onDismiss()
+            onRandomClick()
+        },
+        onDiningClick = {
+            onDismiss()
+            onDiningClick()
+        },
+        onExportPostClick = {
+            onDismiss()
+            onExportPostClick()
+        },
+        onSettingsClick = {
+            onDismiss()
+            onSettingsClick()
+        },
+        onAboutClick = {
+            onDismiss()
+            onAboutClick()
         }
+    )
+
+    Column(modifier = modifier) {
+        actions.forEach { action -> MapMenuItem(action) }
     }
 }
 

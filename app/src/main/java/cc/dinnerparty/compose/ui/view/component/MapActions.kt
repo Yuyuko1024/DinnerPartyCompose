@@ -15,6 +15,7 @@ import cc.dinnerparty.compose.R
 /** 一个地图操作项。 */
 internal class MapAction(
     val imageVector: ImageVector? = null,
+    val iconRes: Int? = null,
     val label: String,
     val onClick: () -> Unit,
     val iconSize: Dp = 24.dp,
@@ -35,7 +36,7 @@ internal fun phoneMapActions(
         onClick = onMoreClick
     ),
     MapAction(
-        imageVector = Icons.Outlined.FavoriteBorder,
+        iconRes = R.drawable.ic_heart_outline,
         label = stringResource(R.string.action_favorites),
         onClick = onFavoritesClick
     ),
@@ -47,7 +48,7 @@ internal fun phoneMapActions(
         highlighted = true
     ),
     MapAction(
-        imageVector = Icons.AutoMirrored.Outlined.DirectionsWalk,
+        iconRes = R.drawable.ic_route_track_outline,
         label = stringResource(R.string.action_along_route),
         onClick = onAlongRouteClick
     )

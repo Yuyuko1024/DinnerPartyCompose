@@ -22,7 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cc.dinnerparty.compose.R
@@ -100,6 +102,14 @@ private fun RowScope.BottomBarItem(action: MapAction) {
         action.imageVector?.let { imageVector ->
             Icon(
                 imageVector = imageVector,
+                contentDescription = null,
+                modifier = Modifier.size(action.iconSize),
+                tint = color
+            )
+        }
+        action.iconRes?.let {
+            Icon(
+                imageVector = ImageVector.vectorResource(it),
                 contentDescription = null,
                 modifier = Modifier.size(action.iconSize),
                 tint = color

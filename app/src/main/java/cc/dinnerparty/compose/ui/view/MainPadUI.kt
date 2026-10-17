@@ -35,10 +35,12 @@ import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
 import cc.dinnerparty.compose.ui.adaptive.currentWindowSizeClass
+import cc.dinnerparty.compose.ui.view.component.AboutContent
 import cc.dinnerparty.compose.ui.view.component.CircleIconButton
 import cc.dinnerparty.compose.ui.view.component.MapFloatingActions
 import cc.dinnerparty.compose.ui.view.component.MapMenuPanel
 import cc.dinnerparty.compose.ui.view.component.MapSearchBar
+import cc.dinnerparty.compose.ui.view.component.PadPanel
 import cc.dinnerparty.compose.ui.view.component.PlaceDetailPanel
 import com.moriafly.salt.ui.Button
 import com.moriafly.salt.ui.SaltTheme
@@ -83,13 +85,19 @@ fun MainPadUI(
     // 菜单是否展开
     var menuExpanded by remember { mutableStateOf(false) }
 
-    // 点击地图时收起菜单
+    // 关于面板是否展开
+    var aboutExpanded by remember { mutableStateOf(false) }
+
+    // 点击地图时收起菜单与关于面板
     LaunchedEffect(mapTapCount) {
-        if (mapTapCount > 0) menuExpanded = false
+        if (mapTapCount > 0) {
+            menuExpanded = false
+            aboutExpanded = false
+        }
     }
 
-    // 右侧被菜单或详情面板占住时悬浮钮横移到左侧
-    val rightSideOccupied = menuExpanded || place != null
+    // 右侧被菜单、关于面板或详情面板占住时悬浮钮横移到左侧
+    val rightSideOccupied = menuExpanded || aboutExpanded || place != null
     val horizontalBias by animateFloatAsState(
         targetValue = if (rightSideOccupied) -1f else 1f,
         animationSpec = tween(FloatingActionDurationMs),
@@ -106,15 +114,23 @@ fun MainPadUI(
         ) {
             PlaceDetailPanel(
                 modifier = Modifier.align(Alignment.TopEnd),
-                place = if (menuExpanded) null else place,
+                place = if (menuExpanded || aboutExpanded) null else place,
                 onDismissRequest = onDismissPlaceCard
             )
             MapMenuPanel(
                 modifier = Modifier.align(Alignment.TopEnd)
                     .padding(top = FloatingActionTopPadding),
                 expanded = menuExpanded,
+                onAboutClick = { aboutExpanded = true },
                 onDismissRequest = { menuExpanded = false }
             )
+            PadPanel(
+                visible = aboutExpanded,
+                modifier = Modifier.align(Alignment.TopEnd)
+                    .padding(top = FloatingActionTopPadding)
+            ) {
+                AboutContent(onClose = { aboutExpanded = false })
+            }
             MapFloatingActions(
                 modifier = Modifier
                     .align(BiasAlignment(horizontalBias, -1f))

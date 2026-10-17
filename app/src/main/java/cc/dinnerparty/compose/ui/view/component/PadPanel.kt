@@ -58,6 +58,21 @@ fun <T : Any> PadPanel(
     }
 }
 
+/** Pad 端右侧浮层面板，内容与数据无关。 */
+@Composable
+fun PadPanel(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    width: Dp = PadPanelWidth,
+    content: @Composable () -> Unit
+) {
+    PadPanel(
+        value = if (visible) Unit else null,
+        modifier = modifier,
+        width = width
+    ) { content() }
+}
+
 /** 面板默认宽度。 */
 private val PadPanelWidth = 360.dp
 

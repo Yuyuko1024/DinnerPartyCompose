@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 关于 -->
+    <string name="about_version">版本 %1$s</string>
+    <string name="about_close">关闭</string>
+</resources>
