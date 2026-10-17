@@ -1,6 +1,7 @@
 package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +35,6 @@ import cc.dinnerparty.compose.R
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.noRippleClickable
 
 /** 单个底栏条目的高度。 */
 private val BottomBarItemHeight = 58.dp
@@ -119,7 +119,7 @@ private fun RowScope.BottomBarItem(
         modifier = Modifier
             .weight(1f)
             .height(BottomBarItemHeight)
-            .noRippleClickable(onClick = onClick),
+            .clickable(onClick = onClick),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -149,7 +149,7 @@ private fun RowScope.AccountItem(
         modifier = Modifier
             .weight(1f)
             .height(BottomBarItemHeight)
-            .noRippleClickable(onClick = onClick),
+            .clickable(onClick = onClick),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

@@ -2,6 +2,7 @@ package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -15,7 +16,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.noRippleClickable
 
 /**
  * 圆形图标按钮，地图页各处悬浮操作按钮共用。
@@ -43,7 +43,7 @@ fun CircleIconButton(
                     Modifier
                 }
             )
-            .noRippleClickable(onClick = onClick),
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(

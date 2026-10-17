@@ -1,5 +1,6 @@
 package cc.dinnerparty.compose.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
@@ -13,7 +14,6 @@ import cc.dinnerparty.compose.R
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.dialog.YesNoDialog
-import com.moriafly.salt.ui.noRippleClickable
 
 // 用户协议与隐私政策地址
 private const val USER_AGREEMENT_URL = "https://www.dinnerparty.cc/agreement"
@@ -57,7 +57,7 @@ fun PrivacyConsentDialog(
 private fun PolicyLink(text: String, onClick: () -> Unit) {
     Text(
         text = text,
-        modifier = Modifier.noRippleClickable(onClick = onClick),
+        modifier = Modifier.clickable(onClick = onClick),
         color = SaltTheme.colors.highlight
     )
 }

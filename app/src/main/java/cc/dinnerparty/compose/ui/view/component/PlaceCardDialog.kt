@@ -5,6 +5,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,7 +66,6 @@ import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import com.moriafly.salt.ui.noRippleClickable
 import java.util.Locale
 
 /** 地点卡片浮层，从底部滑入滑出。 */
@@ -128,7 +128,7 @@ private fun PlaceCardTitle(name: String, onClose: () -> Unit) {
             modifier = Modifier
                 .size(CloseButtonSize)
                 .clip(CircleShape)
-                .noRippleClickable(onClick = onClose),
+                .clickable(onClick = onClose),
             contentAlignment = Alignment.Center
         ) {
             Icon(
