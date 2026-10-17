@@ -43,11 +43,6 @@ fun MainPhoneUI(
     // 关于浮层是否展开
     var aboutExpanded by remember { mutableStateOf(false) }
 
-    // 打开地点卡片时收起菜单
-    LaunchedEffect(place) {
-        if (place != null) menuExpanded = false
-    }
-
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
