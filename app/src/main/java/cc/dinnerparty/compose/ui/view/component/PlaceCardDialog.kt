@@ -1,6 +1,8 @@
 package cc.dinnerparty.compose.ui.view.component
 
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -37,14 +39,17 @@ import androidx.compose.material.icons.outlined.SentimentVeryDissatisfied
 import androidx.compose.material.icons.outlined.SentimentVerySatisfied
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
@@ -66,7 +71,9 @@ import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
+import kotlinx.coroutines.launch
 import java.util.Locale
+import java.util.concurrent.CancellationException
 
 /** 地点卡片浮层，从底部滑入滑出。 */
 @Composable
@@ -75,15 +82,33 @@ fun PlaceCardDialog(
     place: Place?,
     onDismissRequest: () -> Unit
 ) {
-    // 滑出动画期间保留卡片内容
+    // 滑入滑出动画期间保留卡片内容
     var content by remember { mutableStateOf(place) }
     if (place != null) content = place
+
+    // 返回手势的拖动位移，0 为原位、1 为完全移出屏幕
+    val backOffset = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    PredictiveBackHandler(enabled = place != null) { progress ->
+        try {
+            progress.collect { backOffset.snapTo(it.progress) }
+            onDismissRequest()
+        } catch (_: CancellationException) {
+            // 手势取消，回弹到原位
+            scope.launch { backOffset.animateTo(0f) }
+        }
+    }
+
+    // 重新弹出时复位
+    LaunchedEffect(place) {
+        if (place != null) backOffset.snapTo(0f)
+    }
 
     AnimatedVisibility(
         visible = place != null,
         enter = slideInVertically { it },
         exit = slideOutVertically { it },
-        modifier = modifier
+        modifier = modifier.graphicsLayer { translationY = backOffset.value * size.height }
     ) {
         content?.let { PlaceCard(place = it, onClose = onDismissRequest) }
     }
