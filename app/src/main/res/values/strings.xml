@@ -2,10 +2,11 @@
     <string name="app_name">DinnerParty</string>
 
     <!-- Privacy consent dialog -->
-    <string name="privacy_dialog_title">Privacy Policy</string>
-    <string name="privacy_dialog_content">Welcome to %1$s.\n\nTo provide map browsing, nearby restaurant and route planning services, we need to collect necessary device and location information after obtaining your consent.\n\nThis app uses the AMap SDK for map and location features. AMap will process relevant data in accordance with its own privacy policy.\n\nPlease read and agree to the following terms to continue:</string>
+    <string name="privacy_dialog_title">Welcome to %1$s</string>
+    <string name="privacy_dialog_content">To provide you with map browsing, nearby restaurant and route planning services, we need to collect necessary device and location information after obtaining your consent.\n\nPrecise location and photo access still require the corresponding system permissions; if you decline the location permission, you can still browse the map manually. See the Privacy Policy for the current default settings and how to turn off peer discovery, interaction feedback, and research use.\n\nThis app uses the AMap SDK to provide map and location features. AMap will process relevant data in accordance with its privacy policy.\n\nSelecting \u201cAgree and Continue\u201d means you agree to this policy and consent to AMap processing the information required for map services under its policy. If you decline, the map and related services will not start; you can still read the policy and choose again.\n\nPlease read and agree to the terms below before continuing:</string>
     <string name="privacy_terms_user_agreement">User Agreement</string>
     <string name="privacy_terms_privacy_policy">Privacy Policy</string>
+    <string name="privacy_terms_privacy_policy_amap">AMap Open Platform Privacy Policy</string>
     <string name="privacy_action_decline">Decline</string>
     <string name="privacy_action_agree">Agree and Continue</string>
 

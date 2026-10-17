@@ -3,10 +3,11 @@
     <string name="app_name">东方饭联地图</string>
 
     <!-- 隐私政策弹框 -->
-    <string name="privacy_dialog_title">隐私政策</string>
-    <string name="privacy_dialog_content">欢迎使用%1$s。\n\n为了向你提供地图浏览、附近店铺与路线规划服务，我们需要在取得你的同意后，收集必要的设备信息与位置信息。\n\n本应用使用高德地图 SDK 提供地图与定位能力，高德将依据其隐私政策处理相关数据。\n\n请阅读并同意以下条款后继续使用：</string>
-    <string name="privacy_terms_user_agreement">《用户协议》</string>
-    <string name="privacy_terms_privacy_policy">《隐私政策》</string>
+    <string name="privacy_dialog_title">欢迎使用%1$s</string>
+    <string name="privacy_dialog_content">为了向你提供地图浏览、附近店铺与路线规划服务，我们需要在取得你的同意后，收集必要的设备信息与位置信息。\n\n精确定位和照片访问仍需相应系统权限，拒绝定位权限后可手动浏览地图。同好发现、交互反馈与研究使用的当前默认设置及关闭方式见隐私权政策。\n\n本应用使用高德地图 SDK 提供地图与定位能力，高德将依据其隐私政策处理相关数据。\n\n选择“同意并继续”，表示您同意本政策，并同意高德按其政策处理地图服务所需信息。拒绝后不会启动地图和相关服务，您仍可阅读政策并重新选择。\n\n请阅读并同意以下条款后继续使用：</string>
+    <string name="privacy_terms_user_agreement">用户协议</string>
+    <string name="privacy_terms_privacy_policy">隐私政策</string>
+    <string name="privacy_terms_privacy_policy_amap">高德地图开放平台隐私权政策</string>
     <string name="privacy_action_decline">不同意</string>
     <string name="privacy_action_agree">同意并继续</string>
 

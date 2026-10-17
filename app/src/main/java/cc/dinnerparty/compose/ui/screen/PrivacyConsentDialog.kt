@@ -3,6 +3,7 @@ package cc.dinnerparty.compose.ui.screen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -18,6 +19,7 @@ import com.moriafly.salt.ui.dialog.YesNoDialog
 // 用户协议与隐私政策地址
 private const val USER_AGREEMENT_URL = "https://www.dinnerparty.cc/agreement"
 private const val PRIVACY_POLICY_URL = "https://www.dinnerparty.cc/privacy"
+private const val PRIVACY_POLICY_AMAP_URL = "https://lbs.amap.com/pages/privacy/"
 
 /** 首次启动的隐私政策同意弹框。外部点击和返回键都关不掉，只能选同意或退出。 */
 @Composable
@@ -31,15 +33,22 @@ fun PrivacyConsentDialog(
     YesNoDialog(
         onDismissRequest = onDecline,
         onConfirm = onAgree,
-        title = stringResource(R.string.privacy_dialog_title),
-        content = stringResource(R.string.privacy_dialog_content, appName),
+        title = stringResource(R.string.privacy_dialog_title, appName),
+        content = stringResource(R.string.privacy_dialog_content),
         drawContent = {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                PolicyLink(text = stringResource(R.string.privacy_terms_user_agreement)) {
+            Row(
+                modifier = Modifier.padding(16.dp, 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                /*PolicyLink(text = stringResource(R.string.privacy_terms_user_agreement)) {
                     uriHandler.openUriSafely(USER_AGREEMENT_URL)
-                }
+                }*/
                 PolicyLink(text = stringResource(R.string.privacy_terms_privacy_policy)) {
                     uriHandler.openUriSafely(PRIVACY_POLICY_URL)
+                }
+
+                PolicyLink(text = stringResource(R.string.privacy_terms_privacy_policy_amap)) {
+                    uriHandler.openUriSafely(PRIVACY_POLICY_AMAP_URL)
                 }
             }
         },
