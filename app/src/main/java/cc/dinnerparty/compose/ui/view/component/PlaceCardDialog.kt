@@ -1,11 +1,5 @@
 package cc.dinnerparty.compose.ui.view.component
 
-import androidx.activity.compose.PredictiveBackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,16 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,19 +30,12 @@ import androidx.compose.material.icons.outlined.SentimentVeryDissatisfied
 import androidx.compose.material.icons.outlined.SentimentVerySatisfied
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -71,9 +55,7 @@ import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-import kotlinx.coroutines.launch
 import java.util.Locale
-import java.util.concurrent.CancellationException
 
 /** 地点卡片浮层，从底部滑入滑出。 */
 @Composable
@@ -82,46 +64,12 @@ fun PlaceCardDialog(
     place: Place?,
     onDismissRequest: () -> Unit
 ) {
-    // 滑入滑出动画期间保留卡片内容
-    var content by remember { mutableStateOf(place) }
-    if (place != null) content = place
-
-    // 返回手势的拖动位移，0 为原位、1 为完全移出屏幕
-    val backOffset = remember { Animatable(0f) }
-    val scope = rememberCoroutineScope()
-    PredictiveBackHandler(enabled = place != null) { progress ->
-        try {
-            progress.collect { backOffset.snapTo(it.progress) }
-            onDismissRequest()
-        } catch (_: CancellationException) {
-            // 手势取消，回弹到原位
-            scope.launch { backOffset.animateTo(0f) }
-        }
-    }
-
-    // 重新弹出时复位
-    LaunchedEffect(place) {
-        if (place != null) backOffset.snapTo(0f)
-    }
-
-    AnimatedVisibility(
-        visible = place != null,
-        enter = slideInVertically { it },
-        exit = slideOutVertically { it },
-        modifier = modifier.graphicsLayer { translationY = backOffset.value * size.height }
-    ) {
-        content?.let {
-            PlaceCardContent(
-                place = it,
-                onClose = onDismissRequest,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .consumeTouchEvents()
-                    .clip(CardShape)
-                    .background(SaltTheme.colors.subBackground)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-            )
-        }
+    PhoneSheet(
+        value = place,
+        onDismissRequest = onDismissRequest,
+        modifier = modifier
+    ) { shown ->
+        PlaceCardContent(place = shown, onClose = onDismissRequest)
     }
 }
 
@@ -390,16 +338,6 @@ private fun ratingTierColor(tier: RatingTier, colors: DinnerPartySemanticColors)
 /** 固定一位小数 */
 private fun formatAverage(average: Double): String = String.format(Locale.US, "%.1f", average)
 
-/** 吃掉落在组件上的触摸事件，避免穿透到下层。 */
-internal fun Modifier.consumeTouchEvents(): Modifier = pointerInput(Unit) {
-    awaitPointerEventScope {
-        while (true) {
-            awaitPointerEvent().changes.forEach { it.consume() }
-        }
-    }
-}
-
-private val CardShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
 private val RatingRowShape = RoundedCornerShape(8.dp)
 private val ActionButtonShape = RoundedCornerShape(8.dp)
 
