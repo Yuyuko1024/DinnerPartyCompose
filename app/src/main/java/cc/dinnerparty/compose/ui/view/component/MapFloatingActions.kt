@@ -2,16 +2,21 @@ package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cc.dinnerparty.compose.R
+import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
 
 /**
  * 地图页右侧悬浮操作按钮组，含定位与顺路吃。
@@ -24,11 +29,30 @@ fun MapFloatingActions(
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
 ) {
+    val isTablet = LocalIsTablet.current
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalAlignment = Alignment.End
     ) {
+        if (isTablet) {
+            CircleIconButton(
+                painterRes = R.drawable.ic_route_track_outline,
+                contentDescription = stringResource(R.string.action_along_route),
+                onClick = {  }
+            )
+            CircleIconButton(
+                imageVector = Icons.Outlined.Add,
+                contentDescription = stringResource(R.string.action_add),
+                onClick = {  }
+            )
+            CircleIconButton(
+                painterRes = R.drawable.ic_heart_outline,
+                contentDescription = stringResource(R.string.action_favorites),
+                onClick = {  }
+            )
+        }
         CircleIconButton(
             imageVector = if (locating) Icons.Filled.MyLocation else Icons.Outlined.MyLocation,
             contentDescription = stringResource(
@@ -37,4 +61,5 @@ fun MapFloatingActions(
             onClick = onLocateClick
         )
     }
+
 }

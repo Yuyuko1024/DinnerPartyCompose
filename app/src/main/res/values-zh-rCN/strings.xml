@@ -32,6 +32,13 @@
     <string name="action_along_route">顺路吃</string>
     <string name="action_locate">定位</string>
     <string name="action_search">搜索</string>
+    <string name="action_login">登录</string>
+    <string name="action_menu">菜单</string>
+    <string name="menu_random">随机美食</string>
+    <string name="menu_dining">聚餐活动(Beta)</string>
+    <string name="menu_export_post">导出海报(Beta)</string>
+    <string name="menu_settings">设置</string>
+    <string name="menu_about">关于</string>
 
     <!-- 地点卡片 -->
     <string name="place_card_close">关闭</string>

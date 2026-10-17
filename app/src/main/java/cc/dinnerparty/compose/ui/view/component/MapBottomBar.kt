@@ -17,18 +17,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
-import androidx.compose.material.icons.outlined.AddCircleOutline
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cc.dinnerparty.compose.R
@@ -54,6 +48,13 @@ fun MapBottomBar(
     onAlongRouteClick: () -> Unit = {},
     onAccountClick: () -> Unit = {}
 ) {
+    val actions = phoneMapActions(
+        onMoreClick = onMoreClick,
+        onFavoritesClick = onFavoritesClick,
+        onAddClick = onAddClick,
+        onAlongRouteClick = onAlongRouteClick
+    )
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -71,28 +72,7 @@ fun MapBottomBar(
                 .padding(vertical = 4.dp)
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
-            BottomBarItem(
-                imageVector = Icons.Outlined.MoreHoriz,
-                text = stringResource(R.string.action_more),
-                onClick = onMoreClick
-            )
-            BottomBarItem(
-                imageVector = Icons.Outlined.FavoriteBorder,
-                text = stringResource(R.string.action_favorites),
-                onClick = onFavoritesClick
-            )
-            BottomBarItem(
-                imageVector = Icons.Outlined.AddCircleOutline,
-                text = stringResource(R.string.action_add),
-                onClick = onAddClick,
-                iconSize = 27.dp,
-                highlighted = true
-            )
-            BottomBarItem(
-                imageVector = Icons.AutoMirrored.Outlined.DirectionsWalk,
-                text = stringResource(R.string.action_along_route),
-                onClick = onAlongRouteClick
-            )
+            actions.forEach { action -> BottomBarItem(action) }
             AccountItem(
                 text = accountName ?: stringResource(R.string.map_account_guest),
                 onClick = onAccountClick
@@ -102,14 +82,8 @@ fun MapBottomBar(
 }
 
 @Composable
-private fun RowScope.BottomBarItem(
-    imageVector: ImageVector,
-    text: String,
-    onClick: () -> Unit,
-    iconSize: Dp = 24.dp,
-    highlighted: Boolean = false
-) {
-    val color = if (highlighted) {
+private fun RowScope.BottomBarItem(action: MapAction) {
+    val color = if (action.highlighted) {
         SaltTheme.colors.highlight
     } else {
         SaltTheme.colors.subText.copy(alpha = 0.5f)
@@ -119,19 +93,21 @@ private fun RowScope.BottomBarItem(
         modifier = Modifier
             .weight(1f)
             .height(BottomBarItemHeight)
-            .clickable(onClick = onClick),
+            .clickable(onClick = action.onClick),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = imageVector,
-            contentDescription = null,
-            modifier = Modifier.size(iconSize),
-            tint = color
-        )
+        action.imageVector?.let { imageVector ->
+            Icon(
+                imageVector = imageVector,
+                contentDescription = null,
+                modifier = Modifier.size(action.iconSize),
+                tint = color
+            )
+        }
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = text,
+            text = action.label,
             color = color,
             fontSize = 11.sp,
             maxLines = 1

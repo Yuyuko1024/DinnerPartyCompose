@@ -4,21 +4,15 @@ import android.Manifest
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -28,11 +22,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.data.model.MapBounds
+import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
+import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
+import cc.dinnerparty.compose.ui.adaptive.currentWindowSizeClass
 import cc.dinnerparty.compose.ui.view.component.AmapView
-import cc.dinnerparty.compose.ui.view.component.MapBottomBar
-import cc.dinnerparty.compose.ui.view.component.MapFloatingActions
-import cc.dinnerparty.compose.ui.view.component.MapSearchBar
-import cc.dinnerparty.compose.ui.view.component.PlaceCardDialog
 import cc.dinnerparty.compose.ui.view.component.toMapMarker
 import cc.dinnerparty.compose.ui.viewmodel.MapViewModel
 import cc.dinnerparty.compose.utils.LocationClient
@@ -129,6 +122,8 @@ fun MainView(modifier: Modifier = Modifier) {
         }
     }
 
+    val windowSizeClass = currentWindowSizeClass()
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -154,7 +149,8 @@ fun MainView(modifier: Modifier = Modifier) {
 
         AmapView(
             modifier = Modifier.fillMaxSize(),
-            logoBottomMargin = BottomOverlayHeight,
+            // 手机端底栏常驻，地图 Logo 需要抬升
+            logoBottomMargin = if (windowSizeClass == WindowSizeClass.Compact) PhoneOverlayHeight else 0.dp,
             markers = markers,
             userLocation = userLocation,
             selectedMarkerId = selectedPlace?.id,
@@ -201,34 +197,25 @@ fun MainView(modifier: Modifier = Modifier) {
             }
         )
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-
+        CompositionLocalProvider(
+            LocalIsTablet provides (windowSizeClass != WindowSizeClass.Compact)
         ) {
-            MapFloatingActions(
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(end = 12.dp, bottom = 12.dp),
-                locating = locating,
-                onLocateClick = { if (!locating) requestLocationPermission() }
-            )
-            MapSearchBar(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-            )
-            MapBottomBar(
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+            when (windowSizeClass) {
+                WindowSizeClass.Compact -> MainPhoneUI(
+                    locating = locating,
+                    onLocateClick = { if (!locating) requestLocationPermission() },
+                    place = selectedPlace,
+                    onDismissPlaceCard = viewModel::clearSelection
+                )
 
-        PlaceCardDialog(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth(),
-            place = uiState.selectedPlace,
-            onDismissRequest = viewModel::clearSelection,
-        )
+                WindowSizeClass.Medium, WindowSizeClass.Expanded -> MainPadUI(
+                    locating = locating,
+                    onLocateClick = { if (!locating) requestLocationPermission() },
+                    place = selectedPlace,
+                    onDismissPlaceCard = viewModel::clearSelection
+                )
+            }
+        }
     }
 
     if (showLocationPermissionGuide) {
@@ -245,9 +232,6 @@ fun MainView(modifier: Modifier = Modifier) {
         )
     }
 }
-
-/** 底部常驻浮层总高。 */
-private val BottomOverlayHeight = 136.dp
 
 /** 定位权限。 */
 private val LocationPermissions = arrayOf(

@@ -110,24 +110,31 @@ fun PlaceCardDialog(
         exit = slideOutVertically { it },
         modifier = modifier.graphicsLayer { translationY = backOffset.value * size.height }
     ) {
-        content?.let { PlaceCard(place = it, onClose = onDismissRequest) }
+        content?.let {
+            PlaceCardContent(
+                place = it,
+                onClose = onDismissRequest,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .consumeTouchEvents()
+                    .clip(CardShape)
+                    .background(SaltTheme.colors.subBackground)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+            )
+        }
     }
 }
 
 /** 卡片内容。 */
 @Composable
-private fun PlaceCard(place: Place, onClose: () -> Unit) {
+internal fun PlaceCardContent(
+    place: Place,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val semanticColors = dinnerPartySemanticColors()
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .consumeTouchEvents()
-            .clip(CardShape)
-            .background(SaltTheme.colors.subBackground)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(CardPadding)
-    ) {
+    Column(modifier = modifier.padding(CardPadding)) {
         PlaceCardTitle(name = place.name.orEmpty(), onClose = onClose)
         PlaceCardDescription(place.description)
         PlaceCardMeta(category = place.category, perPersonCost = place.perPersonCost)
@@ -384,7 +391,7 @@ private fun ratingTierColor(tier: RatingTier, colors: DinnerPartySemanticColors)
 private fun formatAverage(average: Double): String = String.format(Locale.US, "%.1f", average)
 
 /** 吃掉落在组件上的触摸事件，避免穿透到下层。 */
-private fun Modifier.consumeTouchEvents(): Modifier = pointerInput(Unit) {
+internal fun Modifier.consumeTouchEvents(): Modifier = pointerInput(Unit) {
     awaitPointerEventScope {
         while (true) {
             awaitPointerEvent().changes.forEach { it.consume() }
