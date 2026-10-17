@@ -1,12 +1,5 @@
 package cc.dinnerparty.compose.ui.view.component
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,25 +7,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 
-/** 面板宽度。 */
-private val PanelWidth = 320.dp
-
-/** 面板圆角。 */
-private val PanelShape = RoundedCornerShape(16.dp)
-
-/** 菜单面板，从右侧滑入，点任一项后收起。 */
+/** 菜单面板，内容为菜单项列表。 */
 @Composable
 fun MapMenuPanel(
     modifier: Modifier = Modifier,
@@ -44,19 +28,9 @@ fun MapMenuPanel(
     onAboutClick: () -> Unit = {},
     onDismissRequest: () -> Unit = {}
 ) {
-    AnimatedVisibility(
-        visible = expanded,
-        enter = slideInHorizontally { it } + fadeIn(),
-        exit = slideOutHorizontally { it } + fadeOut(),
-        modifier = modifier
-    ) {
+    PadPanel(visible = expanded, modifier = modifier) {
         MapMenuList(
-            modifier = Modifier
-                .width(PanelWidth)
-                .clip(PanelShape)
-                .background(SaltTheme.colors.subBackground)
-                .border(1.dp, SaltTheme.colors.stroke, PanelShape)
-                .padding(vertical = 8.dp),
+            modifier = Modifier.padding(vertical = 8.dp),
             onDismiss = onDismissRequest,
             onRandomClick = onRandomClick,
             onDiningClick = onDiningClick,

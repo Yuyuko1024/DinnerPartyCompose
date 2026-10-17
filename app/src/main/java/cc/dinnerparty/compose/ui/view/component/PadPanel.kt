@@ -44,12 +44,10 @@ fun <T : Any> PadPanel(
                 modifier = Modifier
                     .width(width)
                     .padding(PadPanelPadding)
-                    .fillMaxHeight()
                     .consumeTouchEvents()
                     .clip(PadPanelShape)
                     .background(SaltTheme.colors.subBackground)
                     .border(1.dp, SaltTheme.colors.stroke, PadPanelShape)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
                     .verticalScroll(rememberScrollState())
             ) {
                 content(it)
