@@ -26,13 +26,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
+import com.amap.api.location.AMapLocationClient
 import com.amap.api.maps.AMap
 import com.amap.api.maps.MapsInitializer
 import com.amap.api.maps.TextureMapView
 import com.amap.api.maps.model.LatLng
 import com.amap.api.maps.model.Marker
 import com.amap.api.maps.model.MarkerOptions
-import com.amap.api.location.AMapLocationClient
 import com.moriafly.salt.ui.SaltTheme
 
 /**

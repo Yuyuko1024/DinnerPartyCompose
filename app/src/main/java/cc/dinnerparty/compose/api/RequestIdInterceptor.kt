@@ -1,8 +1,8 @@
 package cc.dinnerparty.compose.api
 
-import java.util.UUID
 import okhttp3.Interceptor
 import okhttp3.Response
+import java.util.UUID
 
 /** 为每个请求加上 `X-Request-ID` 头。 */
 internal class RequestIdInterceptor : Interceptor {
