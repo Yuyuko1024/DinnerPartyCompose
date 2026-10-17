@@ -62,6 +62,9 @@ fun MainView(modifier: Modifier = Modifier) {
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var locating by remember { mutableStateOf(false) }
 
+    // 地图被点击的次数，Pad 端据此收起菜单
+    var mapTapCount by remember { mutableStateOf(0) }
+
     val locationClient = remember(context) { LocationClient(context) }
     DisposableEffect(locationClient) {
         onDispose { locationClient.destroy() }
@@ -156,6 +159,7 @@ fun MainView(modifier: Modifier = Modifier) {
             selectedMarkerId = selectedPlace?.id,
             onMarkerClick = { marker ->
                 if (marker.clusterCount == null) {
+                    mapTapCount++
                     viewModel.selectPlace(marker.id)
                     // 把点中的地点移到地图中心
                     amap?.animateCamera(
@@ -178,7 +182,10 @@ fun MainView(modifier: Modifier = Modifier) {
                     }
                 }
             },
-            onMapClick = viewModel::clearSelection,
+            onMapClick = {
+                mapTapCount++
+                viewModel.clearSelection()
+            },
             onMapReady = { map ->
                 amap = map
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(DefaultCenter, DefaultZoom))
@@ -212,7 +219,8 @@ fun MainView(modifier: Modifier = Modifier) {
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = selectedPlace,
-                    onDismissPlaceCard = viewModel::clearSelection
+                    onDismissPlaceCard = viewModel::clearSelection,
+                    mapTapCount = mapTapCount
                 )
             }
         }

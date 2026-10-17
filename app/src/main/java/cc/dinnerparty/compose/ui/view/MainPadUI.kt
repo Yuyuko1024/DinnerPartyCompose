@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,10 +77,16 @@ fun MainPadUI(
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
     place: Place? = null,
-    onDismissPlaceCard: () -> Unit = {}
+    onDismissPlaceCard: () -> Unit = {},
+    mapTapCount: Int = 0
 ) {
     // 菜单是否展开
     var menuExpanded by remember { mutableStateOf(false) }
+
+    // 点击地图时收起菜单
+    LaunchedEffect(mapTapCount) {
+        if (mapTapCount > 0) menuExpanded = false
+    }
 
     // 右侧被菜单或详情面板占住时悬浮钮横移到左侧
     val rightSideOccupied = menuExpanded || place != null
