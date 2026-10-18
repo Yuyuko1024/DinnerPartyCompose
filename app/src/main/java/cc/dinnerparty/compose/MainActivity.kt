@@ -15,7 +15,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import cc.dinnerparty.compose.data.SettingsDataStore
-import cc.dinnerparty.compose.ui.screen.PrivacyConsentDialog
+import cc.dinnerparty.compose.ui.view.component.PrivacyConsentDialog
 import cc.dinnerparty.compose.ui.theme.DinnerPartyTheme
 import cc.dinnerparty.compose.ui.view.MainView
 import cc.dinnerparty.compose.ui.view.component.agreeAmapPrivacy

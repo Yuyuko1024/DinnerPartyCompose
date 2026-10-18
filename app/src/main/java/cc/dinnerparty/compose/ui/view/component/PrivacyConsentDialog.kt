@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.screen
+package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -10,10 +10,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import cc.dinnerparty.compose.R
-import cc.dinnerparty.compose.ui.view.component.PRIVACY_POLICY_AMAP_URL
-import cc.dinnerparty.compose.ui.view.component.PRIVACY_POLICY_URL
-import cc.dinnerparty.compose.ui.view.component.PolicyLink
-import cc.dinnerparty.compose.ui.view.component.openUriSafely
 import com.moriafly.salt.ui.dialog.YesNoDialog
 
 /** 首次启动的隐私政策同意弹框。外部点击和返回键都关不掉，只能选同意或退出。 */
