@@ -121,7 +121,7 @@ fun AmapView(
             modifier = Modifier.fillMaxSize(),
             factory = {
                 mapView.apply {
-                    getMap().apply {
+                    map.apply {
                         uiSettings.run {
                             // 关掉高德自带的缩放按钮、指南针与定位按钮
                             isZoomControlsEnabled = false
