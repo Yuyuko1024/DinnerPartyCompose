@@ -18,10 +18,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
@@ -74,22 +71,14 @@ private const val FloatingActionDurationMs = 300
 @Composable
 fun MainPadUI(
     modifier: Modifier = Modifier,
+    overlay: MapOverlayManager = rememberMapOverlayManager(),
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
     place: Place? = null,
-    onDismissPlaceCard: () -> Unit = {},
-    mapTapCount: Int = 0
+    onDismissPlaceCard: () -> Unit = {}
 ) {
-    // 右侧当前显示的面板
-    var rightPanel by remember { mutableStateOf<RightPanel?>(null) }
-
-    // 选中地点时切到详情面板，点击地图时收起
-    LaunchedEffect(mapTapCount, place) {
-        rightPanel = if (place != null) RightPanel.Place else null
-    }
-
     // 右侧被面板占住时悬浮钮横移到左侧
-    val rightSideOccupied = rightPanel != null
+    val rightSideOccupied = overlay.current != null
     val horizontalBias by animateFloatAsState(
         targetValue = if (rightSideOccupied) -1f else 1f,
         animationSpec = tween(FloatingActionDurationMs),
@@ -108,22 +97,22 @@ fun MainPadUI(
             PlaceDetailPanel(
                 modifier = Modifier.align(Alignment.TopEnd)
                     .padding(top = FloatingActionTopPadding),
-                place = place.takeIf { rightPanel == RightPanel.Place },
+                place = place.takeIf { overlay.current == MapOverlay.Place },
                 onDismissRequest = onDismissPlaceCard
             )
             MapMenuPanel(
                 modifier = Modifier.align(Alignment.TopEnd)
                     .padding(top = FloatingActionTopPadding),
-                expanded = rightPanel == RightPanel.Menu,
-                onAboutClick = { rightPanel = RightPanel.About },
-                onDismissRequest = { rightPanel = null }
+                expanded = overlay.current == MapOverlay.Menu,
+                onAboutClick = { overlay.show(MapOverlay.About) },
+                onDismissRequest = overlay::hide
             )
             PadPanel(
-                visible = rightPanel == RightPanel.About,
+                visible = overlay.current == MapOverlay.About,
                 modifier = Modifier.align(Alignment.TopEnd)
                     .padding(top = FloatingActionTopPadding)
             ) {
-                AboutContent(onClose = { rightPanel = null })
+                AboutContent(onClose = overlay::hide)
             }
             MapFloatingActions(
                 modifier = Modifier
@@ -137,15 +126,10 @@ fun MainPadUI(
         PadHeader(
             modifier = Modifier.align(Alignment.TopCenter),
             onAccountClick = {},
-            onMenuClick = {
-                rightPanel = if (rightPanel == RightPanel.Menu) null else RightPanel.Menu
-            }
+            onMenuClick = { overlay.toggle(MapOverlay.Menu) }
         )
     }
 }
-
-/** 右侧面板，同一时刻只显示一个。 */
-private enum class RightPanel { Place, Menu, About }
 
 /** 顶部 Header，左侧登录、中间搜索框、右侧菜单。 */
 @UnstableSaltUiApi

@@ -62,8 +62,8 @@ fun MainView(modifier: Modifier = Modifier) {
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var locating by remember { mutableStateOf(false) }
 
-    // 地图被点击的次数，Pad 端据此收起菜单
-    var mapTapCount by remember { mutableStateOf(0) }
+    // 当前显示的浮层
+    val overlay = rememberMapOverlayManager()
 
     val locationClient = remember(context) { LocationClient(context) }
     DisposableEffect(locationClient) {
@@ -159,7 +159,7 @@ fun MainView(modifier: Modifier = Modifier) {
             selectedMarkerId = selectedPlace?.id,
             onMarkerClick = { marker ->
                 if (marker.clusterCount == null) {
-                    mapTapCount++
+                    overlay.show(MapOverlay.Place)
                     viewModel.selectPlace(marker.id)
                     // 把点中的地点移到地图中心
                     amap?.animateCamera(
@@ -178,12 +178,13 @@ fun MainView(modifier: Modifier = Modifier) {
                             )
                             // 聚合成气泡后清掉卡片
                             viewModel.clearSelection()
+                            overlay.hide()
                         }
                     }
                 }
             },
             onMapClick = {
-                mapTapCount++
+                overlay.hide()
                 viewModel.clearSelection()
             },
             onMapReady = { map ->
@@ -209,18 +210,25 @@ fun MainView(modifier: Modifier = Modifier) {
         ) {
             when (windowSizeClass) {
                 WindowSizeClass.Compact -> MainPhoneUI(
+                    overlay = overlay,
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = selectedPlace,
-                    onDismissPlaceCard = viewModel::clearSelection
+                    onDismissPlaceCard = {
+                        overlay.hide()
+                        viewModel.clearSelection()
+                    }
                 )
 
                 WindowSizeClass.Medium, WindowSizeClass.Expanded -> MainPadUI(
+                    overlay = overlay,
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = selectedPlace,
-                    onDismissPlaceCard = viewModel::clearSelection,
-                    mapTapCount = mapTapCount
+                    onDismissPlaceCard = {
+                        overlay.hide()
+                        viewModel.clearSelection()
+                    }
                 )
             }
         }

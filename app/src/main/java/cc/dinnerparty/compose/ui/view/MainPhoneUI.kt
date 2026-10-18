@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,17 +27,12 @@ internal val PhoneOverlayHeight = 136.dp
 @Composable
 fun MainPhoneUI(
     modifier: Modifier = Modifier,
+    overlay: MapOverlayManager = rememberMapOverlayManager(),
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
     place: Place? = null,
     onDismissPlaceCard: () -> Unit = {}
 ) {
-    // 菜单浮层是否展开
-    var menuExpanded by remember { mutableStateOf(false) }
-
-    // 关于浮层是否展开
-    var aboutExpanded by remember { mutableStateOf(false) }
-
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -60,7 +51,7 @@ fun MainPhoneUI(
             )
             MapBottomBar(
                 modifier = Modifier.fillMaxWidth(),
-                onMoreClick = { menuExpanded = true }
+                onMoreClick = { overlay.show(MapOverlay.Menu) }
             )
         }
 
@@ -68,28 +59,28 @@ fun MainPhoneUI(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
-            place = place,
+            place = place.takeIf { overlay.current == MapOverlay.Place },
             onDismissRequest = onDismissPlaceCard
         )
 
         PhoneSheet(
-            visible = menuExpanded,
-            onDismissRequest = { menuExpanded = false },
+            visible = overlay.current == MapOverlay.Menu,
+            onDismissRequest = overlay::hide,
             modal = true
         ) {
             MapMenuList(
                 modifier = Modifier.padding(vertical = 8.dp),
-                onDismiss = { menuExpanded = false },
-                onAboutClick = { aboutExpanded = true }
+                onDismiss = overlay::hide,
+                onAboutClick = { overlay.show(MapOverlay.About) }
             )
         }
 
         PhoneSheet(
-            visible = aboutExpanded,
-            onDismissRequest = { aboutExpanded = false },
+            visible = overlay.current == MapOverlay.About,
+            onDismissRequest = overlay::hide,
             modal = true
         ) {
-            AboutContent(onClose = { aboutExpanded = false })
+            AboutContent(onClose = overlay::hide)
         }
     }
 }
