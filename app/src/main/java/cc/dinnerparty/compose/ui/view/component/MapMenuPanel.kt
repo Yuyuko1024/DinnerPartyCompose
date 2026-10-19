@@ -31,7 +31,7 @@ fun MapMenuPanel(
     PadPanel(visible = expanded, modifier = modifier) {
         MapMenuList(
             modifier = Modifier.padding(vertical = 8.dp),
-            onDismiss = onDismissRequest,
+            onClose = onDismissRequest,
             onRandomClick = onRandomClick,
             onDiningClick = onDiningClick,
             onExportPostClick = onExportPostClick,
@@ -45,7 +45,7 @@ fun MapMenuPanel(
 @Composable
 internal fun MapMenuList(
     modifier: Modifier = Modifier,
-    onDismiss: () -> Unit = {},
+    onClose: () -> Unit = {},
     onRandomClick: () -> Unit = {},
     onDiningClick: () -> Unit = {},
     onExportPostClick: () -> Unit = {},
@@ -54,23 +54,23 @@ internal fun MapMenuList(
 ) {
     val actions = padMenuActions(
         onRandomClick = {
-            onDismiss()
+            onClose()
             onRandomClick()
         },
         onDiningClick = {
-            onDismiss()
+            onClose()
             onDiningClick()
         },
         onExportPostClick = {
-            onDismiss()
+            onClose()
             onExportPostClick()
         },
         onSettingsClick = {
-            onDismiss()
+            onClose()
             onSettingsClick()
         },
         onAboutClick = {
-            onDismiss()
+            onClose()
             onAboutClick()
         }
     )

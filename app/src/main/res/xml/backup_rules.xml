@@ -6,8 +6,6 @@
    See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <!-- 登录凭证绑定设备密钥，不参与备份 -->
+    <exclude domain="file" path="datastore/auth.preferences_pb"/>
 </full-backup-content>

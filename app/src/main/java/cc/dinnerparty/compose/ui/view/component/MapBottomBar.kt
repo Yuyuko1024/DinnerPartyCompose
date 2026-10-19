@@ -28,6 +28,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cc.dinnerparty.compose.R
+import cc.dinnerparty.compose.api.model.User
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
@@ -38,12 +39,13 @@ private val BottomBarItemHeight = 58.dp
 /**
  * 地图页底部操作栏，含更多 / 收藏 / 添加 / 顺路吃 / 账号五个条目，其中「添加」恒用主色。
  *
- * @param accountName 留空则显示未登录文案。
+ * @param user 已登录的住民，null 表示未登录。
  */
 @Composable
 fun MapBottomBar(
     modifier: Modifier = Modifier,
-    accountName: String? = null,
+    user: User? = null,
+    avatarVersion: Long = 0L,
     onMoreClick: () -> Unit = {},
     onFavoritesClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
@@ -76,7 +78,8 @@ fun MapBottomBar(
         ) {
             actions.forEach { action -> BottomBarItem(action) }
             AccountItem(
-                text = accountName ?: stringResource(R.string.map_account_guest),
+                user = user,
+                avatarVersion = avatarVersion,
                 onClick = onAccountClick
             )
         }
@@ -128,7 +131,8 @@ private fun RowScope.BottomBarItem(action: MapAction) {
 /** 账号条目，圆形头像加用户名。 */
 @Composable
 private fun RowScope.AccountItem(
-    text: String,
+    user: User?,
+    avatarVersion: Long,
     onClick: () -> Unit
 ) {
     Column(
@@ -139,24 +143,32 @@ private fun RowScope.AccountItem(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(SaltTheme.colors.highlight),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = SaltTheme.colors.onHighlight
-            )
+        if (user == null) {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(SaltTheme.colors.highlight),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = SaltTheme.colors.onHighlight
+                )
+            }
+        } else {
+            UserAvatar(user = user, avatarVersion = avatarVersion)
         }
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = text,
-            color = SaltTheme.colors.subText.copy(alpha = 0.5f),
+            text = user?.username ?: stringResource(R.string.map_account_guest),
+            color = if (user == null) {
+                SaltTheme.colors.subText.copy(alpha = 0.5f)
+            } else {
+                SaltTheme.colors.subText
+            },
             fontSize = 11.sp,
             maxLines = 1
         )

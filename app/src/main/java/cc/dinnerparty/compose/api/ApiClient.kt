@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 /** 全局唯一的 Retrofit 客户端。 */
 object ApiClient {
 
-    private const val BASE_URL = "https://www.dinnerparty.cc/backend/"
+    internal const val BASE_URL = "https://www.dinnerparty.cc/backend/"
     private const val TIMEOUT_SECONDS = 30L
 
     /** 宽容模式解析 JSON。 */
@@ -29,6 +29,7 @@ object ApiClient {
             .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .addInterceptor(RequestIdInterceptor())
+            .addInterceptor(AuthInterceptor())
             .apply {
                 // 仅 debug 打印请求与响应体
                 if (BuildConfig.DEBUG) {

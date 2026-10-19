@@ -26,7 +26,11 @@ import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
 import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
 import cc.dinnerparty.compose.ui.adaptive.currentWindowSizeClass
 import cc.dinnerparty.compose.ui.view.component.AmapView
+import cc.dinnerparty.compose.ui.view.component.AvatarUpdateFlow
+import cc.dinnerparty.compose.ui.view.component.EditPasswordDialog
+import cc.dinnerparty.compose.ui.view.component.EditUsernameDialog
 import cc.dinnerparty.compose.ui.view.component.toMapMarker
+import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import cc.dinnerparty.compose.ui.viewmodel.MapViewModel
 import cc.dinnerparty.compose.utils.LocationClient
 import cc.dinnerparty.compose.utils.LocationFailure
@@ -52,8 +56,20 @@ import kotlin.math.max
 fun MainView(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val viewModel: MapViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
+    val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showLocationPermissionGuide by remember { mutableStateOf(false) }
+
+    // 账号编辑弹框开关
+    var editUsername by remember { mutableStateOf(false) }
+    var editPassword by remember { mutableStateOf(false) }
+
+    // 待二次确认的账号操作
+    var pendingAccountAction by remember { mutableStateOf<AccountAction?>(null) }
+
+    // 头像选择裁剪上传流程
+    var avatarUpdating by remember { mutableStateOf(false) }
 
     // 地图对象
     var amap by remember { mutableStateOf<AMap?>(null) }
@@ -211,24 +227,36 @@ fun MainView(modifier: Modifier = Modifier) {
             when (windowSizeClass) {
                 WindowSizeClass.Compact -> MainPhoneUI(
                     overlay = overlay,
+                    authViewModel = authViewModel,
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = selectedPlace,
                     onDismissPlaceCard = {
                         overlay.hide()
                         viewModel.clearSelection()
-                    }
+                    },
+                    onUpdateAvatar = { avatarUpdating = true },
+                    onUpdateUsername = { editUsername = true },
+                    onUpdatePassword = { editPassword = true },
+                    onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
+                    onDeleteAccount = { pendingAccountAction = AccountAction.DELETE_ACCOUNT }
                 )
 
                 WindowSizeClass.Medium, WindowSizeClass.Expanded -> MainPadUI(
                     overlay = overlay,
+                    authViewModel = authViewModel,
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = selectedPlace,
                     onDismissPlaceCard = {
                         overlay.hide()
                         viewModel.clearSelection()
-                    }
+                    },
+                    onUpdateAvatar = { avatarUpdating = true },
+                    onUpdateUsername = { editUsername = true },
+                    onUpdatePassword = { editPassword = true },
+                    onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
+                    onDeleteAccount = { pendingAccountAction = AccountAction.DELETE_ACCOUNT }
                 )
             }
         }
@@ -247,6 +275,66 @@ fun MainView(modifier: Modifier = Modifier) {
             confirmText = stringResource(R.string.action_go_to_settings)
         )
     }
+
+    if (editUsername) {
+        EditUsernameDialog(
+            currentUsername = authState.session?.user?.username.orEmpty(),
+            onDismiss = { editUsername = false },
+            authViewModel = authViewModel,
+            onMessage = { message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            },
+        )
+    }
+
+    if (editPassword) {
+        EditPasswordDialog(
+            onDismiss = { editPassword = false },
+            authViewModel = authViewModel,
+            onMessage = { message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            },
+        )
+    }
+
+    pendingAccountAction?.let { action ->
+        val isLogout = action == AccountAction.LOGOUT_ALL
+        YesNoDialog(
+            onDismissRequest = { pendingAccountAction = null },
+            onConfirm = {
+                pendingAccountAction = null
+                when (action) {
+                    AccountAction.LOGOUT_ALL -> authViewModel.logoutAll()
+                    AccountAction.DELETE_ACCOUNT -> authViewModel.deleteAccount()
+                }
+            },
+            title = stringResource(
+                if (isLogout) R.string.account_logout_title else R.string.account_delete_title
+            ),
+            content = stringResource(
+                if (isLogout) R.string.account_logout_content else R.string.account_delete_content
+            ),
+            cancelText = stringResource(R.string.action_cancel),
+            confirmText = stringResource(
+                if (isLogout) R.string.account_logout_confirm else R.string.account_delete_confirm
+            )
+        )
+    }
+
+    AvatarUpdateFlow(
+        visible = avatarUpdating,
+        onDismiss = { avatarUpdating = false },
+        authViewModel = authViewModel,
+        onMessage = { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        },
+    )
+}
+
+/** 需要二次确认的账号操作。 */
+internal enum class AccountAction {
+    LOGOUT_ALL,
+    DELETE_ACCOUNT
 }
 
 /** 定位权限。 */

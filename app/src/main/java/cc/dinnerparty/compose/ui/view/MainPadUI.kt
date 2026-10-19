@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -26,17 +27,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.Place
+import cc.dinnerparty.compose.api.model.User
 import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
 import cc.dinnerparty.compose.ui.adaptive.currentWindowSizeClass
 import cc.dinnerparty.compose.ui.view.component.AboutContent
+import cc.dinnerparty.compose.ui.view.component.AccountChip
+import cc.dinnerparty.compose.ui.view.component.AccountContent
 import cc.dinnerparty.compose.ui.view.component.CircleIconButton
+import cc.dinnerparty.compose.ui.view.component.LoginContent
 import cc.dinnerparty.compose.ui.view.component.MapFloatingActions
 import cc.dinnerparty.compose.ui.view.component.MapMenuPanel
 import cc.dinnerparty.compose.ui.view.component.MapSearchBar
 import cc.dinnerparty.compose.ui.view.component.PadPanel
 import cc.dinnerparty.compose.ui.view.component.PlaceDetailPanel
+import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import com.moriafly.salt.ui.Button
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
@@ -72,11 +79,27 @@ private const val FloatingActionDurationMs = 300
 fun MainPadUI(
     modifier: Modifier = Modifier,
     overlay: MapOverlayManager = rememberMapOverlayManager(),
+    authViewModel: AuthViewModel,
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
     place: Place? = null,
-    onDismissPlaceCard: () -> Unit = {}
+    onDismissPlaceCard: () -> Unit = {},
+    onUpdateAvatar: () -> Unit = {},
+    onUpdateUsername: () -> Unit = {},
+    onUpdatePassword: () -> Unit = {},
+    onLogoutAll: () -> Unit = {},
+    onDeleteAccount: () -> Unit = {}
 ) {
+    val authState by authViewModel.uiState.collectAsStateWithLifecycle()
+
+    // 登录成功或退出登录后收起对应面板
+    LaunchedEffect(authState.session, overlay.current) {
+        when {
+            overlay.current == MapOverlay.Login && authState.session != null -> overlay.hide()
+            overlay.current == MapOverlay.Account && authState.session == null -> overlay.hide()
+        }
+    }
+
     // 右侧被面板占住时悬浮钮横移到左侧
     val rightSideOccupied = overlay.current != null
     val horizontalBias by animateFloatAsState(
@@ -95,24 +118,64 @@ fun MainPadUI(
                 .padding(horizontal = EdgePadding)
         ) {
             PlaceDetailPanel(
-                modifier = Modifier.align(Alignment.TopEnd)
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
                     .padding(top = FloatingActionTopPadding),
                 place = place.takeIf { overlay.current == MapOverlay.Place },
                 onDismissRequest = onDismissPlaceCard
             )
+
             MapMenuPanel(
-                modifier = Modifier.align(Alignment.TopEnd)
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
                     .padding(top = FloatingActionTopPadding),
                 expanded = overlay.current == MapOverlay.Menu,
                 onAboutClick = { overlay.show(MapOverlay.About) },
                 onDismissRequest = overlay::hide
             )
+
             PadPanel(
                 visible = overlay.current == MapOverlay.About,
-                modifier = Modifier.align(Alignment.TopEnd)
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
                     .padding(top = FloatingActionTopPadding)
             ) {
                 AboutContent(onClose = overlay::hide)
+            }
+
+            PadPanel(
+                visible = overlay.current == MapOverlay.Account,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = FloatingActionTopPadding)
+            ) {
+                AccountContent(
+                    modifier = Modifier.padding(16.dp),
+                    user = authState.session?.user,
+                    avatarVersion = authState.session?.avatarVersion ?: 0L,
+                    onUpdateAvatar = onUpdateAvatar,
+                    onUpdateUsername = onUpdateUsername,
+                    onUpdatePassword = onUpdatePassword,
+                    onExitLogin = onLogoutAll,
+                    onDeleteUser = onDeleteAccount
+                )
+            }
+            PadPanel(
+                visible = overlay.current == MapOverlay.Login,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = FloatingActionTopPadding)
+            ) {
+                LoginContent(
+                    state = authState,
+                    onClose = overlay::hide,
+                    onLogin = authViewModel::login,
+                    onRegister = authViewModel::register,
+                    onResetPassword = authViewModel::resetPassword,
+                    onRequestRegisterCode = authViewModel::requestRegisterCode,
+                    onRequestResetCode = authViewModel::requestResetCode,
+                    onClearError = authViewModel::clearError
+                )
             }
             MapFloatingActions(
                 modifier = Modifier
@@ -125,7 +188,16 @@ fun MainPadUI(
 
         PadHeader(
             modifier = Modifier.align(Alignment.TopCenter),
-            onAccountClick = {},
+            user = authState.session?.user,
+            avatarVersion = authState.session?.avatarVersion ?: 0L,
+            onAccountClick = {
+                if (authState.session == null) {
+                    overlay.toggle(MapOverlay.Login)
+                }
+                else {
+                    overlay.toggle(MapOverlay.Account)
+                }
+            },
             onMenuClick = { overlay.toggle(MapOverlay.Menu) }
         )
     }
@@ -136,6 +208,8 @@ fun MainPadUI(
 @Composable
 private fun PadHeader(
     modifier: Modifier = Modifier,
+    user: User? = null,
+    avatarVersion: Long = 0L,
     onAccountClick: () -> Unit = {},
     onMenuClick: () -> Unit = {}
 ) {
@@ -164,11 +238,20 @@ private fun PadHeader(
                     .align(Alignment.CenterStart)
                     .padding(start = EdgePadding)
             ) {
-                Button(
-                    onClick = onAccountClick,
-                    text = stringResource(R.string.action_login),
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
+                if (user == null) {
+                    Button(
+                        onClick = onAccountClick,
+                        text = stringResource(R.string.action_login),
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                } else {
+                    AccountChip(
+                        onClick = onAccountClick,
+                        user = user,
+                        avatarVersion = avatarVersion,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                }
                 if (showLabel) {
                     Text(
                         text = stringResource(R.string.app_name),

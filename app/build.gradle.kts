@@ -67,8 +67,15 @@ dependencies {
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.gson)
+    // 头像加载
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    // 头像裁剪
+    implementation(libs.crop.kit)
     // 高德地图 3D，直接引用 app/libs 下的本地 AAR
     implementation(files("libs/AMap3DMap_11.3.100_AMapSearch_9.8.1_AMapLocation_11.3.101_20260924.aar"))
+    // 自定义分段按钮
+    implementation(libs.segmented.control)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
