@@ -62,18 +62,17 @@ class AuthDataStore(context: Context) {
         }
     }
 
-    /** 只更新住民资料，保留凭证。 */
+    /** 刷新住民资料 保留凭证 */
     suspend fun saveUser(user: User) {
         dataStore.edit { preferences ->
             preferences.putUser(user)
         }
     }
 
-    /** 上传头像后保存资料并递增头像版本 */
+    /** 上传头像后保存资料 */
     suspend fun saveAvatar(user: User) {
         dataStore.edit { preferences ->
             preferences.putUser(user)
-            preferences[AvatarVersionKey] = (preferences[AvatarVersionKey] ?: 0L) + 1
         }
     }
 
@@ -93,6 +92,7 @@ class AuthDataStore(context: Context) {
             ?.let { this[AdminLevelKey] = it }
             ?: remove(AdminLevelKey)
         this[HasAvatarKey] = user.hasAvatar
+        this[AvatarVersionKey] = (this[AvatarVersionKey] ?: 0L) + 1
     }
 
     private companion object {
