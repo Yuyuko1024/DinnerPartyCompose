@@ -1,7 +1,12 @@
 package cc.dinnerparty.compose.ui.view.component
 
 import android.content.Context
+import android.opengl.GLSurfaceView
+import android.os.Build
 import android.os.Bundle
+import android.view.TextureView
+import android.view.View
+import android.view.ViewGroup
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -73,7 +78,10 @@ fun AmapView(
     val currentOnMapClick by rememberUpdatedState(onMapClick)
 
     val mapView = remember(context) {
-        TextureMapView(context).apply { onCreate(Bundle()) }
+        TextureMapView(context).apply {
+            onCreate(Bundle())
+            requestHighFrameRate()
+        }
     }
 
     // 深色模式用高德内置夜视图
@@ -135,6 +143,8 @@ fun AmapView(
                             true
                         }
                         setOnMapClickListener { currentOnMapClick() }
+                        setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY)
+                        setRenderFps(MapRenderFps)
                         aMap = this
                         onMapReady(this)
                     }
@@ -239,3 +249,17 @@ private class UserLocationHolder {
 
 /** 蓝点的层级，压在所有 POI 标记之上。 */
 private const val UserLocationZIndex = 2f
+
+/** 地图固定 60 帧渲染。 */
+private const val MapRenderFps = 60
+
+/** 给地图内部的 TextureView 投票高帧率，供 ARR 提升屏幕刷新率。 */
+private fun View.requestHighFrameRate() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && this is TextureView) {
+        requestedFrameRate = View.REQUESTED_FRAME_RATE_CATEGORY_HIGH
+    }
+    if (this !is ViewGroup) return
+    for (index in 0 until childCount) {
+        getChildAt(index).requestHighFrameRate()
+    }
+}
