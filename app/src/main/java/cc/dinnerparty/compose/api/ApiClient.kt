@@ -52,4 +52,9 @@ object ApiClient {
     }
 
     fun <T> createService(serviceClass: Class<T>): T = retrofit.create(serviceClass)
+
+    /** 把后端返回的相对资源路径补成完整地址。 */
+    fun assetUrl(path: String): String =
+        if (path.startsWith("http")) path
+        else BASE_URL.removeSuffix("backend/") + path.trimStart('/')
 }

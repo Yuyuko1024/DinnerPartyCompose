@@ -22,7 +22,10 @@ enum class MapOverlay {
     Menu,
 
     /** 关于 */
-    About
+    About,
+
+    /** 添加或修改地点 */
+    AddPlace,
 }
 
 /** 浮层状态，null 表示什么都不显示 */

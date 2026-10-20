@@ -58,20 +58,28 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import java.util.Locale
 
+/** 地点卡片里的操作与可用性。 */
+class PlaceCardOps(
+    val external: Boolean = false,
+    val canEdit: Boolean = false,
+    val onAdd: () -> Unit = {},
+    val onEdit: () -> Unit = {},
+)
+
 /** 地点卡片浮层，从底部滑入滑出。 */
 @Composable
 fun PlaceCardDialog(
     modifier: Modifier = Modifier,
     place: Place?,
     onDismissRequest: () -> Unit,
-    external: Boolean = false
+    ops: PlaceCardOps = PlaceCardOps(),
 ) {
     PhoneSheet(
         value = place,
         onDismissRequest = onDismissRequest,
         modifier = modifier
     ) { shown ->
-        PlaceCardContent(place = shown, onClose = onDismissRequest, external = external)
+        PlaceCardContent(place = shown, onClose = onDismissRequest, ops = ops)
     }
 }
 
@@ -81,13 +89,13 @@ internal fun PlaceCardContent(
     place: Place,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    external: Boolean = false
+    ops: PlaceCardOps = PlaceCardOps(),
 ) {
     val semanticColors = dinnerPartySemanticColors()
 
     Column(modifier = modifier.padding(CardPadding)) {
         PlaceCardTitle(name = place.name.orEmpty(), onClose = onClose)
-        if (external) {
+        if (ops.external) {
             PlaceCardAddress(place.address)
         } else {
             PlaceCardDescription(place.description)
@@ -95,7 +103,7 @@ internal fun PlaceCardContent(
             PlaceCardRating(place = place, semanticColors = semanticColors)
             PlaceCardLastModified(place = place)
         }
-        PlaceCardActions(external = external)
+        PlaceActionRow(ops = ops)
     }
 }
 
@@ -274,7 +282,7 @@ private fun PlaceCardLastModified(place: Place) {
 }
 
 @Composable
-private fun PlaceCardActions(external: Boolean) {
+private fun PlaceActionRow(ops: PlaceCardOps) {
     Spacer(modifier = Modifier.height(8.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         PlaceCardAction(
@@ -293,12 +301,19 @@ private fun PlaceCardActions(external: Boolean) {
             contentDescription = stringResource(R.string.action_favorites)
         )
         // 外部地点未收录 这里是添加入口
-        PlaceCardAction(
-            icon = if (external) Icons.Outlined.Add else Icons.Outlined.Edit,
-            contentDescription = stringResource(
-                if (external) R.string.action_add else R.string.place_action_edit
+        if (ops.external) {
+            PlaceCardAction(
+                icon = Icons.Outlined.Add,
+                contentDescription = stringResource(R.string.action_add),
+                onClick = ops.onAdd,
             )
-        )
+        } else if (ops.canEdit) {
+            PlaceCardAction(
+                icon = Icons.Outlined.Edit,
+                contentDescription = stringResource(R.string.place_action_edit),
+                onClick = ops.onEdit,
+            )
+        }
         PlaceCardAction(
             icon = Icons.Outlined.MoreHoriz,
             contentDescription = stringResource(R.string.action_more)
@@ -310,7 +325,8 @@ private fun PlaceCardActions(external: Boolean) {
 private fun PlaceCardAction(
     icon: ImageVector,
     contentDescription: String,
-    label: String? = null
+    label: String? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
@@ -318,6 +334,7 @@ private fun PlaceCardAction(
             .widthIn(min = ActionButtonMinSize)
             .clip(ActionButtonShape)
             .border(1.dp, SaltTheme.colors.stroke, ActionButtonShape)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = 10.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -342,7 +359,7 @@ private fun PlaceCardAction(
 
 /** 档位词，无档位时返回 null。 */
 @Composable
-private fun ratingTierLabel(tier: RatingTier?): String? = when (tier) {
+internal fun ratingTierLabel(tier: RatingTier?): String? = when (tier) {
     null -> null
     RatingTier.STRONG_YES -> stringResource(R.string.rating_tier_strong_yes)
     RatingTier.ABOVE_AVERAGE -> stringResource(R.string.rating_tier_above_average)
@@ -350,14 +367,14 @@ private fun ratingTierLabel(tier: RatingTier?): String? = when (tier) {
     RatingTier.STRONG_NO -> stringResource(R.string.rating_tier_strong_no)
 }
 
-private fun ratingTierIcon(tier: RatingTier): ImageVector = when (tier) {
+internal fun ratingTierIcon(tier: RatingTier): ImageVector = when (tier) {
     RatingTier.STRONG_YES -> Icons.Outlined.SentimentVerySatisfied
     RatingTier.ABOVE_AVERAGE -> Icons.Outlined.SentimentSatisfied
     RatingTier.BELOW_AVERAGE -> Icons.Outlined.SentimentDissatisfied
     RatingTier.STRONG_NO -> Icons.Outlined.SentimentVeryDissatisfied
 }
 
-private fun ratingTierColor(tier: RatingTier, colors: DinnerPartySemanticColors): Color = when (tier) {
+internal fun ratingTierColor(tier: RatingTier, colors: DinnerPartySemanticColors): Color = when (tier) {
     RatingTier.STRONG_YES -> colors.strongYes
     RatingTier.ABOVE_AVERAGE -> colors.aboveAverage
     RatingTier.BELOW_AVERAGE -> colors.belowAverage

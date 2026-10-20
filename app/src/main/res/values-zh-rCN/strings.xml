@@ -50,6 +50,32 @@
     <string name="place_action_share">分享</string>
     <string name="place_action_edit">编辑</string>
 
+    <!-- Place form -->
+    <string name="place_form_add_title">新增地点</string>
+    <string name="place_form_edit_title">修改地点</string>
+    <string name="place_form_pin">新地点</string>
+    <string name="place_form_name">店名</string>
+    <string name="place_form_name_hint">店名</string>
+    <string name="place_form_category">分类</string>
+    <string name="place_form_tag_hint">输入分类后按回车</string>
+    <string name="place_form_common">常用分类</string>
+    <string name="place_form_remove_tag">删除分类</string>
+    <string name="place_form_tag_too_long">单个分类最多 8 个汉字或 16 个字符</string>
+    <string name="place_form_desc">备注</string>
+    <string name="place_form_desc_hint">可不填</string>
+    <string name="place_form_cost">人均</string>
+    <string name="place_form_cost_hint">可不填</string>
+    <string name="place_form_rating">你的评价</string>
+    <string name="place_form_rating_tip">默认跟随分类，带避雷的分类自动取最低档</string>
+    <string name="place_form_exterior">门店图片</string>
+    <string name="place_form_menu">菜单图片</string>
+    <string name="place_form_photo">添加</string>
+    <string name="place_form_image_failed">这张图片读取失败</string>
+    <string name="place_form_remove_image">删除图片</string>
+    <string name="place_form_submit">新增</string>
+    <string name="place_form_submitting">提交中\u2026</string>
+    <string name="place_form_saved">已保存</string>
+
     <!-- 评价档位 -->
     <string name="rating_tier_strong_yes">强烈推荐</string>
     <string name="rating_tier_above_average">均线之上</string>

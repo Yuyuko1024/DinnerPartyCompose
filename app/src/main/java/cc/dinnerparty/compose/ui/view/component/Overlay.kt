@@ -8,11 +8,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 
-/** 吃掉落在组件上的触摸事件，避免穿透到下层。 */
-internal fun Modifier.consumeTouchEvents(): Modifier = pointerInput(Unit) {
+/** 阻断命中且不消费事件，避免点击穿透到下层兄弟。 */
+internal fun Modifier.blockTouch(): Modifier = pointerInput(Unit) {
     awaitPointerEventScope {
         while (true) {
-            awaitPointerEvent().changes.forEach { it.consume() }
+            awaitPointerEvent()
         }
     }
 }

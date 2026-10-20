@@ -1,7 +1,11 @@
 package cc.dinnerparty.compose.api.apis
 
 import cc.dinnerparty.compose.api.model.Place
+import cc.dinnerparty.compose.api.model.PlaceDraft
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -29,4 +33,12 @@ interface PlaceApi {
         @Query("lat") lat: Double?,
         @Query("lng") lng: Double?,
     ): List<Place>
+
+    /** 新建地点。 */
+    @POST("places")
+    suspend fun createPlace(@Body body: PlaceDraft): Place
+
+    /** 修改地点，服务端不接受 address 与 rating。 */
+    @PUT("places/{id}")
+    suspend fun updatePlace(@Path("id") id: Long, @Body body: PlaceDraft): Place
 }

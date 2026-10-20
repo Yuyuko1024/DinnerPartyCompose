@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.User
+import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
@@ -50,13 +51,15 @@ fun MapBottomBar(
     onFavoritesClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
     onAlongRouteClick: () -> Unit = {},
-    onAccountClick: () -> Unit = {}
+    onAccountClick: () -> Unit = {},
+    adding: Boolean = false,
 ) {
     val actions = phoneMapActions(
         onMoreClick = onMoreClick,
         onFavoritesClick = onFavoritesClick,
         onAddClick = onAddClick,
-        onAlongRouteClick = onAlongRouteClick
+        onAlongRouteClick = onAlongRouteClick,
+        adding = adding,
     )
 
     Column(
@@ -88,10 +91,10 @@ fun MapBottomBar(
 
 @Composable
 private fun RowScope.BottomBarItem(action: MapAction) {
-    val color = if (action.highlighted) {
-        SaltTheme.colors.highlight
-    } else {
-        SaltTheme.colors.subText.copy(alpha = 0.5f)
+    val color = when {
+        action.danger -> dinnerPartySemanticColors().danger
+        action.highlighted -> SaltTheme.colors.highlight
+        else -> SaltTheme.colors.subText.copy(alpha = 0.5f)
     }
 
     Column(

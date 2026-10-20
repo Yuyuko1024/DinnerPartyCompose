@@ -1,6 +1,7 @@
 package cc.dinnerparty.compose.data.model
 
 import cc.dinnerparty.compose.api.model.Place
+import cc.dinnerparty.compose.api.model.User
 import kotlin.math.floor
 
 /** 地点评价的四档，与后端 `placeRatings.js` 算出的 `tier` 一一对应。 */
@@ -22,6 +23,34 @@ enum class RatingTier {
             }
         }
     }
+
+    /** 档位对应的分值。 */
+    fun score(): Int = when (this) {
+        STRONG_YES -> 4
+        ABOVE_AVERAGE -> 3
+        BELOW_AVERAGE -> 2
+        STRONG_NO -> 1
+    }
+}
+
+/** 分值 → 档位，超出范围按最近的一端算。 */
+fun tierOf(score: Int): RatingTier = when (score.coerceIn(1, 4)) {
+    4 -> RatingTier.STRONG_YES
+    3 -> RatingTier.ABOVE_AVERAGE
+    2 -> RatingTier.BELOW_AVERAGE
+    else -> RatingTier.STRONG_NO
+}
+
+/** 新建地点的默认分，带避雷分类时为最低档。 */
+fun defaultScore(tags: List<String>): Int =
+    if (tags.any { it.contains(AvoidTag) }) RatingTier.STRONG_NO.score()
+    else RatingTier.STRONG_YES.score()
+
+/** 当前用户能否修改该地点。 */
+fun Place.canManage(user: User?): Boolean {
+    if (user == null) return false
+    if ((user.adminLevel?.toIntOrNull() ?: 0) > 0) return true
+    return creatorId != null && creatorId == user.id
 }
 
 /** 是不是「避雷」地点：有评价看综合评分是否低于均线，没评价就看分类名是否含「避雷」。 */

@@ -40,7 +40,7 @@ fun <T : Any> PadPanel(
                 modifier = Modifier
                     .width(width)
                     .padding(PadPanelPadding)
-                    .consumeTouchEvents()
+                    .blockTouch()
                     .clip(PadPanelShape)
                     .background(SaltTheme.colors.subBackground)
                     .border(1.dp, SaltTheme.colors.stroke, PadPanelShape)

@@ -5,14 +5,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
+import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
+import com.moriafly.salt.ui.SaltTheme
 
 /**
  * 地图页右侧悬浮操作按钮组，含定位与顺路吃。
@@ -24,8 +28,11 @@ fun MapFloatingActions(
     modifier: Modifier = Modifier,
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
+    addMode: Boolean = false,
+    onAddClick: () -> Unit = {},
 ) {
     val isTablet = LocalIsTablet.current
+    val danger = dinnerPartySemanticColors().danger
 
     Column(
         modifier = modifier,
@@ -39,9 +46,20 @@ fun MapFloatingActions(
                 onClick = {  }
             )
             CircleIconButton(
-                imageVector = Icons.Outlined.Add,
+                imageVector = if (addMode) Icons.Outlined.Close else Icons.Outlined.Add,
                 contentDescription = stringResource(R.string.action_add),
-                onClick = {  }
+                onClick = onAddClick,
+                containerColor = if (addMode) {
+                    danger
+                } else {
+                    SaltTheme.colors.subBackground
+                },
+                contentColor = if (addMode) Color.White else SaltTheme.colors.text,
+                borderColor = if (addMode) {
+                    danger
+                } else {
+                    SaltTheme.colors.stroke
+                },
             )
             CircleIconButton(
                 painterRes = R.drawable.ic_heart_outline,

@@ -2,6 +2,7 @@ package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -17,7 +18,8 @@ internal class MapAction(
     val label: String,
     val onClick: () -> Unit,
     val iconSize: Dp = 24.dp,
-    val highlighted: Boolean = false
+    val highlighted: Boolean = false,
+    val danger: Boolean = false,
 )
 
 /** 手机底栏组件 */
@@ -26,7 +28,8 @@ internal fun phoneMapActions(
     onMoreClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onAddClick: () -> Unit,
-    onAlongRouteClick: () -> Unit
+    onAlongRouteClick: () -> Unit,
+    adding: Boolean = false,
 ): List<MapAction> = listOf(
     MapAction(
         imageVector = Icons.Outlined.MoreHoriz,
@@ -39,11 +42,12 @@ internal fun phoneMapActions(
         onClick = onFavoritesClick
     ),
     MapAction(
-        imageVector = Icons.Outlined.AddCircleOutline,
+        imageVector = if (adding) Icons.Outlined.Close else Icons.Outlined.AddCircleOutline,
         label = stringResource(R.string.action_add),
         onClick = onAddClick,
         iconSize = 27.dp,
-        highlighted = true
+        highlighted = !adding,
+        danger = adding,
     ),
     MapAction(
         iconRes = R.drawable.ic_route_track_outline,

@@ -45,7 +45,10 @@ import cc.dinnerparty.compose.ui.view.component.MapSearchBar
 import cc.dinnerparty.compose.ui.view.component.MapSearchBinding
 import cc.dinnerparty.compose.ui.view.component.PadPanel
 import cc.dinnerparty.compose.ui.view.component.PanelMaxHeight
+import cc.dinnerparty.compose.ui.view.component.PlaceCardOps
 import cc.dinnerparty.compose.ui.view.component.PlaceDetailPanel
+import cc.dinnerparty.compose.ui.view.component.PlaceFormContent
+import cc.dinnerparty.compose.ui.view.component.PlaceFormUi
 import cc.dinnerparty.compose.ui.view.component.SearchPanel
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import com.moriafly.salt.ui.Button
@@ -88,7 +91,10 @@ fun MainPadUI(
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
     place: Place? = null,
-    external: Boolean = false,
+    cardOps: PlaceCardOps = PlaceCardOps(),
+    form: PlaceFormUi = PlaceFormUi(),
+    addMode: Boolean = false,
+    onAddClick: () -> Unit = {},
     onDismissPlaceCard: () -> Unit = {},
     onUpdateAvatar: () -> Unit = {},
     onUpdateUsername: () -> Unit = {},
@@ -129,7 +135,7 @@ fun MainPadUI(
                     .padding(top = FloatingActionTopPadding),
                 place = place.takeIf { overlay.current == MapOverlay.Place },
                 onDismissRequest = onDismissPlaceCard,
-                external = external
+                ops = cardOps
             )
 
             MapMenuPanel(
@@ -184,12 +190,23 @@ fun MainPadUI(
                     onClearError = authViewModel::clearError
                 )
             }
+            // 添加或修改地点的表单
+            PadPanel(
+                visible = overlay.current == MapOverlay.AddPlace,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = FloatingActionTopPadding)
+            ) {
+                PlaceFormContent(state = form.state, events = form.events)
+            }
             MapFloatingActions(
                 modifier = Modifier
                     .align(BiasAlignment(horizontalBias, -1f))
                     .padding(top = FloatingActionTopPadding),
                 locating = locating,
-                onLocateClick = onLocateClick
+                onLocateClick = onLocateClick,
+                addMode = addMode,
+                onAddClick = onAddClick
             )
 
             if (search.state.resultsVisible) {

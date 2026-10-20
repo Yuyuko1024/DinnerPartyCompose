@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.data.model.MapBounds
+import cc.dinnerparty.compose.data.model.canManage
 import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
 import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
 import cc.dinnerparty.compose.ui.adaptive.currentWindowSizeClass
@@ -30,12 +31,16 @@ import cc.dinnerparty.compose.ui.view.component.AmapView
 import cc.dinnerparty.compose.ui.view.component.AvatarUpdateFlow
 import cc.dinnerparty.compose.ui.view.component.EditPasswordDialog
 import cc.dinnerparty.compose.ui.view.component.EditUsernameDialog
+import cc.dinnerparty.compose.ui.view.component.PlaceCardOps
+import cc.dinnerparty.compose.ui.view.component.PlaceFormEvents
+import cc.dinnerparty.compose.ui.view.component.PlaceFormUi
 import cc.dinnerparty.compose.ui.view.component.SearchPoi
 import cc.dinnerparty.compose.ui.view.component.rememberDismiss
 import cc.dinnerparty.compose.ui.view.component.rememberSearch
 import cc.dinnerparty.compose.ui.view.component.toMapMarker
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import cc.dinnerparty.compose.ui.viewmodel.MapViewModel
+import cc.dinnerparty.compose.ui.viewmodel.PlaceFormViewModel
 import cc.dinnerparty.compose.ui.viewmodel.SearchViewModel
 import cc.dinnerparty.compose.utils.LocationClient
 import cc.dinnerparty.compose.utils.LocationFailure
@@ -65,8 +70,10 @@ fun MainView(modifier: Modifier = Modifier) {
     val viewModel: MapViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
     val searchViewModel: SearchViewModel = viewModel()
+    val formViewModel: PlaceFormViewModel = viewModel()
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val formState by formViewModel.uiState.collectAsStateWithLifecycle()
     val searchBinding = rememberSearch(searchViewModel)
     val dismiss = rememberDismiss()
     var showLocationPermissionGuide by remember { mutableStateOf(false) }
@@ -96,6 +103,78 @@ fun MainView(modifier: Modifier = Modifier) {
 
     // 当前显示的浮层
     val overlay = rememberMapOverlayManager()
+
+    // 添加模式 此时点地图或高德 POI 取点
+    var addMode by remember { mutableStateOf(false) }
+
+    // 退出添加模式并清掉取点预览
+    val stopAdd: () -> Unit = {
+        addMode = false
+        searchPoi = null
+    }
+
+    // 以拾取到的位置打开新建表单
+    val startCreate: (LatLng, String, String) -> Unit = { position, name, address ->
+        amapPlace = null
+        viewModel.clearSelection()
+        searchPoi = SearchPoi(position, context.getString(R.string.place_form_pin))
+        formViewModel.openCreate(position.latitude, position.longitude, name, address)
+        addMode = true
+        overlay.show(MapOverlay.AddPlace)
+    }
+
+    // 以已有地点打开修改表单
+    val startEdit: (Place) -> Unit = { place ->
+        formViewModel.openEdit(place)
+        overlay.show(MapOverlay.AddPlace)
+    }
+
+    val closeForm: () -> Unit = {
+        overlay.hide()
+        stopAdd()
+    }
+
+    val formEvents = PlaceFormEvents(
+        onName = formViewModel::updateName,
+        onDesc = formViewModel::updateDesc,
+        onCost = formViewModel::updateCost,
+        onTagInput = formViewModel::updateTagInput,
+        onAddTag = formViewModel::addTag,
+        onRemoveTag = formViewModel::removeTag,
+        onRating = formViewModel::chooseRating,
+        onUpload = formViewModel::upload,
+        onRemoveImage = formViewModel::removeImage,
+        onSubmit = formViewModel::submit,
+        onClose = closeForm,
+    )
+
+    // 未登录时先弹登录窗
+    val requireLogin: (() -> Unit) -> Unit = { action ->
+        if (authState.session == null) overlay.show(MapOverlay.Login) else action()
+    }
+
+    // 底栏的添加钮在普通态与取点态之间切换
+    val toggleAdd: () -> Unit = {
+        if (addMode) {
+            closeForm()
+        } else {
+            requireLogin {
+                overlay.hide()
+                amapPlace = null
+                viewModel.clearSelection()
+                addMode = true
+            }
+        }
+    }
+
+    // 表单提交成功后回到地图并刷新一次数据
+    LaunchedEffect(formState.done) {
+        if (!formState.done) return@LaunchedEffect
+        Toast.makeText(context, R.string.place_form_saved, Toast.LENGTH_SHORT).show()
+        closeForm()
+        formViewModel.close()
+        viewModel.reload()
+    }
 
     val locationClient = remember(context) { LocationClient(context) }
     DisposableEffect(locationClient) {
@@ -219,7 +298,9 @@ fun MainView(modifier: Modifier = Modifier) {
             userLocation = userLocation,
             searchPoi = searchPoi,
             selectedMarkerId = selectedPlace?.id,
-            onMarkerClick = { marker ->
+            onMarkerClick = clickMarker@ { marker ->
+                // 取点态下不响应站点标记
+                if (addMode) return@clickMarker
                 searchPoi = null
                 amapPlace = null
                 if (marker.clusterCount == null) {
@@ -247,12 +328,19 @@ fun MainView(modifier: Modifier = Modifier) {
                     }
                 }
             },
-            onMapClick = {
-                dismiss()
-                searchPoi = null
-                amapPlace = null
-                overlay.hide()
-                viewModel.clearSelection()
+            onMapClick = { position ->
+                if (addMode) {
+                    startCreate(position, "", "")
+                } else {
+                    dismiss()
+                    searchPoi = null
+                    amapPlace = null
+                    overlay.hide()
+                    viewModel.clearSelection()
+                }
+            },
+            onPoiClick = { name, position ->
+                if (addMode) startCreate(position, name, "")
             },
             onMapReady = { map ->
                 amap = map
@@ -272,6 +360,25 @@ fun MainView(modifier: Modifier = Modifier) {
             }
         )
 
+        // 卡片上的操作，外部地点走新增，站内地点按权限走修改
+        val cardOps = PlaceCardOps(
+            external = amapPlace != null,
+            canEdit = selectedPlace?.canManage(authState.session?.user) == true,
+            onAdd = {
+                requireLogin {
+                    amapPlace?.let { place ->
+                        startCreate(
+                            LatLng(place.latitude ?: 0.0, place.longitude ?: 0.0),
+                            place.name.orEmpty(),
+                            place.address.orEmpty(),
+                        )
+                    }
+                }
+            },
+            onEdit = { selectedPlace?.let(startEdit) },
+        )
+        val formUi = PlaceFormUi(state = formState, events = formEvents)
+
         CompositionLocalProvider(
             LocalIsTablet provides (windowSizeClass != WindowSizeClass.Compact)
         ) {
@@ -283,7 +390,10 @@ fun MainView(modifier: Modifier = Modifier) {
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = amapPlace ?: selectedPlace,
-                    external = amapPlace != null,
+                    cardOps = cardOps,
+                    form = formUi,
+                    addMode = addMode,
+                    onAddClick = toggleAdd,
                     onDismissPlaceCard = {
                         overlay.hide()
                         amapPlace = null
@@ -304,7 +414,10 @@ fun MainView(modifier: Modifier = Modifier) {
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = amapPlace ?: selectedPlace,
-                    external = amapPlace != null,
+                    cardOps = cardOps,
+                    form = formUi,
+                    addMode = addMode,
+                    onAddClick = toggleAdd,
                     onDismissPlaceCard = {
                         overlay.hide()
                         amapPlace = null

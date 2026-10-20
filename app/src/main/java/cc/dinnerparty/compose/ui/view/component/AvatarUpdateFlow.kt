@@ -2,10 +2,7 @@ package cc.dinnerparty.compose.ui.view.component
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,6 +49,8 @@ import androidx.compose.ui.window.DialogProperties
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.ApiException
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
+import cc.dinnerparty.compose.utils.decodeImage
+import cc.dinnerparty.compose.utils.toJpegBytes
 import com.moriafly.salt.ui.Button
 import com.moriafly.salt.ui.ButtonType
 import com.moriafly.salt.ui.ItemOuterTip
@@ -68,8 +67,6 @@ import com.tanishranjan.cropkit.GridLinesType
 import com.tanishranjan.cropkit.GridLinesVisibility
 import com.tanishranjan.cropkit.ImageCropper
 import com.tanishranjan.cropkit.rememberCropController
-import java.io.ByteArrayOutputStream
-import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -97,7 +94,7 @@ fun AvatarUpdateFlow(
             return@rememberLauncherForActivityResult
         }
         scope.launch {
-            val bitmap = runCatching { decodeBitmap(context, uri) }.getOrNull()
+            val bitmap = runCatching { decodeImage(context, uri) }.getOrNull()
             if (bitmap == null) {
                 onMessage(context.getString(R.string.avatar_load_failed))
                 onDismiss()
@@ -303,48 +300,3 @@ private fun UploadDialog(
         }
     }
 }
-
-/** 读取图片并限制长边尺寸 */
-private suspend fun decodeBitmap(context: Context, uri: Uri): Bitmap =
-    withContext(Dispatchers.IO) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val source = ImageDecoder.createSource(context.contentResolver, uri)
-            ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
-                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-                val longest = maxOf(info.size.width, info.size.height)
-                if (longest > DecodeMaxEdge) {
-                    val scale = DecodeMaxEdge.toFloat() / longest
-                    decoder.setTargetSize(
-                        (info.size.width * scale).roundToInt().coerceAtLeast(1),
-                        (info.size.height * scale).roundToInt().coerceAtLeast(1),
-                    )
-                }
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-        }
-    }
-
-/** 压缩为上传用的 JPEG 字节 */
-private fun Bitmap.toJpegBytes(): ByteArray {
-    val longest = maxOf(width, height)
-    val scaled = if (longest > UploadMaxEdge) {
-        val scale = UploadMaxEdge.toFloat() / longest
-        Bitmap.createScaledBitmap(
-            this,
-            (width * scale).roundToInt().coerceAtLeast(1),
-            (height * scale).roundToInt().coerceAtLeast(1),
-            true,
-        )
-    } else {
-        this
-    }
-    return ByteArrayOutputStream().use { stream ->
-        scaled.compress(Bitmap.CompressFormat.JPEG, 90, stream)
-        stream.toByteArray()
-    }
-}
-
-private const val DecodeMaxEdge = 2048
-private const val UploadMaxEdge = 1024

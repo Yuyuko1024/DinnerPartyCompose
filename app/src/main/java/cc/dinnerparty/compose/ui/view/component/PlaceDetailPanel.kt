@@ -10,12 +10,12 @@ fun PlaceDetailPanel(
     modifier: Modifier = Modifier,
     place: Place? = null,
     onDismissRequest: () -> Unit = {},
-    external: Boolean = false
+    ops: PlaceCardOps = PlaceCardOps(),
 ) {
     PadPanel(
         value = place,
         modifier = modifier
     ) { shown ->
-        PlaceCardContent(place = shown, onClose = onDismissRequest, external = external)
+        PlaceCardContent(place = shown, onClose = onDismissRequest, ops = ops)
     }
 }

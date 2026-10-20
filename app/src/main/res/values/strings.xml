@@ -144,4 +144,30 @@
     <string name="search_empty_amap">No places found on the map</string>
     <string name="search_distance_m">%1$d m</string>
     <string name="search_distance_km">%1$s km</string>
+
+    <!-- Place form -->
+    <string name="place_form_add_title">Add a place</string>
+    <string name="place_form_edit_title">Edit place</string>
+    <string name="place_form_pin">New place</string>
+    <string name="place_form_name">Name</string>
+    <string name="place_form_name_hint">Name</string>
+    <string name="place_form_category">Categories</string>
+    <string name="place_form_tag_hint">Type a category, then press enter</string>
+    <string name="place_form_common">Common categories</string>
+    <string name="place_form_remove_tag">Remove category</string>
+    <string name="place_form_tag_too_long">A category holds at most 8 Chinese characters or 16 letters</string>
+    <string name="place_form_desc">Notes</string>
+    <string name="place_form_desc_hint">Optional</string>
+    <string name="place_form_cost">Price per person</string>
+    <string name="place_form_cost_hint">Optional</string>
+    <string name="place_form_rating">Your rating</string>
+    <string name="place_form_rating_tip">Default follows the categories, 避雷 goes to the lowest tier</string>
+    <string name="place_form_exterior">Photos</string>
+    <string name="place_form_menu">Menu</string>
+    <string name="place_form_photo">Add</string>
+    <string name="place_form_image_failed">This image could not be read</string>
+    <string name="place_form_remove_image">Remove photo</string>
+    <string name="place_form_submit">Add</string>
+    <string name="place_form_submitting">Saving\u2026</string>
+    <string name="place_form_saved">Saved</string>
 </resources>

@@ -93,7 +93,7 @@ fun <T : Any> PhoneSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .consumeTouchEvents()
+                        .blockTouch()
                         .clip(SheetShape)
                         .background(SaltTheme.colors.subBackground)
                         .windowInsetsPadding(WindowInsets.navigationBars)

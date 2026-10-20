@@ -50,7 +50,8 @@ import com.moriafly.salt.ui.SaltTheme
  * @param userLocation 用户当前位置，非空时画「我的位置」蓝点。
  * @param searchPoi 高德检索命中的地点，单独画一个标记。
  * @param onMarkerClick 标记点击回调。
- * @param onMapClick 地图空白处点击回调。
+ * @param onMapClick 地图空白处点击回调，回传点击坐标。
+ * @param onPoiClick 高德自带 POI 点击回调，回传名称与坐标。
  * @param onMapReady 地图就绪回调。
  */
 @Composable
@@ -62,7 +63,8 @@ fun AmapView(
     searchPoi: SearchPoi? = null,
     selectedMarkerId: Long? = null,
     onMarkerClick: (MapMarker) -> Unit = {},
-    onMapClick: () -> Unit = {},
+    onMapClick: (LatLng) -> Unit = {},
+    onPoiClick: (String, LatLng) -> Unit = { _, _ -> },
     onMapReady: (AMap) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -79,6 +81,7 @@ fun AmapView(
     // 回调经 rememberUpdatedState 转发
     val currentOnMarkerClick by rememberUpdatedState(onMarkerClick)
     val currentOnMapClick by rememberUpdatedState(onMapClick)
+    val currentOnPoiClick by rememberUpdatedState(onPoiClick)
 
     val mapView = remember(context) {
         TextureMapView(context).apply {
@@ -145,7 +148,10 @@ fun AmapView(
                             (marker?.getObject() as? MapMarker)?.let { currentOnMarkerClick(it) }
                             true
                         }
-                        setOnMapClickListener { currentOnMapClick() }
+                        setOnMapClickListener { position -> currentOnMapClick(position) }
+                        setOnPOIClickListener { poi ->
+                            currentOnPoiClick(poi.name.orEmpty(), poi.coordinate)
+                        }
                         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY)
                         setRenderFps(MapRenderFps)
                         aMap = this

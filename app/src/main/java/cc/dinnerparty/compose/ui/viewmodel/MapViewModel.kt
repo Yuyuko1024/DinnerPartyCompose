@@ -97,6 +97,12 @@ class MapViewModel(
     /** 聚合散开所需的缩放级别，不会超过 [mapMaxZoom]。 */
     fun expansionZoomFor(clusterId: Long): Int? = clusterIndex?.expansionZoom(clusterId)
 
+    /** 按当前范围重新拉取。 */
+    fun reload() {
+        val bounds = requestedBounds ?: return
+        loadPlaces(bounds)
+    }
+
     /** 拉取指定范围内的地点。 */
     private fun loadPlaces(bounds: MapBounds) {
         requestedBounds = bounds
