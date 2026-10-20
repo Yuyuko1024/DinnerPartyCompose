@@ -29,9 +29,13 @@ import cc.dinnerparty.compose.ui.view.component.AmapView
 import cc.dinnerparty.compose.ui.view.component.AvatarUpdateFlow
 import cc.dinnerparty.compose.ui.view.component.EditPasswordDialog
 import cc.dinnerparty.compose.ui.view.component.EditUsernameDialog
+import cc.dinnerparty.compose.ui.view.component.SearchPoi
+import cc.dinnerparty.compose.ui.view.component.rememberDismiss
+import cc.dinnerparty.compose.ui.view.component.rememberSearch
 import cc.dinnerparty.compose.ui.view.component.toMapMarker
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import cc.dinnerparty.compose.ui.viewmodel.MapViewModel
+import cc.dinnerparty.compose.ui.viewmodel.SearchViewModel
 import cc.dinnerparty.compose.utils.LocationClient
 import cc.dinnerparty.compose.utils.LocationFailure
 import cc.dinnerparty.compose.utils.LocationResult
@@ -46,7 +50,9 @@ import com.amap.api.maps.model.LatLng
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltUiApi
 import com.moriafly.salt.ui.dialog.YesNoDialog
+import kotlin.coroutines.resume
 import kotlin.math.max
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * 地图主页。
@@ -57,8 +63,11 @@ fun MainView(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val viewModel: MapViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
+    val searchViewModel: SearchViewModel = viewModel()
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val searchBinding = rememberSearch(searchViewModel)
+    val dismiss = rememberDismiss()
     var showLocationPermissionGuide by remember { mutableStateOf(false) }
 
     // 账号编辑弹框开关
@@ -73,6 +82,9 @@ fun MainView(modifier: Modifier = Modifier) {
 
     // 地图对象
     var amap by remember { mutableStateOf<AMap?>(null) }
+
+    // 高德检索命中点 动画结束后单独标注
+    var searchPoi by remember { mutableStateOf<SearchPoi?>(null) }
 
     // 当前设备定位到的位置。
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -143,6 +155,27 @@ fun MainView(modifier: Modifier = Modifier) {
 
     val windowSizeClass = currentWindowSizeClass()
 
+    // 选中搜索结果后先放大到最大级别再显示地点卡片
+    LaunchedEffect(searchBinding.state.focusedItem, amap) {
+        val item = searchBinding.state.focusedItem ?: return@LaunchedEffect
+        val map = amap ?: return@LaunchedEffect
+        val target = LatLng(item.latitude, item.longitude)
+        val placeId = item.placeId
+        // 详情在相机动画期间并行加载
+        placeId?.let(viewModel::openPlace)
+        map.flyTo(target, map.maxZoomLevel, SearchDurationMs)
+        if (placeId == null) {
+            viewModel.clearSelection()
+            overlay.hide()
+            // 高德结果等相机停稳后再标注
+            searchPoi = SearchPoi(target, item.name)
+        } else {
+            searchPoi = null
+            overlay.show(MapOverlay.Place)
+        }
+        searchViewModel.consumeFocus()
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -164,6 +197,7 @@ fun MainView(modifier: Modifier = Modifier) {
                     clusterRadiusPx = ClusterRadius * density,
                 )
             }
+            map.cameraPosition?.target?.let(searchViewModel::updateCenter)
         }
 
         AmapView(
@@ -172,8 +206,10 @@ fun MainView(modifier: Modifier = Modifier) {
             logoBottomMargin = if (windowSizeClass == WindowSizeClass.Compact) PhoneOverlayHeight else 0.dp,
             markers = markers,
             userLocation = userLocation,
+            searchPoi = searchPoi,
             selectedMarkerId = selectedPlace?.id,
             onMarkerClick = { marker ->
+                searchPoi = null
                 if (marker.clusterCount == null) {
                     overlay.show(MapOverlay.Place)
                     viewModel.selectPlace(marker.id)
@@ -200,6 +236,8 @@ fun MainView(modifier: Modifier = Modifier) {
                 }
             },
             onMapClick = {
+                dismiss()
+                searchPoi = null
                 overlay.hide()
                 viewModel.clearSelection()
             },
@@ -228,6 +266,7 @@ fun MainView(modifier: Modifier = Modifier) {
                 WindowSizeClass.Compact -> MainPhoneUI(
                     overlay = overlay,
                     authViewModel = authViewModel,
+                    search = searchBinding,
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = selectedPlace,
@@ -245,6 +284,7 @@ fun MainView(modifier: Modifier = Modifier) {
                 WindowSizeClass.Medium, WindowSizeClass.Expanded -> MainPadUI(
                     overlay = overlay,
                     authViewModel = authViewModel,
+                    search = searchBinding,
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = selectedPlace,
@@ -363,6 +403,29 @@ private const val LocateDurationMs = 400L
 
 /** 点开地点时相机移到地图中心的时长。 */
 private const val MarkerCenterDurationMs = 300L
+
+/** 搜索结果定位的相机动画时长。 */
+private const val SearchDurationMs = 300L
+
+/** 相机飞到目标点 动画结束后返回 */
+private suspend fun AMap.flyTo(target: LatLng, zoom: Float, duration: Long) {
+    suspendCancellableCoroutine { cont ->
+        animateCamera(
+            CameraUpdateFactory.newLatLngZoom(target, zoom),
+            duration,
+            object : AMap.CancelableCallback {
+                override fun onFinish() {
+                    if (cont.isActive) cont.resume(Unit)
+                }
+
+                override fun onCancel() {
+                    if (cont.isActive) cont.resume(Unit)
+                }
+            }
+        )
+        cont.invokeOnCancellation { stopAnimation() }
+    }
+}
 
 /** 地图当前可见的经纬度范围。 */
 private fun AMap.visibleBounds(): MapBounds? {

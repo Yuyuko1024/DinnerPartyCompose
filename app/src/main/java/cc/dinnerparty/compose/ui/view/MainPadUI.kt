@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -41,8 +42,11 @@ import cc.dinnerparty.compose.ui.view.component.LoginContent
 import cc.dinnerparty.compose.ui.view.component.MapFloatingActions
 import cc.dinnerparty.compose.ui.view.component.MapMenuPanel
 import cc.dinnerparty.compose.ui.view.component.MapSearchBar
+import cc.dinnerparty.compose.ui.view.component.MapSearchBinding
 import cc.dinnerparty.compose.ui.view.component.PadPanel
+import cc.dinnerparty.compose.ui.view.component.PanelMaxHeight
 import cc.dinnerparty.compose.ui.view.component.PlaceDetailPanel
+import cc.dinnerparty.compose.ui.view.component.SearchPanel
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import com.moriafly.salt.ui.Button
 import com.moriafly.salt.ui.SaltTheme
@@ -80,6 +84,7 @@ fun MainPadUI(
     modifier: Modifier = Modifier,
     overlay: MapOverlayManager = rememberMapOverlayManager(),
     authViewModel: AuthViewModel,
+    search: MapSearchBinding,
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
     place: Place? = null,
@@ -184,10 +189,23 @@ fun MainPadUI(
                 locating = locating,
                 onLocateClick = onLocateClick
             )
+
+            if (search.state.resultsVisible) {
+                SearchPanel(
+                    state = search.state,
+                    actions = search.actions,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .widthIn(max = SearchBarMaxWidth)
+                        .fillMaxWidth()
+                        .heightIn(max = PanelMaxHeight)
+                )
+            }
         }
 
         PadHeader(
             modifier = Modifier.align(Alignment.TopCenter),
+            search = search,
             user = authState.session?.user,
             avatarVersion = authState.session?.avatarVersion ?: 0L,
             onAccountClick = {
@@ -208,6 +226,7 @@ fun MainPadUI(
 @Composable
 private fun PadHeader(
     modifier: Modifier = Modifier,
+    search: MapSearchBinding,
     user: User? = null,
     avatarVersion: Long = 0L,
     onAccountClick: () -> Unit = {},
@@ -229,6 +248,8 @@ private fun PadHeader(
             contentAlignment = Alignment.Center
         ) {
             MapSearchBar(
+                state = search.state,
+                actions = search.actions,
                 modifier = Modifier
                     .padding(horizontal = SearchBarSideSpace)
                     .widthIn(max = SearchBarMaxWidth)

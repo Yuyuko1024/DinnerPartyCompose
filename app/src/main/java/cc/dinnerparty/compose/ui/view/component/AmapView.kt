@@ -38,6 +38,7 @@ import com.amap.api.maps.TextureMapView
 import com.amap.api.maps.model.LatLng
 import com.amap.api.maps.model.Marker
 import com.amap.api.maps.model.MarkerOptions
+import com.amap.api.services.core.ServiceSettings
 import com.moriafly.salt.ui.SaltTheme
 
 /**
@@ -47,6 +48,7 @@ import com.moriafly.salt.ui.SaltTheme
  * @param markers 地图上的地点标记，列表变化时全量重绘。
  * @param selectedMarkerId 选中标记的 id，选中的标记名字加粗并压在最上层。
  * @param userLocation 用户当前位置，非空时画「我的位置」蓝点。
+ * @param searchPoi 高德检索命中的地点，单独画一个标记。
  * @param onMarkerClick 标记点击回调。
  * @param onMapClick 地图空白处点击回调。
  * @param onMapReady 地图就绪回调。
@@ -57,6 +59,7 @@ fun AmapView(
     logoBottomMargin: Dp = 0.dp,
     markers: List<MapMarker> = emptyList(),
     userLocation: LatLng? = null,
+    searchPoi: SearchPoi? = null,
     selectedMarkerId: Long? = null,
     onMarkerClick: (MapMarker) -> Unit = {},
     onMapClick: () -> Unit = {},
@@ -223,8 +226,44 @@ fun AmapView(
                 shown.position = userLocation
             }
         }
+
+        // 高德检索命中点，与站点标记分开管理
+        val searchPoiHolder = remember(aMap) { SearchPoiHolder() }
+
+        LaunchedEffect(aMap, searchPoi, renderer) {
+            val map = aMap ?: return@LaunchedEffect
+            val holder = searchPoiHolder
+            holder.marker?.remove()
+            holder.marker = null
+            holder.shown = null
+            val poi = searchPoi ?: return@LaunchedEffect
+            val marker = MapMarker(
+                id = SearchPoiId,
+                position = poi.position,
+                name = poi.name,
+                isAvoided = false,
+            )
+            val graphic = renderer.graphic(marker, true)
+            val overlay = map.addMarker(
+                MarkerOptions()
+                    .position(marker.position)
+                    .icon(graphic.descriptor)
+                    .anchor(0.5f, graphic.anchorV)
+                    .zIndex(SearchPoiZIndex)
+            ) ?: return@LaunchedEffect
+            // 关掉高德信息气泡
+            overlay.setInfoWindowEnable(false)
+            holder.marker = overlay
+            holder.shown = marker
+        }
     }
 }
+
+/** 高德检索命中的地点 */
+data class SearchPoi(
+    val position: LatLng,
+    val name: String,
+)
 
 /** 高德隐私合规声明。 */
 fun agreeAmapPrivacy(context: Context) {
@@ -233,6 +272,9 @@ fun agreeAmapPrivacy(context: Context) {
     // 定位 SDK 与地图 SDK 各声明一次
     AMapLocationClient.updatePrivacyShow(context, true, true)
     AMapLocationClient.updatePrivacyAgree(context, true)
+    // 搜索 SDK 单独声明
+    ServiceSettings.updatePrivacyShow(context, true, true)
+    ServiceSettings.updatePrivacyAgree(context, true)
 }
 
 /** 已经挂在地图上的一个标记。 */
@@ -247,8 +289,20 @@ private class UserLocationHolder {
     var marker: Marker? = null
 }
 
+/** 高德检索点标记的持有者。 */
+private class SearchPoiHolder {
+    var marker: Marker? = null
+    var shown: MapMarker? = null
+}
+
 /** 蓝点的层级，压在所有 POI 标记之上。 */
 private const val UserLocationZIndex = 2f
+
+/** 高德检索点的固定 id，不与站点 id 冲突。 */
+private const val SearchPoiId = -1L
+
+/** 高德检索点的层级。 */
+private const val SearchPoiZIndex = 1f
 
 /** 地图固定 60 帧渲染。 */
 private const val MapRenderFps = 60

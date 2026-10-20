@@ -133,4 +133,15 @@
     <string name="rating_summary">%1$s %2$s \u00b7 %3$d ratings</string>
     <string name="rating_summary_empty">No ratings yet</string>
     <string name="rating_action_rate">Rate</string>
+    <string name="search_clear">Clear search</string>
+    <string name="search_collapse">Hide search results</string>
+    <string name="search_expand">Show search results</string>
+    <string name="search_site_section">In DinnerParty</string>
+    <string name="search_amap_section">Map results</string>
+    <string name="search_find_unlisted">Find places not listed here</string>
+    <string name="search_loading">Searching</string>
+    <string name="search_empty_site">No places here match yet</string>
+    <string name="search_empty_amap">No places found on the map</string>
+    <string name="search_distance_m">%1$d m</string>
+    <string name="search_distance_km">%1$s km</string>
 </resources>

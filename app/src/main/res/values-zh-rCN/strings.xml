@@ -134,4 +134,15 @@
     <string name="account_edit_password_too_short">新通行密码至少 6 位</string>
     <string name="account_edit_password_mismatch">两次输入的通行密码不一致</string>
     <string name="account_edit_password_updated">通行密码已更新</string>
+    <string name="search_clear">清空搜索</string>
+    <string name="search_collapse">收起搜索结果</string>
+    <string name="search_expand">展开搜索结果</string>
+    <string name="search_site_section">站内结果</string>
+    <string name="search_amap_section">地图结果</string>
+    <string name="search_find_unlisted">查找未收录地点</string>
+    <string name="search_loading">检索中</string>
+    <string name="search_empty_site">站内暂时没有匹配的地点</string>
+    <string name="search_empty_amap">地图上没有找到相关地点</string>
+    <string name="search_distance_m">%1$d 米</string>
+    <string name="search_distance_km">%1$s 公里</string>
 </resources>

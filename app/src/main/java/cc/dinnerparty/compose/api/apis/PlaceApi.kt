@@ -20,4 +20,13 @@ interface PlaceApi {
     /** 单个地点。 */
     @GET("places/{id}")
     suspend fun getPlace(@Path("id") id: Long): Place
+
+    /** 按关键词搜索站内地点。 */
+    @GET("api/places/search/fast")
+    suspend fun searchPlaces(
+        @Query("q") query: String,
+        @Query("limit") limit: Int,
+        @Query("lat") lat: Double?,
+        @Query("lng") lng: Double?,
+    ): List<Place>
 }

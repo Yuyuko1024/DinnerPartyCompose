@@ -2,8 +2,11 @@ package cc.dinnerparty.compose.ui.view
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,7 +23,10 @@ import cc.dinnerparty.compose.ui.view.component.MapBottomBar
 import cc.dinnerparty.compose.ui.view.component.MapFloatingActions
 import cc.dinnerparty.compose.ui.view.component.MapMenuList
 import cc.dinnerparty.compose.ui.view.component.MapSearchBar
+import cc.dinnerparty.compose.ui.view.component.MapSearchBinding
+import cc.dinnerparty.compose.ui.view.component.PanelMaxHeight
 import cc.dinnerparty.compose.ui.view.component.PhoneSheet
+import cc.dinnerparty.compose.ui.view.component.SearchPanel
 import cc.dinnerparty.compose.ui.view.component.PlaceCardDialog
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import com.moriafly.salt.ui.UnstableSaltUiApi
@@ -35,6 +41,7 @@ fun MainPhoneUI(
     modifier: Modifier = Modifier,
     overlay: MapOverlayManager = rememberMapOverlayManager(),
     authViewModel: AuthViewModel,
+    search: MapSearchBinding,
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
     place: Place? = null,
@@ -68,7 +75,20 @@ fun MainPhoneUI(
                 locating = locating,
                 onLocateClick = onLocateClick
             )
+            if (search.state.resultsVisible) {
+                SearchPanel(
+                    state = search.state,
+                    actions = search.actions,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = PanelMaxHeight)
+                        .padding(horizontal = 12.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
             MapSearchBar(
+                state = search.state,
+                actions = search.actions,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
             )
             MapBottomBar(

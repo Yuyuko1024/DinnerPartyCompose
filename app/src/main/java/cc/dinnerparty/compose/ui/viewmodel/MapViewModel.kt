@@ -81,6 +81,19 @@ class MapViewModel(
         _uiState.update { it.copy(selectedPlace = null) }
     }
 
+    /** 打开视野外的地点详情 */
+    fun openPlace(placeId: Long) {
+        viewModelScope.launch {
+            runCatching { placeRepo.getPlace(placeId) }
+                .onSuccess { place ->
+                    _uiState.update { it.copy(selectedPlace = place) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.message) }
+                }
+        }
+    }
+
     /** 聚合散开所需的缩放级别，不会超过 [mapMaxZoom]。 */
     fun expansionZoomFor(clusterId: Long): Int? = clusterIndex?.expansionZoom(clusterId)
 
