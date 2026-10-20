@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -62,14 +63,15 @@ import java.util.Locale
 fun PlaceCardDialog(
     modifier: Modifier = Modifier,
     place: Place?,
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
+    external: Boolean = false
 ) {
     PhoneSheet(
         value = place,
         onDismissRequest = onDismissRequest,
         modifier = modifier
     ) { shown ->
-        PlaceCardContent(place = shown, onClose = onDismissRequest)
+        PlaceCardContent(place = shown, onClose = onDismissRequest, external = external)
     }
 }
 
@@ -78,17 +80,22 @@ fun PlaceCardDialog(
 internal fun PlaceCardContent(
     place: Place,
     onClose: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    external: Boolean = false
 ) {
     val semanticColors = dinnerPartySemanticColors()
 
     Column(modifier = modifier.padding(CardPadding)) {
         PlaceCardTitle(name = place.name.orEmpty(), onClose = onClose)
-        PlaceCardDescription(place.description)
-        PlaceCardMeta(category = place.category, perPersonCost = place.perPersonCost)
-        PlaceCardRating(place = place, semanticColors = semanticColors)
-        PlaceCardLastModified(place = place)
-        PlaceCardActions()
+        if (external) {
+            PlaceCardAddress(place.address)
+        } else {
+            PlaceCardDescription(place.description)
+            PlaceCardMeta(category = place.category, perPersonCost = place.perPersonCost)
+            PlaceCardRating(place = place, semanticColors = semanticColors)
+            PlaceCardLastModified(place = place)
+        }
+        PlaceCardActions(external = external)
     }
 }
 
@@ -119,6 +126,25 @@ private fun PlaceCardTitle(name: String, onClose: () -> Unit) {
             )
         }
     }
+}
+
+/** 外部地点只显示地址。 */
+@Composable
+private fun PlaceCardAddress(address: String?) {
+    val normalized = remember(address) {
+        address.orEmpty().replace(Whitespace, " ").trim()
+    }
+    if (normalized.isEmpty()) return
+
+    Spacer(modifier = Modifier.height(6.dp))
+    Text(
+        text = normalized,
+        color = SaltTheme.colors.subText,
+        fontSize = 13.sp,
+        lineHeight = 20.sp,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
+    )
 }
 
 /**
@@ -248,7 +274,7 @@ private fun PlaceCardLastModified(place: Place) {
 }
 
 @Composable
-private fun PlaceCardActions() {
+private fun PlaceCardActions(external: Boolean) {
     Spacer(modifier = Modifier.height(8.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         PlaceCardAction(
@@ -266,9 +292,12 @@ private fun PlaceCardActions() {
             icon = Icons.Outlined.FavoriteBorder,
             contentDescription = stringResource(R.string.action_favorites)
         )
+        // 外部地点未收录 这里是添加入口
         PlaceCardAction(
-            icon = Icons.Outlined.Edit,
-            contentDescription = stringResource(R.string.place_action_edit)
+            icon = if (external) Icons.Outlined.Add else Icons.Outlined.Edit,
+            contentDescription = stringResource(
+                if (external) R.string.action_add else R.string.place_action_edit
+            )
         )
         PlaceCardAction(
             icon = Icons.Outlined.MoreHoriz,

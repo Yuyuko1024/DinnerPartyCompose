@@ -9,12 +9,13 @@ import cc.dinnerparty.compose.api.model.Place
 fun PlaceDetailPanel(
     modifier: Modifier = Modifier,
     place: Place? = null,
-    onDismissRequest: () -> Unit = {}
+    onDismissRequest: () -> Unit = {},
+    external: Boolean = false
 ) {
     PadPanel(
         value = place,
         modifier = modifier
     ) { shown ->
-        PlaceCardContent(place = shown, onClose = onDismissRequest)
+        PlaceCardContent(place = shown, onClose = onDismissRequest, external = external)
     }
 }

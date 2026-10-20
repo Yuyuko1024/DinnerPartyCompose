@@ -45,6 +45,7 @@ fun MainPhoneUI(
     locating: Boolean = false,
     onLocateClick: () -> Unit = {},
     place: Place? = null,
+    external: Boolean = false,
     onDismissPlaceCard: () -> Unit = {},
     onUpdateAvatar: () -> Unit = {},
     onUpdateUsername: () -> Unit = {},
@@ -112,7 +113,8 @@ fun MainPhoneUI(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
             place = place.takeIf { overlay.current == MapOverlay.Place },
-            onDismissRequest = onDismissPlaceCard
+            onDismissRequest = onDismissPlaceCard,
+            external = external
         )
 
         // 登录对话框

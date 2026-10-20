@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.dinnerparty.compose.R
+import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.data.model.MapBounds
 import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
 import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
@@ -85,6 +86,9 @@ fun MainView(modifier: Modifier = Modifier) {
 
     // 高德检索命中点 动画结束后单独标注
     var searchPoi by remember { mutableStateOf<SearchPoi?>(null) }
+
+    // 高德检索命中点对应的卡片数据 未收录于站内
+    var amapPlace by remember { mutableStateOf<Place?>(null) }
 
     // 当前设备定位到的位置。
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -166,11 +170,18 @@ fun MainView(modifier: Modifier = Modifier) {
         map.flyTo(target, map.maxZoomLevel, SearchDurationMs)
         if (placeId == null) {
             viewModel.clearSelection()
-            overlay.hide()
-            // 高德结果等相机停稳后再标注
+            // 高德结果等相机停稳后再标注并弹卡片
             searchPoi = SearchPoi(target, item.name)
+            amapPlace = Place(
+                name = item.name,
+                address = item.address,
+                latitude = item.latitude,
+                longitude = item.longitude
+            )
+            overlay.show(MapOverlay.Place)
         } else {
             searchPoi = null
+            amapPlace = null
             overlay.show(MapOverlay.Place)
         }
         searchViewModel.consumeFocus()
@@ -210,6 +221,7 @@ fun MainView(modifier: Modifier = Modifier) {
             selectedMarkerId = selectedPlace?.id,
             onMarkerClick = { marker ->
                 searchPoi = null
+                amapPlace = null
                 if (marker.clusterCount == null) {
                     overlay.show(MapOverlay.Place)
                     viewModel.selectPlace(marker.id)
@@ -238,6 +250,7 @@ fun MainView(modifier: Modifier = Modifier) {
             onMapClick = {
                 dismiss()
                 searchPoi = null
+                amapPlace = null
                 overlay.hide()
                 viewModel.clearSelection()
             },
@@ -269,9 +282,12 @@ fun MainView(modifier: Modifier = Modifier) {
                     search = searchBinding,
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
-                    place = selectedPlace,
+                    place = amapPlace ?: selectedPlace,
+                    external = amapPlace != null,
                     onDismissPlaceCard = {
                         overlay.hide()
+                        amapPlace = null
+                        searchPoi = null
                         viewModel.clearSelection()
                     },
                     onUpdateAvatar = { avatarUpdating = true },
@@ -287,9 +303,12 @@ fun MainView(modifier: Modifier = Modifier) {
                     search = searchBinding,
                     locating = locating,
                     onLocateClick = { if (!locating) requestLocationPermission() },
-                    place = selectedPlace,
+                    place = amapPlace ?: selectedPlace,
+                    external = amapPlace != null,
                     onDismissPlaceCard = {
                         overlay.hide()
+                        amapPlace = null
+                        searchPoi = null
                         viewModel.clearSelection()
                     },
                     onUpdateAvatar = { avatarUpdating = true },
