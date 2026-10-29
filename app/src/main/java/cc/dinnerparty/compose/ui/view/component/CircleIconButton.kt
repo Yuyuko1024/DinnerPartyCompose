@@ -1,7 +1,6 @@
 package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -30,21 +29,13 @@ fun CircleIconButton(
     modifier: Modifier = Modifier,
     buttonSize: Dp = 44.dp,
     containerColor: Color = SaltTheme.colors.subBackground,
-    contentColor: Color = SaltTheme.colors.text,
-    borderColor: Color? = SaltTheme.colors.stroke
+    contentColor: Color = SaltTheme.colors.text
 ) {
     Box(
         modifier = modifier
             .size(buttonSize)
             .clip(CircleShape)
             .background(containerColor)
-            .then(
-                if (borderColor != null) {
-                    Modifier.border(1.dp, borderColor, CircleShape)
-                } else {
-                    Modifier
-                }
-            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {

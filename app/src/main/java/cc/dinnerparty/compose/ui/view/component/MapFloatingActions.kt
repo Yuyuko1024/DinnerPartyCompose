@@ -54,12 +54,7 @@ fun MapFloatingActions(
                 } else {
                     SaltTheme.colors.subBackground
                 },
-                contentColor = if (addMode) Color.White else SaltTheme.colors.text,
-                borderColor = if (addMode) {
-                    danger
-                } else {
-                    SaltTheme.colors.stroke
-                },
+                contentColor = if (addMode) Color.White else SaltTheme.colors.text
             )
             CircleIconButton(
                 painterRes = R.drawable.ic_heart_outline,

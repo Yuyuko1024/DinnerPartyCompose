@@ -226,8 +226,7 @@ private fun CropDialog(
                     contentDescription = stringResource(R.string.action_cancel),
                     onClick = onCancel,
                     containerColor = Color.White.copy(alpha = 0.16f),
-                    contentColor = Color.White,
-                    borderColor = null,
+                    contentColor = Color.White
                 )
                 CircleIconButton(
                     imageVector = Icons.Outlined.Check,
@@ -240,8 +239,7 @@ private fun CropDialog(
                             }
                     },
                     containerColor = Color.White,
-                    contentColor = Color.Black,
-                    borderColor = null,
+                    contentColor = Color.Black
                 )
             }
         }

@@ -1,7 +1,6 @@
 package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -68,7 +67,6 @@ fun SearchPanel(
         modifier = modifier
             .clip(PanelShape)
             .background(SaltTheme.colors.background)
-            .border(1.dp, SaltTheme.colors.stroke, PanelShape)
             .clickable(
                 interactionSource = blank,
                 indication = null,

@@ -56,14 +56,8 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
-/** Header 内容高度，不含状态栏与底部描边。 */
+/** Header 内容高度，不含状态栏 */
 private val HeaderContentHeight = 56.dp
-
-/** Header 底部描边高度。 */
-private val HeaderStrokeHeight = 1.dp
-
-/** Header 占位总高，不含状态栏。 */
-private val HeaderPlaceholderHeight = HeaderContentHeight + HeaderStrokeHeight
 
 /** 浮层与屏幕左右边缘的距离。 */
 private val EdgePadding = 12.dp
@@ -126,7 +120,7 @@ fun MainPadUI(
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(top = HeaderPlaceholderHeight)
+                .padding(top = HeaderContentHeight)
                 .padding(horizontal = EdgePadding)
         ) {
             PlaceDetailPanel(
@@ -311,12 +305,6 @@ private fun PadHeader(
                     .padding(end = EdgePadding)
             )
         }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(HeaderStrokeHeight)
-                .background(SaltTheme.colors.stroke)
-        )
     }
 }
 

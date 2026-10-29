@@ -1,7 +1,6 @@
 package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -100,7 +99,6 @@ fun MapSearchBar(
                 .height(SearchBarHeight)
                 .clip(SearchBarShape)
                 .background(SaltTheme.colors.subBackground)
-                .border(1.dp, SaltTheme.colors.stroke, SearchBarShape)
                 .padding(horizontal = 14.dp),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -182,8 +180,7 @@ fun MapSearchBar(
                 actions.searchClick()
             },
             containerColor = SaltTheme.colors.highlight,
-            contentColor = SaltTheme.colors.onHighlight,
-            borderColor = null
+            contentColor = SaltTheme.colors.onHighlight
         )
     }
 }

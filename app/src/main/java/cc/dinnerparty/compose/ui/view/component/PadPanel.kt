@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -43,7 +42,6 @@ fun <T : Any> PadPanel(
                     .blockTouch()
                     .clip(PadPanelShape)
                     .background(SaltTheme.colors.subBackground)
-                    .border(1.dp, SaltTheme.colors.stroke, PadPanelShape)
                     .verticalScroll(rememberScrollState())
             ) {
                 content(it)

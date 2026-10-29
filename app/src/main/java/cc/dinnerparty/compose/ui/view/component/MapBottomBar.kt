@@ -67,12 +67,6 @@ fun MapBottomBar(
             .fillMaxWidth()
             .background(SaltTheme.colors.subBackground)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(SaltTheme.colors.stroke)
-        )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
