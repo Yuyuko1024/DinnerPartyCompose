@@ -52,7 +52,7 @@ import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import cc.dinnerparty.compose.utils.decodeImage
 import cc.dinnerparty.compose.utils.toJpegBytes
 import com.moriafly.salt.ui.Button
-import com.moriafly.salt.ui.ButtonType
+import com.moriafly.salt.ui.ButtonAppearance
 import com.moriafly.salt.ui.ItemOuterTip
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
@@ -281,7 +281,7 @@ private fun UploadDialog(
                 text = stringResource(R.string.action_cancel),
                 modifier = Modifier
                     .weight(1f),
-                type = ButtonType.Sub
+                appearance = ButtonAppearance.Subtle
             )
             Spacer(modifier = Modifier.width(SaltTheme.dimens.padding))
             Button(

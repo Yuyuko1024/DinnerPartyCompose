@@ -10,7 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.DialogProperties
 import cc.dinnerparty.compose.R
 import com.moriafly.salt.ui.Button
-import com.moriafly.salt.ui.ButtonType
+import com.moriafly.salt.ui.ButtonAppearance
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltUiApi
 import com.moriafly.salt.ui.dialog.BasicDialog
@@ -46,7 +46,7 @@ fun YesNoContentDialog(
                 text = cancelText,
                 modifier = Modifier.weight(1f),
                 enabled = enabled,
-                type = ButtonType.Sub,
+                appearance = ButtonAppearance.Subtle,
             )
             Spacer(modifier = Modifier.width(SaltTheme.dimens.padding))
             Button(

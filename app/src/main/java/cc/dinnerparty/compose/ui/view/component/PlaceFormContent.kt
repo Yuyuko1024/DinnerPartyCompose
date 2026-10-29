@@ -64,7 +64,7 @@ import cc.dinnerparty.compose.utils.decodeImage
 import cc.dinnerparty.compose.utils.toJpegBytes
 import coil3.compose.AsyncImage
 import com.moriafly.salt.ui.Button
-import com.moriafly.salt.ui.ButtonType
+import com.moriafly.salt.ui.ButtonAppearance
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.ItemEdit
 import com.moriafly.salt.ui.RoundedColumn
@@ -623,7 +623,7 @@ private fun SubmitRow(state: PlaceFormState, events: PlaceFormEvents) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
             modifier = Modifier.weight(1f),
-            type = ButtonType.Sub,
+            appearance = ButtonAppearance.Subtle,
             text = stringResource(R.string.action_cancel),
             onClick = events.onClose,
         )
