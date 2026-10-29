@@ -482,11 +482,12 @@ private fun RatingOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val optionShape = SaltTheme.shapes.small
     Column(
         modifier = modifier
-            .clip(OptionShape)
+            .clip(optionShape)
             .background(if (selected) color.copy(alpha = 0.16f) else SaltTheme.colors.popup)
-            .border(1.dp, if (selected) color else SaltTheme.colors.stroke, OptionShape)
+            .border(1.dp, if (selected) color else SaltTheme.colors.stroke, optionShape)
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -543,11 +544,12 @@ private fun ImageSection(
 
 @Composable
 private fun ImageTile(url: String, onRemove: () -> Unit) {
+    val tileShape = SaltTheme.shapes.small
     Box(
         modifier = Modifier
             .size(TileSize)
-            .clip(TileShape)
-            .border(1.dp, SaltTheme.colors.stroke, TileShape)
+            .clip(tileShape)
+            .border(1.dp, SaltTheme.colors.stroke, tileShape)
     ) {
         AsyncImage(
             model = ApiClient.assetUrl(url),
@@ -581,12 +583,13 @@ private fun ImageAddTile(
     kind: PlaceImageKind,
     onPick: (PlaceImageKind) -> Unit,
 ) {
+    val tileShape = SaltTheme.shapes.small
     Box {
         Column(
             modifier = Modifier
                 .size(TileSize)
-                .clip(TileShape)
-                .border(1.dp, SaltTheme.colors.stroke, TileShape)
+                .clip(tileShape)
+                .border(1.dp, SaltTheme.colors.stroke, tileShape)
                 .clickable(enabled = !uploading) { onPick(kind) },
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -653,9 +656,7 @@ private fun tagWeight(tag: String): Int =
 private val FormPadding = 16.dp
 private val CloseSize = 24.dp
 private val TileSize = 76.dp
-private val TileShape = RoundedCornerShape(10.dp)
 private val TagShape = RoundedCornerShape(50)
-private val OptionShape = RoundedCornerShape(10.dp)
 private val ErrorColor = Color(0xFFD9534F)
 private const val SheetMaxRatio = 0.92f
 private const val TagWeightLimit = 16

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -40,7 +39,7 @@ fun <T : Any> PadPanel(
                     .width(width)
                     .padding(PadPanelPadding)
                     .blockTouch()
-                    .clip(PadPanelShape)
+                    .clip(SaltTheme.shapes.large)
                     .background(SaltTheme.colors.subBackground)
                     .verticalScroll(rememberScrollState())
             ) {
@@ -70,6 +69,3 @@ private val PadPanelWidth = 360.dp
 
 /** 面板与屏幕边缘的间距。 */
 private val PadPanelPadding = 12.dp
-
-/** 面板圆角。 */
-private val PadPanelShape = RoundedCornerShape(16.dp)

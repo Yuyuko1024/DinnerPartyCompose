@@ -94,7 +94,7 @@ fun <T : Any> PhoneSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .blockTouch()
-                        .clip(SheetShape)
+                        .clip(SaltTheme.shapes.large)
                         .background(SaltTheme.colors.subBackground)
                         .windowInsetsPadding(WindowInsets.navigationBars)
                 ) {
@@ -121,9 +121,6 @@ fun PhoneSheet(
         modal = modal
     ) { content() }
 }
-
-/** 浮层顶部圆角。 */
-private val SheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
 
 /** 模态遮罩颜色。 */
 private val ScrimColor = Color.Black.copy(alpha = 0.32f)

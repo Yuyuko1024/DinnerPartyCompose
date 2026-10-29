@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -61,9 +60,6 @@ class MapSearchActions(
 /** 搜索条高度 */
 private val SearchBarHeight = 44.dp
 
-/** 搜索条圆角 */
-private val SearchBarShape = RoundedCornerShape(24.dp)
-
 /** 地图页搜索条 左侧胶囊输入框加右侧圆形搜索按钮 */
 @UnstableSaltUiApi
 @Composable
@@ -74,6 +70,7 @@ fun MapSearchBar(
 ) {
     val focus = LocalFocusManager.current
     val dismiss = rememberDismiss()
+    val barShape = SaltTheme.shapes.large
 
     // 键盘收起后同步清除焦点
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -97,7 +94,7 @@ fun MapSearchBar(
             modifier = Modifier
                 .weight(1f)
                 .height(SearchBarHeight)
-                .clip(SearchBarShape)
+                .clip(barShape)
                 .background(SaltTheme.colors.subBackground)
                 .padding(horizontal = 14.dp),
             contentAlignment = Alignment.CenterStart

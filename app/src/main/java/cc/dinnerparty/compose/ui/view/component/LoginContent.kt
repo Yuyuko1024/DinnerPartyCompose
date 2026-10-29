@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.runtime.Composable
@@ -259,7 +258,7 @@ fun RegisterView(
         Image(
             painter = painterResource(R.drawable.qrcode),
             contentDescription = null,
-            modifier = Modifier.clip(RoundedCornerShape(8.dp))
+            modifier = Modifier.clip(SaltTheme.shapes.small)
                 .clickable {
                     uriHandler.openUriSafely("https://qm.qq.com/q/DP6mpdX0oo")
                 }

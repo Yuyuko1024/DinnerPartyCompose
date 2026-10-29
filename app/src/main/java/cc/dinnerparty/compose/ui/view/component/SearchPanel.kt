@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Place
@@ -38,9 +37,6 @@ import com.moriafly.salt.ui.UnstableSaltUiApi
 import java.util.Locale
 import kotlin.math.roundToInt
 
-/** 结果面板圆角 */
-private val PanelShape = RoundedCornerShape(18.dp)
-
 /** 结果面板最大高度 */
 internal val PanelMaxHeight = 360.dp
 
@@ -54,6 +50,7 @@ fun SearchPanel(
 ) {
     val dismiss = rememberDismiss()
     val blank = remember { MutableInteractionSource() }
+    val panelShape = SaltTheme.shapes.medium
     val select: (SearchItem) -> Unit = { item ->
         dismiss()
         actions.selectItem(item)
@@ -65,7 +62,7 @@ fun SearchPanel(
 
     Column(
         modifier = modifier
-            .clip(PanelShape)
+            .clip(panelShape)
             .background(SaltTheme.colors.background)
             .clickable(
                 interactionSource = blank,

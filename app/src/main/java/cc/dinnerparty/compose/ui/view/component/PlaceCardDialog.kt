@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Add
@@ -217,6 +216,7 @@ private fun PlaceCardRating(place: Place, semanticColors: DinnerPartySemanticCol
     val tier = RatingTier.forAverage(average)
     val tierLabel = ratingTierLabel(tier)
     val count = place.ratingCount ?: 0
+    val rowShape = SaltTheme.shapes.small
 
     val summary = if (tierLabel != null && average != null) {
         stringResource(R.string.rating_summary, tierLabel, formatAverage(average), count)
@@ -229,8 +229,8 @@ private fun PlaceCardRating(place: Place, semanticColors: DinnerPartySemanticCol
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = RatingRowMinHeight)
-            .clip(RatingRowShape)
-            .border(1.dp, SaltTheme.colors.stroke, RatingRowShape)
+            .clip(rowShape)
+            .border(1.dp, SaltTheme.colors.stroke, rowShape)
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -328,12 +328,13 @@ private fun PlaceCardAction(
     label: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
+    val btnShape = SaltTheme.shapes.small
     Row(
         modifier = Modifier
             .heightIn(min = ActionButtonMinSize)
             .widthIn(min = ActionButtonMinSize)
-            .clip(ActionButtonShape)
-            .border(1.dp, SaltTheme.colors.stroke, ActionButtonShape)
+            .clip(btnShape)
+            .border(1.dp, SaltTheme.colors.stroke, btnShape)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = 10.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -383,9 +384,6 @@ internal fun ratingTierColor(tier: RatingTier, colors: DinnerPartySemanticColors
 
 /** 固定一位小数 */
 private fun formatAverage(average: Double): String = String.format(Locale.US, "%.1f", average)
-
-private val RatingRowShape = RoundedCornerShape(8.dp)
-private val ActionButtonShape = RoundedCornerShape(8.dp)
 
 private val CardPadding = 16.dp
 private val CardGap = 6.dp
