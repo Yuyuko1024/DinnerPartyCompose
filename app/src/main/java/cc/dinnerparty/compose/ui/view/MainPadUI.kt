@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.api.model.User
@@ -50,7 +51,9 @@ import cc.dinnerparty.compose.ui.view.component.PlaceDetailPanel
 import cc.dinnerparty.compose.ui.view.component.PlaceFormContent
 import cc.dinnerparty.compose.ui.view.component.PlaceFormUi
 import cc.dinnerparty.compose.ui.view.component.SearchPanel
+import cc.dinnerparty.compose.ui.view.component.SettingsContent
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
+import cc.dinnerparty.compose.ui.viewmodel.SettingsViewModel
 import com.moriafly.salt.ui.Button
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
@@ -97,6 +100,8 @@ fun MainPadUI(
     onDeleteAccount: () -> Unit = {}
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
+    val settingsVm: SettingsViewModel = viewModel()
+    val settingsState by settingsVm.uiState.collectAsStateWithLifecycle()
 
     // 登录成功或退出登录后收起对应面板
     LaunchedEffect(authState.session, overlay.current) {
@@ -137,9 +142,23 @@ fun MainPadUI(
                     .align(Alignment.TopEnd)
                     .padding(top = FloatingActionTopPadding),
                 expanded = overlay.current == MapOverlay.Menu,
+                onSettingsClick = { overlay.show(MapOverlay.Settings) },
                 onAboutClick = { overlay.show(MapOverlay.About) },
                 onDismissRequest = overlay::hide
             )
+
+            PadPanel(
+                visible = overlay.current == MapOverlay.Settings,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = FloatingActionTopPadding)
+            ) {
+                SettingsContent(
+                    liquidGlass = settingsState.liquidGlass,
+                    onGlassChange = settingsVm::setGlass,
+                    onClose = overlay::hide
+                )
+            }
 
             PadPanel(
                 visible = overlay.current == MapOverlay.About,

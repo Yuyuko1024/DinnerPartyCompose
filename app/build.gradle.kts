@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.salt.ui)
     // 浮层玻璃：haze 采集与折射
     implementation(libs.haze.core)
+    implementation(libs.haze.blur)
     implementation(libs.haze.glass)
     // 网络：Retrofit + OkHttp + Gson
     implementation(libs.retrofit.core)

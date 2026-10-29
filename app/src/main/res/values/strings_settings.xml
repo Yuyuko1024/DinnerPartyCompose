@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_close">Close</string>
+    <string name="settings_glass">Liquid Glass</string>
+    <string name="settings_blur">Blur</string>
+    <string name="settings_glass_unsupported">Unsupported OS version, the blur theme will be used</string>
+</resources>

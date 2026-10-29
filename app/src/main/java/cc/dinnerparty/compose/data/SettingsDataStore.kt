@@ -15,25 +15,37 @@ import java.io.IOException
 /** settings 文件的 DataStore 委托。 */
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-/** 本地设置持久化。 */
+/** 本地设置持久化 */
 class SettingsDataStore(context: Context) {
 
     private val dataStore = context.applicationContext.settingsDataStore
 
-    /** 用户是否已同意隐私政策。首次启动为 false。 */
-    val privacyAgreed: Flow<Boolean> = dataStore.data
+    private val prefs: Flow<Preferences> = dataStore.data
         .catch { throwable ->
-            // IO 异常按未同意处理
+            // IO 异常按空设置处理
             if (throwable is IOException) emit(emptyPreferences()) else throw throwable
         }
+
+    /** 用户是否已同意隐私政策 首次启动为 false */
+    val privacyAgreed: Flow<Boolean> = prefs
         .map { preferences -> preferences[PrivacyAgreedKey] ?: false }
 
-    /** 记录用户已同意隐私政策。 */
+    /** 是否启用液态玻璃 默认开启 */
+    val liquidGlass: Flow<Boolean> = prefs
+        .map { preferences -> preferences[LiquidGlassKey] ?: true }
+
+    /** 记录用户已同意隐私政策 */
     suspend fun agreePrivacy() {
         dataStore.edit { preferences -> preferences[PrivacyAgreedKey] = true }
     }
 
+    /** 记录液态玻璃开关 */
+    suspend fun setLiquidGlass(enabled: Boolean) {
+        dataStore.edit { preferences -> preferences[LiquidGlassKey] = enabled }
+    }
+
     private companion object {
         val PrivacyAgreedKey = booleanPreferencesKey("privacy_agreed")
+        val LiquidGlassKey = booleanPreferencesKey("liquid_glass")
     }
 }

@@ -31,6 +31,7 @@ import cc.dinnerparty.compose.ui.view.component.AmapView
 import cc.dinnerparty.compose.ui.view.component.AvatarUpdateFlow
 import cc.dinnerparty.compose.ui.view.component.EditPasswordDialog
 import cc.dinnerparty.compose.ui.view.component.EditUsernameDialog
+import cc.dinnerparty.compose.ui.view.component.LocalLiquidGlass
 import cc.dinnerparty.compose.ui.view.component.LocalMapHaze
 import cc.dinnerparty.compose.ui.view.component.PlaceCardOps
 import cc.dinnerparty.compose.ui.view.component.PlaceFormEvents
@@ -44,6 +45,7 @@ import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import cc.dinnerparty.compose.ui.viewmodel.MapViewModel
 import cc.dinnerparty.compose.ui.viewmodel.PlaceFormViewModel
 import cc.dinnerparty.compose.ui.viewmodel.SearchViewModel
+import cc.dinnerparty.compose.ui.viewmodel.SettingsViewModel
 import cc.dinnerparty.compose.utils.LocationClient
 import cc.dinnerparty.compose.utils.LocationFailure
 import cc.dinnerparty.compose.utils.LocationResult
@@ -110,6 +112,11 @@ fun MainView(modifier: Modifier = Modifier) {
 
     // 浮层玻璃的采样源，取自地图
     val haze = rememberHazeState()
+
+    // 浮层玻璃是否走液态玻璃
+    val settingsVm: SettingsViewModel = viewModel()
+    val settingsState by settingsVm.uiState.collectAsStateWithLifecycle()
+    val liquidGlass = settingsState.liquidGlass
 
     // 添加模式 此时点地图或高德 POI 取点
     var addMode by remember { mutableStateOf(false) }
@@ -391,6 +398,7 @@ fun MainView(modifier: Modifier = Modifier) {
         CompositionLocalProvider(
             LocalIsTablet provides (windowSizeClass != WindowSizeClass.Compact),
             LocalMapHaze provides haze,
+            LocalLiquidGlass provides liquidGlass,
         ) {
             when (windowSizeClass) {
                 WindowSizeClass.Compact -> MainPhoneUI(
@@ -444,7 +452,10 @@ fun MainView(modifier: Modifier = Modifier) {
         }
     }
 
-    CompositionLocalProvider(LocalMapHaze provides haze) {
+    CompositionLocalProvider(
+        LocalMapHaze provides haze,
+        LocalLiquidGlass provides liquidGlass,
+    ) {
         if (showLocationPermissionGuide) {
             YesNoContentDialog(
                 title = stringResource(R.string.location_permission_title),
