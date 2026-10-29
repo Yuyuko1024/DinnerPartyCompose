@@ -3,7 +3,6 @@ package cc.dinnerparty.compose.ui.view.component
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -11,7 +10,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.moriafly.salt.ui.SaltTheme
@@ -39,8 +37,7 @@ fun <T : Any> PadPanel(
                     .width(width)
                     .padding(PadPanelPadding)
                     .blockTouch()
-                    .clip(SaltTheme.shapes.large)
-                    .background(SaltTheme.colors.subBackground)
+                    .mapGlass(SaltTheme.shapes.medium)
                     .verticalScroll(rememberScrollState())
             ) {
                 content(it)

@@ -286,7 +286,8 @@ private fun FormField(spec: FieldSpec, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(6.dp))
         RoundedColumn(
             modifier = Modifier.fillMaxWidth(),
-            paddingValues = PaddingValues(0.dp)
+            paddingValues = PaddingValues(0.dp),
+            color = Color.Transparent
         ) {
             ItemEdit(
                 text = spec.value,
@@ -326,7 +327,8 @@ private fun TagSection(state: PlaceFormState, events: PlaceFormEvents) {
         Spacer(modifier = Modifier.height(6.dp))
         RoundedColumn(
             modifier = Modifier.fillMaxWidth(),
-            paddingValues = PaddingValues(0.dp)
+            paddingValues = PaddingValues(0.dp),
+            color = Color.Transparent
         ) {
             ItemEdit(
                 modifier = Modifier.onFocusChanged { focused = it.isFocused },
@@ -387,7 +389,7 @@ private fun TagChip(text: String, onRemove: () -> Unit) {
     Row(
         modifier = Modifier
             .clip(TagShape)
-            .background(SaltTheme.colors.popup)
+            .border(1.dp, SaltTheme.colors.stroke, TagShape)
             .padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -486,7 +488,7 @@ private fun RatingOption(
     Column(
         modifier = modifier
             .clip(optionShape)
-            .background(if (selected) color.copy(alpha = 0.16f) else SaltTheme.colors.popup)
+            .background(if (selected) color.copy(alpha = 0.16f) else Color.Transparent)
             .border(1.dp, if (selected) color else SaltTheme.colors.stroke, optionShape)
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp),

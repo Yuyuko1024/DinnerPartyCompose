@@ -35,7 +35,7 @@ import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
 /** 手机端浮层总高。 */
-internal val PhoneOverlayHeight = 136.dp
+internal val PhoneOverlayHeight = 148.dp
 
 /** 手机端地图浮层，底部依次是悬浮钮、搜索条、底栏，地点卡片从底部滑入。 */
 @UnstableSaltUiApi

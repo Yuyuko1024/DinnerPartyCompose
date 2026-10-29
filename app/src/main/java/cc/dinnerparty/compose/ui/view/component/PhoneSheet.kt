@@ -15,15 +15,14 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
@@ -42,6 +41,7 @@ fun <T : Any> PhoneSheet(
 ) {
     // 滑入滑出动画期间保留内容
     val shown = rememberLastNonNull(value)
+    val sheetShape = SaltTheme.shapes.large
 
     // 返回手势的拖动位移，0 为原位、1 为完全移出屏幕
     val backOffset = remember { Animatable(0f) }
@@ -93,10 +93,11 @@ fun <T : Any> PhoneSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .blockTouch()
-                        .clip(SaltTheme.shapes.large)
-                        .background(SaltTheme.colors.subBackground)
+                        .padding(horizontal = OverlayEdgeGap)
                         .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(bottom = OverlayEdgeGap)
+                        .blockTouch()
+                        .mapGlass(sheetShape)
                 ) {
                     content(it)
                 }

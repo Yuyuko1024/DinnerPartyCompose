@@ -186,7 +186,8 @@ fun LoginView(
             paddingValues = PaddingValues(
                 horizontal = 0.dp,
                 vertical = 0.dp
-            )
+            ),
+            color = Color.Transparent
         ) {
             ItemEdit(
                 hint = stringResource(R.string.login_hint_username),
@@ -201,7 +202,8 @@ fun LoginView(
             paddingValues = PaddingValues(
                 horizontal = 0.dp,
                 vertical = 0.dp
-            )
+            ),
+            color = Color.Transparent
         ) {
             ItemEditPassword(
                 hint = stringResource(R.string.login_hint_password),
@@ -492,7 +494,8 @@ private fun FormField(
         )
         RoundedColumn(
             modifier = Modifier.fillMaxWidth(),
-            paddingValues = FieldContentPadding
+            paddingValues = FieldContentPadding,
+            color = Color.Transparent
         ) {
             if (password) {
                 ItemEditPassword(
@@ -542,7 +545,8 @@ private fun QqField(
         Row(verticalAlignment = Alignment.CenterVertically) {
             RoundedColumn(
                 modifier = Modifier.weight(1f),
-                paddingValues = FieldContentPadding
+                paddingValues = FieldContentPadding,
+                color = Color.Transparent
             ) {
                 ItemEdit(
                     text = text,

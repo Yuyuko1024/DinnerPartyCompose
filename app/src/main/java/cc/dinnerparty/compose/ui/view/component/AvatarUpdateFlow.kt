@@ -57,7 +57,6 @@ import com.moriafly.salt.ui.ItemOuterTip
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
-import com.moriafly.salt.ui.dialog.BasicDialog
 import com.moriafly.salt.ui.dialog.DialogTitle
 import com.moriafly.salt.ui.outerPadding
 import com.tanishranjan.cropkit.CropDefaults
@@ -255,10 +254,7 @@ private fun UploadDialog(
     onCancel: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    BasicDialog(
-        onDismissRequest = onCancel,
-        properties = DialogProperties()
-    ) {
+    GlassDialog(onDismissRequest = onCancel) {
         DialogTitle(text = stringResource(R.string.avatar_upload_title))
         Box(
             modifier = Modifier.fillMaxWidth().padding(0.dp, 16.dp),

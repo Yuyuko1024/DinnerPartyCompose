@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.runtime.Composable
@@ -36,6 +36,12 @@ import com.moriafly.salt.ui.Text
 
 /** 单个底栏条目的高度。 */
 private val BottomBarItemHeight = 58.dp
+
+/** 底栏胶囊形状。 */
+private val BarShape = RoundedCornerShape(percent = 50)
+
+/** 底栏胶囊内边距。 */
+private val BarInnerGap = 4.dp
 
 /**
  * 地图页底部操作栏，含更多 / 收藏 / 添加 / 顺路吃 / 账号五个条目，其中「添加」恒用主色。
@@ -62,24 +68,20 @@ fun MapBottomBar(
         adding = adding,
     )
 
-    Column(
+    Row(
         modifier = modifier
-            .fillMaxWidth()
-            .background(SaltTheme.colors.subBackground)
+            .padding(horizontal = OverlayEdgeGap)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(bottom = OverlayEdgeGap)
+            .mapGlass(BarShape)
+            .padding(horizontal = BarInnerGap, vertical = 4.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-        ) {
-            actions.forEach { action -> BottomBarItem(action) }
-            AccountItem(
-                user = user,
-                avatarVersion = avatarVersion,
-                onClick = onAccountClick
-            )
-        }
+        actions.forEach { action -> BottomBarItem(action) }
+        AccountItem(
+            user = user,
+            avatarVersion = avatarVersion,
+            onClick = onAccountClick
+        )
     }
 }
 

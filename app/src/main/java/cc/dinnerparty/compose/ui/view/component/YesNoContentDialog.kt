@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.window.DialogProperties
 import cc.dinnerparty.compose.R
 import com.moriafly.salt.ui.Button
 import com.moriafly.salt.ui.ButtonAppearance
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.UnstableSaltUiApi
-import com.moriafly.salt.ui.dialog.BasicDialog
 import com.moriafly.salt.ui.dialog.DialogTitle
 import com.moriafly.salt.ui.outerPadding
 
@@ -25,14 +23,16 @@ fun YesNoContentDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
     enabled: Boolean = true,
-    properties: DialogProperties = DialogProperties(),
+    dismissOnClickOutside: Boolean = true,
+    dismissOnBackPress: Boolean = true,
     cancelText: String = stringResource(R.string.action_cancel),
     confirmText: String = stringResource(R.string.action_save),
     content: (@Composable () -> Unit)? = null,
 ) {
-    BasicDialog(
+    GlassDialog(
         onDismissRequest = onDismissRequest,
-        properties = properties,
+        dismissOnClickOutside = dismissOnClickOutside,
+        dismissOnBackPress = dismissOnBackPress,
     ) {
         DialogTitle(text = title)
         if (content != null) {

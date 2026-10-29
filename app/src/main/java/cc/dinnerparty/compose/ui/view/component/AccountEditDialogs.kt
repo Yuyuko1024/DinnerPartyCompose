@@ -201,6 +201,7 @@ private fun DialogField(
     RoundedColumn(
         modifier = modifier.fillMaxWidth(),
         paddingValues = PaddingValues(0.dp),
+        color = Color.Transparent,
     ) {
         if (password) {
             ItemEditPassword(

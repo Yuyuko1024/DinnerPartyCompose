@@ -28,13 +28,13 @@ fun CircleIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     buttonSize: Dp = 44.dp,
-    containerColor: Color = SaltTheme.colors.subBackground,
+    containerColor: Color = Color.Transparent,
     contentColor: Color = SaltTheme.colors.text
 ) {
     Box(
         modifier = modifier
             .size(buttonSize)
-            .clip(CircleShape)
+            .clearGlass(CircleShape)
             .background(containerColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center

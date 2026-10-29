@@ -251,7 +251,6 @@ private fun PadHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(SaltTheme.colors.subBackground)
     ) {
         Box(
             modifier = Modifier

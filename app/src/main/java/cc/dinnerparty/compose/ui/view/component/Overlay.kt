@@ -7,6 +7,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
+
+/** 浮动浮层与屏幕边缘的间距 */
+internal val OverlayEdgeGap = 12.dp
 
 /** 阻断命中且不消费事件，避免点击穿透到下层兄弟。 */
 internal fun Modifier.blockTouch(): Modifier = pointerInput(Unit) {

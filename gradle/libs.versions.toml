@@ -10,6 +10,8 @@ kotlin = "2.4.20"
 composeBom = "2026.09.00"
 # SaltUI
 saltUi = "3.0.0-beta03"
+# 浮层玻璃
+haze = "2.0.1"
 datastorePreferences = "1.1.7"
 # 网络
 retrofit = "2.11.0"
@@ -38,6 +40,8 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 salt-ui = { group = "io.github.moriafly", name = "salt-ui", version.ref = "saltUi" }
+haze-core = { group = "dev.chrisbanes.haze", name = "haze", version.ref = "haze" }
+haze-glass = { group = "dev.chrisbanes.haze", name = "haze-glass", version.ref = "haze" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
 # 网络
 retrofit-core = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }

@@ -31,10 +31,12 @@ import cc.dinnerparty.compose.ui.view.component.AmapView
 import cc.dinnerparty.compose.ui.view.component.AvatarUpdateFlow
 import cc.dinnerparty.compose.ui.view.component.EditPasswordDialog
 import cc.dinnerparty.compose.ui.view.component.EditUsernameDialog
+import cc.dinnerparty.compose.ui.view.component.LocalMapHaze
 import cc.dinnerparty.compose.ui.view.component.PlaceCardOps
 import cc.dinnerparty.compose.ui.view.component.PlaceFormEvents
 import cc.dinnerparty.compose.ui.view.component.PlaceFormUi
 import cc.dinnerparty.compose.ui.view.component.SearchPoi
+import cc.dinnerparty.compose.ui.view.component.YesNoContentDialog
 import cc.dinnerparty.compose.ui.view.component.rememberDismiss
 import cc.dinnerparty.compose.ui.view.component.rememberSearch
 import cc.dinnerparty.compose.ui.view.component.toMapMarker
@@ -54,8 +56,10 @@ import com.amap.api.maps.CameraUpdateFactory
 import com.amap.api.maps.model.CameraPosition
 import com.amap.api.maps.model.LatLng
 import com.moriafly.salt.ui.SaltTheme
+import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
-import com.moriafly.salt.ui.dialog.YesNoDialog
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlin.coroutines.resume
 import kotlin.math.max
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -103,6 +107,9 @@ fun MainView(modifier: Modifier = Modifier) {
 
     // 当前显示的浮层
     val overlay = rememberMapOverlayManager()
+
+    // 浮层玻璃的采样源，取自地图
+    val haze = rememberHazeState()
 
     // 添加模式 此时点地图或高德 POI 取点
     var addMode by remember { mutableStateOf(false) }
@@ -291,7 +298,9 @@ fun MainView(modifier: Modifier = Modifier) {
         }
 
         AmapView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSource(haze),
             // 手机端底栏常驻，地图 Logo 需要抬升
             logoBottomMargin = if (windowSizeClass == WindowSizeClass.Compact) PhoneOverlayHeight else 0.dp,
             markers = markers,
@@ -380,7 +389,8 @@ fun MainView(modifier: Modifier = Modifier) {
         val formUi = PlaceFormUi(state = formState, events = formEvents)
 
         CompositionLocalProvider(
-            LocalIsTablet provides (windowSizeClass != WindowSizeClass.Compact)
+            LocalIsTablet provides (windowSizeClass != WindowSizeClass.Compact),
+            LocalMapHaze provides haze,
         ) {
             when (windowSizeClass) {
                 WindowSizeClass.Compact -> MainPhoneUI(
@@ -434,73 +444,80 @@ fun MainView(modifier: Modifier = Modifier) {
         }
     }
 
-    if (showLocationPermissionGuide) {
-        YesNoDialog(
-            onDismissRequest = { showLocationPermissionGuide = false },
-            onConfirm = {
-                showLocationPermissionGuide = false
-                context.openAppSettings()
-            },
-            title = stringResource(R.string.location_permission_title),
-            content = stringResource(R.string.location_permission_guide),
-            cancelText = stringResource(R.string.action_cancel),
-            confirmText = stringResource(R.string.action_go_to_settings)
-        )
-    }
-
-    if (editUsername) {
-        EditUsernameDialog(
-            currentUsername = authState.session?.user?.username.orEmpty(),
-            onDismiss = { editUsername = false },
-            authViewModel = authViewModel,
-            onMessage = { message ->
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            },
-        )
-    }
-
-    if (editPassword) {
-        EditPasswordDialog(
-            onDismiss = { editPassword = false },
-            authViewModel = authViewModel,
-            onMessage = { message ->
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            },
-        )
-    }
-
-    pendingAccountAction?.let { action ->
-        val isLogout = action == AccountAction.LOGOUT_ALL
-        YesNoDialog(
-            onDismissRequest = { pendingAccountAction = null },
-            onConfirm = {
-                pendingAccountAction = null
-                when (action) {
-                    AccountAction.LOGOUT_ALL -> authViewModel.logoutAll()
-                    AccountAction.DELETE_ACCOUNT -> authViewModel.deleteAccount()
-                }
-            },
-            title = stringResource(
-                if (isLogout) R.string.account_logout_title else R.string.account_delete_title
-            ),
-            content = stringResource(
-                if (isLogout) R.string.account_logout_content else R.string.account_delete_content
-            ),
-            cancelText = stringResource(R.string.action_cancel),
-            confirmText = stringResource(
-                if (isLogout) R.string.account_logout_confirm else R.string.account_delete_confirm
+    CompositionLocalProvider(LocalMapHaze provides haze) {
+        if (showLocationPermissionGuide) {
+            YesNoContentDialog(
+                title = stringResource(R.string.location_permission_title),
+                onDismissRequest = { showLocationPermissionGuide = false },
+                onConfirm = {
+                    showLocationPermissionGuide = false
+                    context.openAppSettings()
+                },
+                cancelText = stringResource(R.string.action_cancel),
+                confirmText = stringResource(R.string.action_go_to_settings),
+                content = { Text(text = stringResource(R.string.location_permission_guide)) },
             )
+        }
+
+        if (editUsername) {
+            EditUsernameDialog(
+                currentUsername = authState.session?.user?.username.orEmpty(),
+                onDismiss = { editUsername = false },
+                authViewModel = authViewModel,
+                onMessage = { message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                },
+            )
+        }
+
+        if (editPassword) {
+            EditPasswordDialog(
+                onDismiss = { editPassword = false },
+                authViewModel = authViewModel,
+                onMessage = { message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                },
+            )
+        }
+
+        pendingAccountAction?.let { action ->
+            val isLogout = action == AccountAction.LOGOUT_ALL
+            YesNoContentDialog(
+                title = stringResource(
+                    if (isLogout) R.string.account_logout_title else R.string.account_delete_title
+                ),
+                onDismissRequest = { pendingAccountAction = null },
+                onConfirm = {
+                    pendingAccountAction = null
+                    when (action) {
+                        AccountAction.LOGOUT_ALL -> authViewModel.logoutAll()
+                        AccountAction.DELETE_ACCOUNT -> authViewModel.deleteAccount()
+                    }
+                },
+                cancelText = stringResource(R.string.action_cancel),
+                confirmText = stringResource(
+                    if (isLogout) R.string.account_logout_confirm else R.string.account_delete_confirm
+                ),
+                content = {
+                    Text(
+                        text = stringResource(
+                            if (isLogout) R.string.account_logout_content
+                            else R.string.account_delete_content
+                        )
+                    )
+                },
+            )
+        }
+
+        AvatarUpdateFlow(
+            visible = avatarUpdating,
+            onDismiss = { avatarUpdating = false },
+            authViewModel = authViewModel,
+            onMessage = { message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            },
         )
     }
-
-    AvatarUpdateFlow(
-        visible = avatarUpdating,
-        onDismiss = { avatarUpdating = false },
-        authViewModel = authViewModel,
-        onMessage = { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        },
-    )
 }
 
 /** 需要二次确认的账号操作。 */

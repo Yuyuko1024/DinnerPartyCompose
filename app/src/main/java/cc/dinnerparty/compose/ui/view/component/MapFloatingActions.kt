@@ -52,7 +52,7 @@ fun MapFloatingActions(
                 containerColor = if (addMode) {
                     danger
                 } else {
-                    SaltTheme.colors.subBackground
+                    Color.Transparent
                 },
                 contentColor = if (addMode) Color.White else SaltTheme.colors.text
             )

@@ -41,7 +41,8 @@ fun AccountContent(
         paddingValues = PaddingValues(
             horizontal = 0.dp,
             vertical = 0.dp
-        )
+        ),
+        color = Color.Transparent
     ) {
         // 头像
         Row(
