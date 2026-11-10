@@ -1,6 +1,7 @@
 package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Place
@@ -17,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -50,12 +53,20 @@ fun ClusterMembersContent(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
             )
-            CircleIconButton(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = stringResource(R.string.place_card_close),
-                onClick = onClose,
-                buttonSize = 40.dp,
-            )
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onClose),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = stringResource(R.string.about_close),
+                    modifier = Modifier.size(18.dp),
+                    tint = SaltTheme.colors.subText
+                )
+            }
         }
         Text(
             text = stringResource(R.string.cluster_members_hint),
