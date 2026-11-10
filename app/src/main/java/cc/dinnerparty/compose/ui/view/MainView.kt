@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.Place
+import cc.dinnerparty.compose.data.cluster.ClusterClick
 import cc.dinnerparty.compose.data.model.MapBounds
 import cc.dinnerparty.compose.data.model.canManage
 import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
@@ -64,6 +65,7 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlin.coroutines.resume
 import kotlin.math.max
+import kotlin.math.ceil
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
@@ -297,7 +299,7 @@ fun MainView(modifier: Modifier = Modifier) {
                 viewModel.updateViewport(
                     bounds = bounds,
                     zoom = zoom,
-                    mapMaxZoom = map.maxZoomLevel.toInt(),
+                    mapMaxZoom = ceil(map.maxZoomLevel).toInt().coerceAtMost(30),
                     clusterRadiusPx = ClusterRadius * density,
                 )
             }
@@ -311,6 +313,7 @@ fun MainView(modifier: Modifier = Modifier) {
             // 手机端底栏常驻，地图 Logo 需要抬升
             logoBottomMargin = if (windowSizeClass == WindowSizeClass.Compact) PhoneOverlayHeight else 0.dp,
             markers = markers,
+            clusterSnapshot = uiState.clusterSnapshot,
             userLocation = userLocation,
             searchPoi = searchPoi,
             selectedMarkerId = selectedPlace?.id,
@@ -329,17 +332,22 @@ fun MainView(modifier: Modifier = Modifier) {
                         null,
                     )
                 } else {
-                    // 放大到聚合散开的级别
                     amap?.let { map ->
-                        viewModel.expansionZoomFor(marker.id)?.let { expansion ->
-                            map.animateCamera(
-                                CameraUpdateFactory.newLatLngZoom(marker.position, expansion.toFloat()),
-                                ClusterExpandDurationMs,
-                                null,
-                            )
-                            // 聚合成气泡后清掉卡片
-                            viewModel.clearSelection()
-                            overlay.hide()
+                        val zoom = map.cameraPosition.zoom
+                        when (val action = viewModel.clusterClick(marker.id, zoom, map.maxZoomLevel)) {
+                            is ClusterClick.Zoom -> {
+                                overlay.hide()
+                                map.animateCamera(
+                                    CameraUpdateFactory.newLatLngZoom(marker.position, action.zoom),
+                                    ClusterExpandDurationMs,
+                                    null,
+                                )
+                            }
+                            is ClusterClick.Members -> {
+                                dismiss()
+                                overlay.show(MapOverlay.ClusterMembers)
+                            }
+                            null -> Unit
                         }
                     }
                 }
@@ -395,6 +403,31 @@ fun MainView(modifier: Modifier = Modifier) {
         )
         val formUi = PlaceFormUi(state = formState, events = formEvents)
 
+        val selectMember: (Place) -> Unit = { member ->
+            if (overlay.current == MapOverlay.ClusterMembers) {
+                viewModel.selectMember(member.id!!)?.let { place ->
+                    dismiss()
+                    searchPoi = null
+                    amapPlace = null
+                    overlay.show(MapOverlay.Place)
+                    amap?.animateCamera(
+                        CameraUpdateFactory.newLatLng(LatLng(place.latitude!!, place.longitude!!)),
+                        MarkerCenterDurationMs,
+                        null,
+                    )
+                }
+            }
+        }
+        val closeCluster: () -> Unit = {
+            if (overlay.current == MapOverlay.ClusterMembers) {
+                viewModel.clearCluster()
+                overlay.hide()
+            }
+        }
+        LaunchedEffect(overlay.current) {
+            if (overlay.current != MapOverlay.ClusterMembers) viewModel.clearCluster()
+        }
+
         CompositionLocalProvider(
             LocalIsTablet provides (windowSizeClass != WindowSizeClass.Compact),
             LocalMapHaze provides haze,
@@ -409,6 +442,9 @@ fun MainView(modifier: Modifier = Modifier) {
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = amapPlace ?: selectedPlace,
                     cardOps = cardOps,
+                    clusterPlaces = uiState.clusterPlaces,
+                    onSelectCluster = selectMember,
+                    onDismissCluster = closeCluster,
                     form = formUi,
                     addMode = addMode,
                     onAddClick = toggleAdd,
@@ -433,6 +469,9 @@ fun MainView(modifier: Modifier = Modifier) {
                     onLocateClick = { if (!locating) requestLocationPermission() },
                     place = amapPlace ?: selectedPlace,
                     cardOps = cardOps,
+                    clusterPlaces = uiState.clusterPlaces,
+                    onSelectCluster = selectMember,
+                    onDismissCluster = closeCluster,
                     form = formUi,
                     addMode = addMode,
                     onAddClick = toggleAdd,
@@ -546,7 +585,7 @@ private val LocationPermissions = arrayOf(
 /** 默认中心点：广州 */
 private val DefaultCenter = LatLng(23.016485, 113.394405)
 
-/** 聚合半径，单位 dp。 */
+/** 聚合半径单位为 dp */
 private const val ClusterRadius = 70.0
 
 /** 点开聚合气泡时的相机动画时长。 */

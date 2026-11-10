@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.ui.view.component.AboutContent
+import cc.dinnerparty.compose.ui.view.component.ClusterMembersContent
 import cc.dinnerparty.compose.ui.view.component.AccountContent
 import cc.dinnerparty.compose.ui.view.component.LoginContent
 import cc.dinnerparty.compose.ui.view.component.MapBottomBar
@@ -52,6 +53,9 @@ fun MainPhoneUI(
     onLocateClick: () -> Unit = {},
     place: Place? = null,
     cardOps: PlaceCardOps = PlaceCardOps(),
+    clusterPlaces: List<Place>? = null,
+    onSelectCluster: (Place) -> Unit = {},
+    onDismissCluster: () -> Unit = {},
     form: PlaceFormUi = PlaceFormUi(),
     addMode: Boolean = false,
     onAddClick: () -> Unit = {},
@@ -131,6 +135,14 @@ fun MainPhoneUI(
             onDismissRequest = onDismissPlaceCard,
             ops = cardOps
         )
+
+        PhoneSheet(
+            value = clusterPlaces.takeIf { overlay.current == MapOverlay.ClusterMembers },
+            onDismissRequest = onDismissCluster,
+            modal = true,
+        ) { places ->
+            ClusterMembersContent(places, onSelectCluster, onDismissCluster)
+        }
 
         // 添加或修改地点的表单
         PhoneSheet(

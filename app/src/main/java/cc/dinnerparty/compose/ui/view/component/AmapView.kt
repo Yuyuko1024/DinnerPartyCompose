@@ -4,6 +4,7 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +31,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import cc.dinnerparty.compose.data.cluster.ClusterSnapshot
 import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.maps.AMap
@@ -45,7 +47,7 @@ import com.moriafly.salt.ui.SaltTheme
  * 高德地图（3D 版 + TextureMapView），内部完成隐私合规声明。
  *
  * @param logoBottomMargin 「高德地图」Logo 需抬升的高度。
- * @param markers 地图上的地点标记，列表变化时全量重绘。
+ * @param markers 地图上的地点标记，按快照增量更新。
  * @param selectedMarkerId 选中标记的 id，选中的标记名字加粗并压在最上层。
  * @param userLocation 用户当前位置，非空时画「我的位置」蓝点。
  * @param searchPoi 高德检索命中的地点，单独画一个标记。
@@ -59,6 +61,7 @@ fun AmapView(
     modifier: Modifier = Modifier,
     logoBottomMargin: Dp = 0.dp,
     markers: List<MapMarker> = emptyList(),
+    clusterSnapshot: ClusterSnapshot? = null,
     userLocation: LatLng? = null,
     searchPoi: SearchPoi? = null,
     selectedMarkerId: Long? = null,
@@ -96,21 +99,6 @@ fun AmapView(
         aMap?.mapType = if (isDarkTheme) AMap.MAP_TYPE_NIGHT else AMap.MAP_TYPE_NORMAL
     }
 
-    DisposableEffect(mapView, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> mapView.onResume()
-                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            mapView.onDestroy()
-        }
-    }
-
     val labelColors = MarkerLabelColors(
         border = SaltTheme.colors.highlight.toArgb(),
         text = SaltTheme.colors.text.toArgb(),
@@ -127,8 +115,30 @@ fun AmapView(
         userLocationIcon(context, density.density)
     }
 
-    // 已经挂在地图上的标记，用来做增量更新；地图换了要丢掉重来
-    val rendered = remember(aMap) { HashMap<Long, RenderedMarker>() }
+    val markerLayer = remember(aMap, mapView) { aMap?.let { MarkerLayer(it, mapView) } }
+    val currentLayer by rememberUpdatedState(markerLayer)
+
+    DisposableEffect(mapView, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    mapView.onResume()
+                    currentLayer?.setActive(true)
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    currentLayer?.setActive(false)
+                    mapView.onPause()
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            currentLayer?.close()
+            mapView.onDestroy()
+        }
+    }
 
     Box(modifier = modifier) {
         AndroidView(
@@ -149,6 +159,10 @@ fun AmapView(
                             true
                         }
                         setOnMapClickListener { position -> currentOnMapClick(position) }
+                        setOnMapTouchListener { event ->
+                            if (event.actionMasked == MotionEvent.ACTION_DOWN ||
+                                event.actionMasked == MotionEvent.ACTION_POINTER_DOWN) currentLayer?.finish()
+                        }
                         setOnPOIClickListener { poi ->
                             currentOnPoiClick(poi.name.orEmpty(), poi.coordinate)
                         }
@@ -163,48 +177,8 @@ fun AmapView(
             update = {}
         )
 
-        // 标记增量更新
-        LaunchedEffect(aMap, markers, selectedMarkerId, renderer) {
-            val map = aMap ?: return@LaunchedEffect
-            val selectedId = selectedMarkerId
-            val alive = HashSet<Long>(markers.size)
-
-            for (marker in markers) {
-                alive += marker.id
-                val selected = marker.id == selectedId
-                val shown = rendered[marker.id]
-                // 外观没变则跳过
-                if (shown != null && shown.marker == marker && shown.selected == selected) continue
-                shown?.overlay?.remove()
-
-                val graphic = renderer.graphic(marker, selected)
-                val overlay = map.addMarker(
-                    MarkerOptions()
-                        .position(marker.position)
-                        .icon(graphic.descriptor)
-                        // 锚点落在图形底边
-                        .anchor(0.5f, graphic.anchorV)
-                        // 选中的压在最上层
-                        .zIndex(if (selected) 1f else 0f)
-                )
-                if (overlay == null) {
-                    rendered.remove(marker.id)
-                    continue
-                }
-                // 关掉高德信息气泡
-                overlay.setInfoWindowEnable(false)
-                overlay.setObject(marker)
-                rendered[marker.id] = RenderedMarker(marker, selected, overlay)
-            }
-
-            val stale = rendered.entries.iterator()
-            while (stale.hasNext()) {
-                val entry = stale.next()
-                if (entry.key !in alive) {
-                    entry.value.overlay.remove()
-                    stale.remove()
-                }
-            }
+        LaunchedEffect(markerLayer, markers, clusterSnapshot, selectedMarkerId, renderer) {
+            markerLayer?.update(MarkerLayerUpdate(markers, clusterSnapshot, selectedMarkerId, renderer))
         }
 
         // 「我的位置」蓝点，与 POI 标记分开管理
@@ -282,13 +256,6 @@ fun agreeAmapPrivacy(context: Context) {
     ServiceSettings.updatePrivacyShow(context, true, true)
     ServiceSettings.updatePrivacyAgree(context, true)
 }
-
-/** 已经挂在地图上的一个标记。 */
-private class RenderedMarker(
-    val marker: MapMarker,
-    val selected: Boolean,
-    val overlay: Marker,
-)
 
 /** 「我的位置」蓝点的持有者。 */
 private class UserLocationHolder {

@@ -1,5 +1,6 @@
 package cc.dinnerparty.compose.ui.view
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -36,6 +37,7 @@ import cc.dinnerparty.compose.api.model.User
 import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
 import cc.dinnerparty.compose.ui.adaptive.currentWindowSizeClass
 import cc.dinnerparty.compose.ui.view.component.AboutContent
+import cc.dinnerparty.compose.ui.view.component.ClusterMembersContent
 import cc.dinnerparty.compose.ui.view.component.AccountChip
 import cc.dinnerparty.compose.ui.view.component.AccountContent
 import cc.dinnerparty.compose.ui.view.component.CircleIconButton
@@ -89,6 +91,9 @@ fun MainPadUI(
     onLocateClick: () -> Unit = {},
     place: Place? = null,
     cardOps: PlaceCardOps = PlaceCardOps(),
+    clusterPlaces: List<Place>? = null,
+    onSelectCluster: (Place) -> Unit = {},
+    onDismissCluster: () -> Unit = {},
     form: PlaceFormUi = PlaceFormUi(),
     addMode: Boolean = false,
     onAddClick: () -> Unit = {},
@@ -110,6 +115,8 @@ fun MainPadUI(
             overlay.current == MapOverlay.Account && authState.session == null -> overlay.hide()
         }
     }
+
+    BackHandler(enabled = overlay.current == MapOverlay.ClusterMembers, onBack = onDismissCluster)
 
     // 右侧被面板占住时悬浮钮横移到左侧
     val rightSideOccupied = overlay.current != null
@@ -136,6 +143,13 @@ fun MainPadUI(
                 onDismissRequest = onDismissPlaceCard,
                 ops = cardOps
             )
+
+            PadPanel(
+                value = clusterPlaces.takeIf { overlay.current == MapOverlay.ClusterMembers },
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = FloatingActionTopPadding),
+            ) { places ->
+                ClusterMembersContent(places, onSelectCluster, onDismissCluster)
+            }
 
             MapMenuPanel(
                 modifier = Modifier

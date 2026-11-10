@@ -39,6 +39,7 @@ internal fun userLocationIcon(context: Context, density: Float): MarkerGraphic {
 
     return MarkerGraphic(
         descriptor = BitmapDescriptorFactory.fromBitmap(bitmap),
+        bitmap = bitmap,
         // 蓝点以自身中心对准坐标
         anchorV = 0.5f,
     )

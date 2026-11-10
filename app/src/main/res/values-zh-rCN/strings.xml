@@ -171,4 +171,10 @@
     <string name="search_empty_amap">地图上没有找到相关地点</string>
     <string name="search_distance_m">%1$d 米</string>
     <string name="search_distance_km">%1$s 公里</string>
+
+    <string name="cluster_members_title">此处有 %1$d 个地点</string>
+    <string name="cluster_members_hint">请选择要查看的地点</string>
+    <string name="cluster_unnamed">未命名地点</string>
+    <string name="cluster_uncategorized">未分类</string>
+    <string name="cluster_member_cost">%1$s · 人均 ¥%2$d</string>
 </resources>

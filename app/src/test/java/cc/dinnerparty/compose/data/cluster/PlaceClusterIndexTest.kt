@@ -21,12 +21,12 @@ class PlaceClusterIndexTest {
 
     @Test
     fun expansion_zoom_actually_splits_the_cluster() {
-        val index = indexOf(place(1, 113.0000, 23.0000), place(2, 113.0004, 23.0004))
+        val index = indexOf(place(1, 113.0000, 23.0000), place(2, 113.0010, 23.0010))
         val group = index.query(EVERYTHING, zoom = 6f)
             .filterIsInstance<MapClusterNode.Group>()
             .single()
 
-        val expansion = index.expansionZoom(group.id)
+        val expansion = index.expansionZoom(group.id)!!
         assertTrue("只能往里放大", expansion > 6)
 
         // 放到这一级，气泡应该换成下一层
@@ -45,11 +45,11 @@ class PlaceClusterIndexTest {
         assertEquals(17, group.count)
 
         // 这一片铺开约 5km，展开级别应该远小于上限
-        val expansion = index.expansionZoom(group.id)
+        val expansion = index.expansionZoom(group.id)!!
         assertTrue("展开级别被拖到了退出聚合那一级：$expansion", expansion < MaxZoom - 1)
     }
 
-    /** 一次点击看到更细的一层，反复点最终全部散成单点。 */
+
     @Test
     fun clicking_a_cluster_shows_a_finer_level_each_time() {
         val index = PlaceClusterIndex(provincePlaces(), mapMaxZoom = MaxZoom, radiusPx = RadiusPx)
@@ -62,9 +62,10 @@ class PlaceClusterIndexTest {
                 .filterIsInstance<MapClusterNode.Group>()
                 .maxByOrNull { it.count } ?: break
 
-            val next = index.expansionZoom(group.id)
+            val next = index.expansionZoom(group.id)!!
             assertTrue("点击必须往里放大：$level → $next", next > level)
 
+            if (next > MaxZoom) break
             level = next
             val after = index.query(EVERYTHING, level.toFloat()).size
             assertTrue("展开之后应该看到更细的一层：$shown → $after", after > shown)
@@ -72,37 +73,29 @@ class PlaceClusterIndexTest {
             clicks++
         }
 
-        assertTrue("反复点击最终应该把所有地点都散开", clicks > 0)
+        assertTrue("常规点先逐级展开，剩余过近地点交给成员选择", clicks > 0)
     }
 
     @Test
-    fun distant_places_never_merge() {
+    fun distant_places_stay_separate_outside_radius() {
         val index = indexOf(place(1, 113.0, 23.0), place(2, 116.4, 39.9))
 
-        val nodes = index.query(EVERYTHING, zoom = 3f)
+        val nodes = index.query(EVERYTHING, zoom = 8f)
 
         assertEquals(2, nodes.count { it is MapClusterNode.Single })
     }
 
-    /** 隔几米的两家店，到退出聚合的级别必须分开。 */
     @Test
-    fun neighbouring_places_split_at_the_exit_level() {
-        // 常州，东西相差 0.0001°，约 9.5m
+    fun neighbouring_places_remain_clustered_when_still_inside_radius_at_max_zoom() {
         val index = PlaceClusterIndex(
             listOf(place(1, 119.9750, 31.8110), place(2, 119.9751, 31.8110)),
             mapMaxZoom = MaxZoom,
             radiusPx = RadiusPx,
         )
-
-        // 退出聚合的那一级和地图极限都给单点
-        listOf(MaxZoom - 1, MaxZoom).forEach { zoom ->
-            val nodes = index.query(EVERYTHING, zoom = zoom.toFloat())
-            assertEquals(2, nodes.size)
-            assertTrue(
-                "第 $zoom 级上不应该再有聚合",
-                nodes.all { it is MapClusterNode.Single },
-            )
-        }
+        val group = index.query(EVERYTHING, MaxZoom.toFloat()).single() as MapClusterNode.Group
+        assertEquals(2, group.count)
+        assertEquals(MaxZoom + 1, index.expansionZoom(group.id))
+        assertEquals(listOf(1L, 2L), index.members(group.id).map { it.id })
     }
 
     /** 半径调大之后，同一个缩放级别下的气泡应该更少。 */
@@ -118,17 +111,13 @@ class PlaceClusterIndexTest {
         assertTrue("半径变大后气泡应该更少：$smallCount → $largeCount", largeCount < smallCount)
     }
 
-    /** 坐标完全相同的两个地点，到退出聚合那一级会变成两个重叠在一起的单点。 */
     @Test
-    fun identical_coordinates_become_overlapping_singles_at_exit_level() {
+    fun identical_coordinates_stay_in_the_same_group_even_beyond_map_max_zoom() {
         val index = indexOf(place(1, 113.0, 23.0), place(2, 113.0, 23.0))
-        val group = index.query(EVERYTHING, zoom = 6f)
-            .filterIsInstance<MapClusterNode.Group>()
-            .single()
-
-        // 展开级别最多就到退出聚合那一级
-        assertEquals(MaxZoom - 1, index.expansionZoom(group.id))
-        assertEquals(2, index.query(EVERYTHING, zoom = (MaxZoom - 1).toFloat()).size)
+        val group = index.query(EVERYTHING, 6f).single() as MapClusterNode.Group
+        assertEquals(MaxZoom + 1, index.expansionZoom(group.id))
+        assertEquals(listOf(group), index.query(EVERYTHING, MaxZoom.toFloat()))
+        assertEquals(listOf(group), index.query(EVERYTHING, (MaxZoom + 1).toFloat()))
     }
 
     @Test
@@ -157,6 +146,133 @@ class PlaceClusterIndexTest {
             nodes.filterIsInstance<MapClusterNode.Single>().map { it.place.id },
         )
     }
+    @Test
+    fun nearby_points_across_a_grid_boundary_merge() {
+        val radius = 68.0
+        val cell = radius / 256.0 / 1024.0
+        val boundary = cell * 2000
+        val index = PlaceClusterIndex(listOf(
+            place(1, (boundary - cell * 0.01) * 360 - 180, 0.0),
+            place(2, (boundary + cell * 0.01) * 360 - 180, 0.0),
+        ), MaxZoom, radius)
+        assertEquals(2, (index.query(EVERYTHING, 10f).single() as MapClusterNode.Group).count)
+    }
+
+    @Test
+    fun diagonal_points_in_one_cell_outside_radius_do_not_merge() {
+        val radius = 68.0
+        val cell = radius / 256.0 / 1024.0
+        val corner = cell * 2000
+        fun at(id: Long, fraction: Double): Place {
+            val coord = corner + cell * fraction
+            val latitude = kotlin.math.atan(kotlin.math.sinh(Math.PI * (1 - 2 * coord))) * 180 / Math.PI
+            return place(id, coord * 360 - 180, latitude)
+        }
+        val index = PlaceClusterIndex(listOf(at(1, 0.02), at(2, 0.98)), MaxZoom, radius)
+        assertEquals(2, index.query(EVERYTHING, 10f).size)
+    }
+
+    @Test
+    fun duplicate_ids_and_non_finite_coordinates_are_excluded() {
+        val index = indexOf(place(1, 113.0, 23.0), place(1, 114.0, 24.0),
+            place(2, Double.NaN, 23.0), place(3, 113.0, Double.POSITIVE_INFINITY),
+            place(4, 181.0, 23.0), place(5, 113.0, 86.0))
+        val single = index.query(EVERYTHING, 20f).single() as MapClusterNode.Single
+        assertEquals(1L, single.place.id)
+        assertEquals(113.0, single.longitude, 0.0)
+    }
+
+    @Test
+    fun input_order_does_not_change_cluster_membership() {
+        val places = provincePlaces()
+        val forward = PlaceClusterIndex(places, MaxZoom, RadiusPx)
+        val reverse = PlaceClusterIndex(places.reversed(), MaxZoom, RadiusPx)
+        for (zoom in 0..MaxZoom) {
+            fun signature(index: PlaceClusterIndex) = index.query(EVERYTHING, zoom.toFloat()).map {
+                when (it) {
+                    is MapClusterNode.Single -> listOf(it.place.id!!)
+                    is MapClusterNode.Group -> index.members(it.id).map { place -> place.id!! }
+                }
+            }.sortedBy { it.joinToString() }
+            assertEquals(signature(forward), signature(reverse))
+        }
+    }
+
+    @Test
+    fun each_level_preserves_every_member_once() {
+        val places = provincePlaces()
+        val index = PlaceClusterIndex(places, MaxZoom, RadiusPx)
+        for (zoom in 0..MaxZoom) {
+            val ids = index.query(EVERYTHING, zoom.toFloat()).flatMap {
+                when (it) {
+                    is MapClusterNode.Single -> listOf(it.place.id)
+                    is MapClusterNode.Group -> index.members(it.id).map { place -> place.id }
+                }
+            }
+            assertEquals(places.map { it.id }.sortedBy { it }, ids.sortedBy { it })
+        }
+    }
+
+    @Test
+    fun expansion_returns_direct_children_with_weighted_centers() {
+        val index = PlaceClusterIndex(provincePlaces(), MaxZoom, RadiusPx)
+        val group = index.query(EVERYTHING, 5f).single() as MapClusterNode.Group
+        val children = index.children(group.id)
+        assertTrue(children.size >= 2)
+        assertEquals(children.toSet(), index.query(EVERYTHING, index.expansionZoom(group.id)!!.toFloat()).toSet())
+        val members = index.members(group.id)
+        assertEquals(members.map { it.longitude!! }.average(), group.longitude, 1e-7)
+    }
+
+    @Test
+    fun stale_cluster_id_does_not_resolve_in_a_new_index() {
+        val places = provincePlaces()
+        val old = PlaceClusterIndex(places, MaxZoom, RadiusPx)
+        val fresh = PlaceClusterIndex(places, MaxZoom, RadiusPx)
+        val group = old.query(EVERYTHING, 5f).single() as MapClusterNode.Group
+        org.junit.Assert.assertNull(fresh.expansionZoom(group.id))
+        assertTrue(fresh.members(group.id).isEmpty())
+    }
+
+    @Test
+    fun antimeridian_viewport_includes_both_sides() {
+        val index = indexOf(place(1, 179.0, 0.0), place(2, -179.0, 0.0), place(3, 0.0, 0.0))
+        val nodes = index.query(MapBounds(170.0, -10.0, -170.0, 10.0), 20f)
+        assertEquals(setOf(1L, 2L), nodes.map { (it as MapClusterNode.Single).place.id }.toSet())
+    }
+
+    @Test
+    fun web_radius_of_68_logical_pixels_splits_at_the_expected_level() {
+        val longitudeGap = 67.0 * 360.0 / (256.0 * (1 shl 12))
+        val index = PlaceClusterIndex(listOf(place(1, 0.0, 0.0), place(2, longitudeGap, 0.0)),
+            MaxZoom, 68.0)
+        val group = index.query(EVERYTHING, 12f).single() as MapClusterNode.Group
+        assertEquals(13, index.expansionZoom(group.id))
+        assertEquals(2, index.query(EVERYTHING, 13f).filterIsInstance<MapClusterNode.Single>().size)
+    }
+
+    @Test
+    fun points_just_outside_web_radius_do_not_collide_at_the_same_level() {
+        val longitudeGap = 69.0 * 360.0 / (256.0 * (1 shl 12))
+        val index = PlaceClusterIndex(listOf(place(1, 0.0, 0.0), place(2, longitudeGap, 0.0)),
+            MaxZoom, 68.0)
+        assertEquals(2, index.query(EVERYTHING, 12f).filterIsInstance<MapClusterNode.Single>().size)
+        val group = index.query(EVERYTHING, 11f).single() as MapClusterNode.Group
+        assertEquals(12, index.expansionZoom(group.id))
+    }
+
+    @Test
+    fun fractional_zoom_has_the_same_hysteresis_at_the_map_maximum() {
+        assertEquals(10, logicalZoom(10.51f, 10, 19))
+        assertEquals(11, logicalZoom(10.66f, 10, 19))
+        assertEquals(11, logicalZoom(10.49f, 11, 19))
+        assertEquals(10, logicalZoom(10.34f, 11, 19))
+        assertEquals(18, logicalZoom(18.6f, 18, 19))
+        assertEquals(19, logicalZoom(18.66f, 18, 19))
+        assertEquals(19, logicalZoom(20f, 18, 19))
+        assertEquals(18, logicalZoom(Float.NaN, 18, 19))
+    }
+
 }
 
 private fun place(id: Long, longitude: Double, latitude: Double) =

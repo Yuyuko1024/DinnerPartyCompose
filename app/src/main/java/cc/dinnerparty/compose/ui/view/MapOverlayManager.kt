@@ -12,6 +12,8 @@ enum class MapOverlay {
     /** 地点详情 */
     Place,
 
+    ClusterMembers,
+
     /** 登录 */
     Login,
 

@@ -2,197 +2,208 @@ package cc.dinnerparty.compose.data.cluster
 
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.data.model.MapBounds
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.PI
 import kotlin.math.atan
-import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.ln
+import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlin.math.sinh
-import kotlin.math.tan
 
-/**
- * 地图点聚合索引。
- *
- * 把地点投到 Web 墨卡托平面，从最细的一级往上逐级按网格合并，得到一棵层级树。
- * 只索引有 id 又有经纬度的地点。
- */
 class PlaceClusterIndex(
     places: List<Place>,
-    /** 地图能达到的最大缩放级别，聚合只做到它的上一级。 */
-    private val mapMaxZoom: Int,
-    /** 聚合半径，单位屏幕像素，同时是格子边长。 */
+    mapMaxZoom: Int,
     radiusPx: Double,
-    private val minZoom: Int = DEFAULT_MIN_ZOOM,
+    private val minZoom: Int = 0,
 ) {
-
-    /** 参与索引的地点。 */
-    private val source: List<Place>
-
-    /** 单点，也就是 [exitZoom] 及以上的节点。 */
-    private val leaves: List<Node>
-
-    /** `levels[zoom]` 是这一级下应该显示的全部节点，只有 `minZoom..exitZoom - 1` 有值。 */
+    private val maxZoom = mapMaxZoom
+    private var source = normalize(places)
+    private val clusters = HashMap<Long, Node>()
     private val levels: Array<List<Node>>
 
-    /** 从这一级起不再聚合，直接出单点。 */
-    private val exitZoom = mapMaxZoom - 1
-
-    /** 按聚合 id 反查节点。 */
-    private val clustersById: Map<Long, Node>
-
-    /** 聚合半径换算到世界坐标下的长度。 */
-    private val worldRadius = radiusPx / TILE_SIZE
-
     init {
-        source = places
-        val projected = ArrayList<Node>(places.size)
-        places.forEachIndexed { index, place ->
-            val id = place.id
-            val longitude = place.longitude
-            val latitude = place.latitude
-            if (id == null || longitude == null || latitude == null) return@forEachIndexed
-            projected += Node(worldX(longitude), worldY(latitude), 1, index)
+        require(mapMaxZoom in 1..30)
+        require(minZoom in 0..maxZoom)
+        require(radiusPx.isFinite() && radiusPx > 0)
+        val leaves = source.mapIndexed { index, place ->
+            Node(worldX(place.longitude!!), worldY(place.latitude!!), 1, index)
         }
-        leaves = projected
-
-        val built = Array(mapMaxZoom + 1) { emptyList<Node>() }
-        val byId = HashMap<Long, Node>()
-        var nextId = CLUSTER_ID_BASE
-
-        // 退出聚合的那一级和它以上都是单点
-        built[exitZoom] = projected
-        built[mapMaxZoom] = projected
-
-        // 从退出聚合的下一级开始往粗合并
-        var current: List<Node> = projected
-        for (zoom in (exitZoom - 1) downTo minZoom) {
-            val cell = cellSizeAt(zoom)
-            val buckets = LinkedHashMap<Long, MutableList<Node>>()
-            for (node in current) {
-                buckets.getOrPut(cellKey(node, cell)) { ArrayList(1) } += node
-            }
-
-            val merged = ArrayList<Node>(buckets.size)
-            for (bucket in buckets.values) {
-                if (bucket.size == 1) {
-                    // 这一格里只有自己，直接升到粗一级
-                    merged += bucket[0]
+        levels = Array(maxZoom + 1) { leaves }
+        var current = leaves
+        val placeIds = source.mapTo(HashSet()) { it.id!! }
+        for (zoom in maxZoom downTo minZoom) {
+            val radius = radiusPx / TILE_SIZE / 2.0.pow(zoom)
+            val grid = RadiusGrid(current, radius)
+            val visited = BooleanArray(current.size)
+            val merged = ArrayList<Node>(current.size)
+            for (index in current.indices) {
+                if (visited[index]) continue
+                visited[index] = true
+                val seed = current[index]
+                val nearby = grid.nearby(seed).filter { !visited[it] }
+                if (nearby.isEmpty()) {
+                    merged += seed
                     continue
                 }
-                var sumX = 0.0
-                var sumY = 0.0
-                var count = 0
-                for (node in bucket) {
-                    // 按地点数加权求中心
-                    sumX += node.x * node.count
-                    sumY += node.y * node.count
+                var sumLng = seed.worldLng * seed.count
+                var sumLat = seed.worldLat * seed.count
+                var count = seed.count
+                val children = ArrayList<Node>(nearby.size + 1)
+                children += seed
+                for (neighbor in nearby) {
+                    visited[neighbor] = true
+                    val node = current[neighbor]
+                    sumLng += node.worldLng * node.count
+                    sumLat += node.worldLat * node.count
                     count += node.count
+                    children += node
                 }
-                val cluster = Node(
-                    x = sumX / count,
-                    y = sumY / count,
-                    count = count,
-                    placeIndex = -1,
-                    id = nextId++,
-                    zoom = zoom,
-                )
-                byId[cluster.id] = cluster
-                merged += cluster
+                var clusterId = clusterIds.getAndIncrement()
+                while (clusterId in placeIds) clusterId = clusterIds.getAndIncrement()
+                val group = Node(sumLng / count, sumLat / count, count, -1,
+                    clusterId, zoom, children)
+                clusters[group.id] = group
+                merged += group
             }
-
-            built[zoom] = merged
+            levels[zoom] = merged
             current = merged
         }
-
-        levels = built
-        clustersById = byId
     }
 
-    /**
-     * 当前视野与缩放级别下应该显示哪些节点。
-     *
-     * @param zoom 高德的缩放级别，小数直接四舍五入。超出索引范围时按边界那一级处理。
-     */
     fun query(bounds: MapBounds, zoom: Float): List<MapClusterNode> {
-        if (leaves.isEmpty()) return emptyList()
+        val level = levels[zoom.roundToInt().coerceIn(minZoom, maxZoom)]
+        val minLng = worldX(bounds.minLng)
+        val maxLng = worldX(bounds.maxLng)
+        val minLat = worldY(bounds.maxLat)
+        val maxLat = worldY(bounds.minLat)
+        return level.asSequence().filter { node ->
+            val inLng = if (bounds.minLng > bounds.maxLng) {
+                node.worldLng >= minLng || node.worldLng <= maxLng
+            } else {
+                node.worldLng in minLng..maxLng
+            }
+            inLng && node.worldLat in minLat..maxLat
+        }.map { it.toMapNode() }.toList()
+    }
 
-        val level = zoom.roundToInt().let { z ->
-            // 到了退出聚合的级别就直接展开成单点
-            if (z >= exitZoom) leaves else levels[z.coerceAtLeast(minZoom)]
+    internal fun updatePlaces(places: List<Place>) {
+        source = normalize(places)
+    }
+
+    fun expansionZoom(clusterId: Long): Int? = clusters[clusterId]?.let { it.zoom + 1 }
+
+    fun children(clusterId: Long): List<MapClusterNode> =
+        clusters[clusterId]?.children.orEmpty().map { it.toMapNode() }
+
+    internal fun descendantsAt(
+        clusterId: Long,
+        targetZoom: Int,
+        budget: NodeBudget,
+    ): List<MapClusterNode>? {
+        val root = clusters[clusterId] ?: return emptyList()
+        val pending = ArrayDeque<Node>()
+        val result = ArrayList<MapClusterNode>()
+        val level = targetZoom.coerceIn(minZoom, maxZoom)
+        pending.add(root)
+        while (pending.isNotEmpty()) {
+            if (--budget.remaining < 0) return null
+            val node = pending.removeLast()
+            if (node.placeIndex >= 0 || level <= node.zoom) result += node.toMapNode()
+            else pending.addAll(node.children.asReversed())
         }
-
-        val minX = worldX(bounds.minLng)
-        val maxX = worldX(bounds.maxLng)
-        // 墨卡托 y 轴朝下，北边对应 y 的下界
-        val minY = worldY(bounds.maxLat)
-        val maxY = worldY(bounds.minLat)
-
-        return level.asSequence()
-            .filter { it.x in minX..maxX && it.y in minY..maxY }
-            .map { it.toClusterNode() }
-            .toList()
+        return result
     }
 
-    /** 聚合散开所需的缩放级别，即它被合并出来时的级别加一。 */
-    fun expansionZoom(clusterId: Long): Int =
-        clustersById[clusterId]?.let { it.zoom + 1 } ?: minZoom
-
-    private fun Node.toClusterNode(): MapClusterNode {
-        val longitude = toLongitude(x)
-        val latitude = toLatitude(y)
-        return if (placeIndex >= 0) {
-            MapClusterNode.Single(source[placeIndex], longitude, latitude)
-        } else {
-            MapClusterNode.Group(id, longitude, latitude, count)
+    fun members(clusterId: Long): List<Place> {
+        val root = clusters[clusterId] ?: return emptyList()
+        val pending = ArrayDeque<Node>()
+        val places = ArrayList<Place>(root.count)
+        pending.add(root)
+        while (pending.isNotEmpty()) {
+            val node = pending.removeLast()
+            if (node.placeIndex >= 0) places += source[node.placeIndex]
+            else pending.addAll(node.children)
         }
+        return places.sortedBy { "place:${it.id}" }
     }
 
-    /** 网格边长（世界坐标单位）。 */
-    private fun cellSizeAt(zoom: Int): Double = worldRadius / (1 shl zoom)
-
-    private fun cellKey(node: Node, cell: Double): Long {
-        val column = floor(node.x / cell).toLong()
-        val row = floor(node.y / cell).toLong()
-        return (column shl 32) or (row and 0xffffffffL)
+    private fun Node.toMapNode(): MapClusterNode = if (placeIndex >= 0) {
+        val place = source[placeIndex]
+        MapClusterNode.Single(place, place.longitude!!, place.latitude!!)
+    } else {
+        MapClusterNode.Group(id, worldLng * 360.0 - 180.0,
+            atan(sinh(PI * (1.0 - 2.0 * worldLat))) * 180.0 / PI, count)
     }
 
-    /** 层级树上的一个节点，坐标为世界坐标（0~1 的墨卡托平面）。 */
     private class Node(
-        val x: Double,
-        val y: Double,
-        /** 这个节点代表多少个地点；叶子恒为 1。 */
+        val worldLng: Double,
+        val worldLat: Double,
         val count: Int,
-        /** 叶子在 [source] 里的下标；聚合点为 -1。 */
         val placeIndex: Int,
-        /** 聚合 id；叶子为 -1。 */
-        val id: Long = -1L,
-        /** 这个聚合被合并出来时的级别。 */
+        val id: Long = -1,
         val zoom: Int = 0,
+        val children: List<Node> = emptyList(),
     )
+
+    private class RadiusGrid(private val nodes: List<Node>, private val radius: Double) {
+        private val buckets = HashMap<Long, MutableList<Int>>()
+
+        init {
+            nodes.forEachIndexed { index, node ->
+                val column = floor(node.worldLng / radius).toLong()
+                val row = floor(node.worldLat / radius).toLong()
+                buckets.getOrPut(cellKey(column, row)) { ArrayList() }.add(index)
+            }
+        }
+
+        fun nearby(seed: Node): List<Int> {
+            val column = floor(seed.worldLng / radius).toLong()
+            val row = floor(seed.worldLat / radius).toLong()
+            val result = ArrayList<Int>()
+            for (offsetLng in -1L..1L) {
+                for (offsetLat in -1L..1L) {
+                    val bucket = buckets[cellKey(column + offsetLng, row + offsetLat)].orEmpty()
+                    for (index in bucket) {
+                        val deltaLng = nodes[index].worldLng - seed.worldLng
+                        val deltaLat = nodes[index].worldLat - seed.worldLat
+                        if (deltaLng * deltaLng + deltaLat * deltaLat <= radius * radius) {
+                            result += index
+                        }
+                    }
+                }
+            }
+            result.sort()
+            return result
+        }
+    }
 }
 
-/** 世界墨卡托的瓦片边长，和高德一致。 */
+internal fun normalize(places: List<Place>): List<Place> = places.asSequence()
+    .filter { place ->
+        val longitude = place.longitude
+        val latitude = place.latitude
+        place.id != null && longitude != null && latitude != null &&
+            longitude.isFinite() && latitude.isFinite() &&
+            longitude in -180.0..180.0 && latitude in -MAX_MAP_LAT..MAX_MAP_LAT
+    }
+    .distinctBy { it.id }
+    .sortedBy { "place:${it.id}" }
+    .map { it.copy(longitude = floor(it.longitude!! * 1e7 + 0.5) / 1e7,
+        latitude = floor(it.latitude!! * 1e7 + 0.5) / 1e7) }
+    .toList()
+
 private const val TILE_SIZE = 256.0
+internal const val MAX_MAP_LAT = 85.0511
+private val clusterIds = AtomicLong(1L shl 40)
 
-/** 墨卡托能表示的最大纬度。 */
-private const val MAX_MERCATOR_LAT = 85.05112877
+private fun cellKey(column: Long, row: Long): Long =
+    (column shl 32) or (row and 0xffffffffL)
 
-/** 索引的起点级别。 */
-private const val DEFAULT_MIN_ZOOM = 3
+private fun worldX(longitude: Double): Double = longitude / 360.0 + 0.5
 
-/** 聚合 id 的起点，大于所有地点 id。 */
-private const val CLUSTER_ID_BASE = 1L shl 40
-
-/** 经度 → 世界坐标 x，范围 0~1。 */
-private fun worldX(longitude: Double): Double = (longitude + 180.0) / 360.0
-
-/** 纬度 → 世界坐标 y，范围 0~1（北为 0，南为 1）。 */
 private fun worldY(latitude: Double): Double {
-    val radians = latitude.coerceIn(-MAX_MERCATOR_LAT, MAX_MERCATOR_LAT) * PI / 180.0
-    return (1.0 - ln(tan(radians) + 1.0 / cos(radians)) / PI) / 2.0
+    val sine = sin(latitude.coerceIn(-MAX_MAP_LAT, MAX_MAP_LAT) * PI / 180.0)
+    return (0.5 - 0.25 * ln((1.0 + sine) / (1.0 - sine)) / PI).coerceIn(0.0, 1.0)
 }
-
-private fun toLongitude(x: Double): Double = x * 360.0 - 180.0
-
-private fun toLatitude(y: Double): Double = atan(sinh(PI * (1.0 - 2.0 * y))) * 180.0 / PI

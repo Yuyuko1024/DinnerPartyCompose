@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.TextPaint
 import android.text.TextUtils
+import android.util.LruCache
 import androidx.core.content.ContextCompat
 import cc.dinnerparty.compose.R
 import com.amap.api.maps.model.BitmapDescriptor
@@ -31,6 +32,7 @@ internal data class MarkerLabelColors(
 /** 一张标记位图，以及它上面「地理坐标」所在的位置。 */
 internal data class MarkerGraphic(
     val descriptor: BitmapDescriptor,
+    val bitmap: Bitmap,
     /** 交给 `MarkerOptions.anchor(0.5f, anchorV)` 的纵向锚点。 */
     val anchorV: Float,
 )
@@ -45,13 +47,22 @@ internal class PlaceMarkerRenderer(
     private val colors: MarkerLabelColors,
 ) {
 
-    private val cache = HashMap<Pair<MapMarker, Boolean>, MarkerGraphic>()
+    private val cache = object : LruCache<MarkerStyle, MarkerGraphic>(4 * 1024 * 1024) {
+        override fun sizeOf(key: MarkerStyle, value: MarkerGraphic): Int = value.bitmap.byteCount
+    }
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
 
-    fun graphic(marker: MapMarker, selected: Boolean): MarkerGraphic =
-        cache.getOrPut(marker to selected) { build(marker, selected) }
+    fun graphic(marker: MapMarker, selected: Boolean): MarkerGraphic {
+        val style = if (marker.clusterCount == null) {
+            MarkerStyle(marker.name, marker.isAvoided, selected, null)
+        } else MarkerStyle("", false, false, marker.clusterCount)
+        cache.get(style)?.let { return it }
+        val graphic = build(marker, selected)
+        cache.put(style, graphic)
+        return graphic
+    }
 
     private fun build(marker: MapMarker, selected: Boolean): MarkerGraphic {
         // textPaint 共用，重画前先重置
@@ -141,6 +152,7 @@ internal class PlaceMarkerRenderer(
 
         return MarkerGraphic(
             descriptor = BitmapDescriptorFactory.fromBitmap(bitmap),
+            bitmap = bitmap,
             // 位图顶部到锚点的距离占整张位图的比例
             anchorV = glyphHeight / height,
         )
@@ -181,6 +193,7 @@ internal class PlaceMarkerRenderer(
 
         return MarkerGraphic(
             descriptor = BitmapDescriptorFactory.fromBitmap(bitmap),
+            bitmap = bitmap,
             // 锚点在图片底边
             anchorV = 1f,
         )
@@ -259,3 +272,6 @@ private fun formatCount(count: Int): String = when {
 
 private const val MaxClusterScale = 1.55
 private const val ClusterScaleFactor = 0.09
+
+private data class MarkerStyle(val name: String, val avoided: Boolean,
+    val selected: Boolean, val count: Int?)

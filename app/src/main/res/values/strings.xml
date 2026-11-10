@@ -170,4 +170,10 @@
     <string name="place_form_submit">Add</string>
     <string name="place_form_submitting">Saving\u2026</string>
     <string name="place_form_saved">Saved</string>
+
+    <string name="cluster_members_title">%1$d nearby places</string>
+    <string name="cluster_members_hint">Choose a place to view its details</string>
+    <string name="cluster_unnamed">Unnamed place</string>
+    <string name="cluster_uncategorized">Uncategorized</string>
+    <string name="cluster_member_cost">%1$s · ¥%2$d per person</string>
 </resources>
