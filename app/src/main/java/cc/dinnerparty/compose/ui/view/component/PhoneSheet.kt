@@ -9,22 +9,34 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.moriafly.salt.ui.SaltTheme
 import kotlinx.coroutines.launch
@@ -45,6 +57,8 @@ fun <T : Any> PhoneSheet(
 
     // 返回手势的拖动位移，0 为原位、1 为完全移出屏幕
     val backOffset = remember { Animatable(0f) }
+    val dragOffset = remember { Animatable(0f) }
+    var sheetHeight by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
     PredictiveBackHandler(enabled = value != null) { progress ->
         try {
@@ -58,7 +72,10 @@ fun <T : Any> PhoneSheet(
 
     // 重新弹出时复位
     LaunchedEffect(value) {
-        if (value != null) backOffset.snapTo(0f)
+        if (value != null) {
+            backOffset.snapTo(0f)
+            dragOffset.snapTo(0f)
+        }
     }
 
     Box(
@@ -87,7 +104,11 @@ fun <T : Any> PhoneSheet(
             visible = value != null,
             enter = slideInVertically { it },
             exit = slideOutVertically { it },
-            modifier = modifier.graphicsLayer { translationY = backOffset.value * size.height }
+            modifier = modifier
+                .onSizeChanged { sheetHeight = it.height.toFloat() }
+                .graphicsLayer {
+                    translationY = backOffset.value * size.height + dragOffset.value
+                }
         ) {
             shown?.let {
                 Box(
@@ -99,12 +120,67 @@ fun <T : Any> PhoneSheet(
                         .blockTouch()
                         .mapGlass(sheetShape)
                 ) {
-                    content(it)
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(HandleZone)
+                                .pointerInput(value) {
+                                    if (value == null) return@pointerInput
+                                    val tracker = VelocityTracker()
+                                    var dragged = 0f
+                                    detectVerticalDragGestures(
+                                        onDragStart = {
+                                            tracker.resetTracking()
+                                            dragged = dragOffset.value
+                                        },
+                                        onVerticalDrag = { change, amount ->
+                                            change.consume()
+                                            tracker.addPosition(change.uptimeMillis, change.position)
+                                            dragged = (dragged + amount).coerceAtLeast(0f)
+                                            scope.launch { dragOffset.snapTo(dragged) }
+                                        },
+                                        onDragEnd = {
+                                            val velocity = tracker.calculateVelocity().y
+                                            val dismiss = dragged >= sheetHeight * DismissFraction ||
+                                                velocity >= DismissVelocity
+                                            if (dismiss) onDismissRequest()
+                                            else scope.launch { dragOffset.animateTo(0f) }
+                                        },
+                                        onDragCancel = {
+                                            scope.launch { dragOffset.animateTo(0f) }
+                                        }
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(width = HandleWidth, height = HandleHeight)
+                                    .clip(CircleShape)
+                                    .background(SaltTheme.colors.subText.copy(alpha = HandleAlpha))
+                            )
+                        }
+                        content(it)
+                    }
                 }
             }
         }
     }
 }
+
+/** 手柄可拖动区域高度 */
+private val HandleZone = 24.dp
+
+private val HandleWidth = 36.dp
+
+private val HandleHeight = 4.dp
+
+private const val HandleAlpha = 0.35f
+
+private const val DismissFraction = 0.25f
+
+private const val DismissVelocity = 900f
 
 /** 手机端底部浮层，内容与数据无关。 */
 @Composable
