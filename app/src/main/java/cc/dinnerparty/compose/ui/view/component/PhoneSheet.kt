@@ -12,16 +12,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,6 +62,7 @@ fun <T : Any> PhoneSheet(
     // 返回手势的拖动位移，0 为原位、1 为完全移出屏幕
     val backOffset = remember { Animatable(0f) }
     val dragOffset = remember { Animatable(0f) }
+    val scrollState = rememberScrollState()
     var sheetHeight by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
     PredictiveBackHandler(enabled = value != null) { progress ->
@@ -75,6 +80,7 @@ fun <T : Any> PhoneSheet(
         if (value != null) {
             backOffset.snapTo(0f)
             dragOffset.snapTo(0f)
+            scrollState.scrollTo(0)
         }
     }
 
@@ -111,7 +117,7 @@ fun <T : Any> PhoneSheet(
                 }
         ) {
             shown?.let {
-                Box(
+                BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = OverlayEdgeGap)
@@ -120,7 +126,11 @@ fun <T : Any> PhoneSheet(
                         .blockTouch()
                         .mapGlass(sheetShape)
                 ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = maxHeight * SheetMaxRatio)
+                    ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -161,7 +171,13 @@ fun <T : Any> PhoneSheet(
                                     .background(SaltTheme.colors.subText.copy(alpha = HandleAlpha))
                             )
                         }
-                        content(it)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(scrollState)
+                        ) {
+                            content(it)
+                        }
                     }
                 }
             }
@@ -181,6 +197,9 @@ private const val HandleAlpha = 0.35f
 private const val DismissFraction = 0.25f
 
 private const val DismissVelocity = 900f
+
+/** 面板最大高度占屏幕比例 */
+private const val SheetMaxRatio = 0.92f
 
 /** 手机端底部浮层，内容与数据无关。 */
 @Composable

@@ -1,6 +1,7 @@
 package cc.dinnerparty.compose.ui.view.component
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,13 +37,9 @@ fun AccountContent(
     user: User?,
     avatarVersion: Long = 0L
 ) {
-    RoundedColumn(
-        modifier = Modifier.fillMaxWidth(),
-        paddingValues = PaddingValues(
-            horizontal = 0.dp,
-            vertical = 0.dp
-        ),
-        color = Color.Transparent
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
     ) {
         // 头像
         Row(

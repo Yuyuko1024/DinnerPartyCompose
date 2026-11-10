@@ -29,7 +29,7 @@ import cc.dinnerparty.compose.ui.view.component.PanelMaxHeight
 import cc.dinnerparty.compose.ui.view.component.PhoneSheet
 import cc.dinnerparty.compose.ui.view.component.PlaceCardDialog
 import cc.dinnerparty.compose.ui.view.component.PlaceCardOps
-import cc.dinnerparty.compose.ui.view.component.PlaceFormSheet
+import cc.dinnerparty.compose.ui.view.component.PlaceFormContent
 import cc.dinnerparty.compose.ui.view.component.PlaceFormUi
 import cc.dinnerparty.compose.ui.view.component.SearchPanel
 import cc.dinnerparty.compose.ui.view.component.SettingsContent
@@ -138,7 +138,7 @@ fun MainPhoneUI(
             onDismissRequest = form.events.onClose,
             modal = true
         ) {
-            PlaceFormSheet(state = form.state, events = form.events)
+            PlaceFormContent(state = form.state, events = form.events)
         }
 
         // 登录对话框

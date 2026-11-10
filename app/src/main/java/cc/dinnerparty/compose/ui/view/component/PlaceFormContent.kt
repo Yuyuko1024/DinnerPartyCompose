@@ -10,7 +10,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -20,15 +19,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
@@ -96,26 +92,6 @@ data class PlaceFormUi(
     val state: PlaceFormState = PlaceFormState(),
     val events: PlaceFormEvents = PlaceFormEvents(),
 )
-
-/** 手机端表单外层，限制高度后可滚动。 */
-@UnstableSaltUiApi
-@Composable
-fun PlaceFormSheet(
-    state: PlaceFormState,
-    events: PlaceFormEvents,
-    modifier: Modifier = Modifier,
-) {
-    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = maxHeight * SheetMaxRatio)
-                .verticalScroll(rememberScrollState())
-        ) {
-            PlaceFormContent(state = state, events = events)
-        }
-    }
-}
 
 /** 地点表单内容。 */
 @OptIn(UnstableSaltUiApi::class, ExperimentalLayoutApi::class)
@@ -660,5 +636,4 @@ private val CloseSize = 24.dp
 private val TileSize = 76.dp
 private val TagShape = RoundedCornerShape(50)
 private val ErrorColor = Color(0xFFD9534F)
-private const val SheetMaxRatio = 0.92f
 private const val TagWeightLimit = 16
