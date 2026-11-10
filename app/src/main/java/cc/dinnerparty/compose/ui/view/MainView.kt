@@ -586,7 +586,7 @@ private val LocationPermissions = arrayOf(
 private val DefaultCenter = LatLng(23.016485, 113.394405)
 
 /** 聚合半径单位为 dp */
-private const val ClusterRadius = 70.0
+private const val ClusterRadius = 50.0
 
 /** 点开聚合气泡时的相机动画时长。 */
 private const val ClusterExpandDurationMs = 300L
