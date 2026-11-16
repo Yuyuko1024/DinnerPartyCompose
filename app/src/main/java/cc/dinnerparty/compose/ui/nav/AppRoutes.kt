@@ -1,0 +1,13 @@
+package cc.dinnerparty.compose.ui.nav
+
+/** 全屏页面的路由名 */
+object AppRoutes {
+    /** 地图主页 栈底且内容为空 触摸穿透到地图 */
+    const val Map = "map"
+
+    /** 住民设置 */
+    const val Settings = "settings"
+
+    /** 修改头像 */
+    const val Avatar = "avatar"
+}

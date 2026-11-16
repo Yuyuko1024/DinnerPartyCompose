@@ -79,6 +79,11 @@
     <string name="login_cooldown">%1$ds</string>
 
     <!-- Account actions -->
+    <string name="account_verified">Identity verified</string>
+    <string name="account_my_places">My places</string>
+    <string name="account_my_profile">My profile</string>
+    <string name="account_settings">Resident &amp; map settings</string>
+    <string name="account_logout">Leave Gensokyo</string>
     <string name="account_logout_title">Sign out on all devices</string>
     <string name="account_logout_content">This device and every other device will be signed out and will need to sign in again. Continue?</string>
     <string name="account_logout_confirm">Sign out</string>

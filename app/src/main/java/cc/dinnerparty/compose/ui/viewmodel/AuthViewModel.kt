@@ -84,6 +84,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         repo.updatePassword(currentPassword, newPassword)
     }
 
+    /** 退出当前设备。 */
+    fun logout() {
+        submit { repo.logout() }
+    }
+
     /** 退出全部设备。 */
     fun logoutAll() {
         submit { repo.logoutAll() }

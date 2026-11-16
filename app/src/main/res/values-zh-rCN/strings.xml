@@ -125,6 +125,11 @@
     <string name="login_cooldown">%1$ds</string>
 
     <!-- 账号操作 -->
+    <string name="account_verified">身份已验证</string>
+    <string name="account_my_places">我创建的地点</string>
+    <string name="account_my_profile">我的主页</string>
+    <string name="account_settings">住民与地图设置</string>
+    <string name="account_logout">暂离幻想乡</string>
     <string name="account_logout_title">退出全部设备</string>
     <string name="account_logout_content">本机与其他所有设备都会退出登录，之后需要重新登录。确认退出？</string>
     <string name="account_logout_confirm">退出</string>

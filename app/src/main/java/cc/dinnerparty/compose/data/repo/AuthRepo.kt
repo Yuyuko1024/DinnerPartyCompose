@@ -121,6 +121,15 @@ class AuthRepo(context: Context) {
         return auth.user ?: error("password response missing user")
     }
 
+    /** 退出当前设备，成功后清空本地登录态。 */
+    suspend fun logout() {
+        try {
+            apiCall { userApi.logout() }
+        } finally {
+            clearSession()
+        }
+    }
+
     /** 退出全部设备，成功后清空本地登录态。 */
     suspend fun logoutAll() {
         apiCall { userApi.logoutAll() }

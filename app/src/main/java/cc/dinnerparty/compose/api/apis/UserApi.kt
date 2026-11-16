@@ -26,6 +26,10 @@ interface UserApi {
     @GET("users/me")
     suspend fun me(): UserResponse
 
+    /** 退出当前设备上的登录。 */
+    @POST("users/logout")
+    suspend fun logout(): SimpleResponse
+
     /** 退出所有设备上的登录。 */
     @POST("users/logout-all")
     suspend fun logoutAll(): SimpleResponse

@@ -6,4 +6,30 @@
     <string name="settings_glass">Liquid Glass</string>
     <string name="settings_blur">Blur</string>
     <string name="settings_glass_unsupported">Unsupported OS version, the blur theme will be used</string>
+    <!-- Resident settings page -->
+    <string name="settings_page_title">Resident settings</string>
+    <string name="settings_back">Back to map</string>
+    <string name="settings_page_path">Settings &gt;</string>
+    <string name="settings_avatar">Avatar:</string>
+    <string name="settings_name">Resident name: %1$s</string>
+    <string name="settings_password">Change passcode</string>
+    <string name="settings_theme">Personalised theme</string>
+    <string name="settings_skin">Theme skins</string>
+    <string name="settings_map">Personalised map</string>
+    <string name="settings_logout_all">Sign out on all devices</string>
+    <string name="settings_logout_all_hint">Every signed in device, this one included, must sign in again.</string>
+    <string name="settings_logout_all_button">Sign out all</string>
+    <string name="settings_delete">Remove from roster</string>
+    <string name="settings_delete_hint">Deletes the account and personal data, this cannot be undone.</string>
+    <string name="settings_delete_button">Remove</string>
+    <!-- Change avatar page -->
+    <string name="avatar_back">Back to settings</string>
+    <string name="avatar_page_path">Settings &gt; Change avatar</string>
+    <string name="avatar_pick">Choose image</string>
+    <string name="avatar_save">Save changes</string>
+    <string name="avatar_saving">Saving…</string>
+    <string name="avatar_source_title">Add image</string>
+    <string name="avatar_source_camera">Take photo</string>
+    <string name="avatar_source_gallery">Choose from gallery</string>
+    <string name="avatar_shot_failed">Cannot start the camera</string>
 </resources>

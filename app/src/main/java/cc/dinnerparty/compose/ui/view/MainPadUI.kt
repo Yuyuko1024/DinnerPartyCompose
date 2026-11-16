@@ -40,6 +40,7 @@ import cc.dinnerparty.compose.ui.view.component.AboutContent
 import cc.dinnerparty.compose.ui.view.component.ClusterMembersContent
 import cc.dinnerparty.compose.ui.view.component.AccountChip
 import cc.dinnerparty.compose.ui.view.component.AccountContent
+import cc.dinnerparty.compose.ui.view.component.AccountOps
 import cc.dinnerparty.compose.ui.view.component.CircleIconButton
 import cc.dinnerparty.compose.ui.view.component.LoginContent
 import cc.dinnerparty.compose.ui.view.component.MapFloatingActions
@@ -98,11 +99,7 @@ fun MainPadUI(
     addMode: Boolean = false,
     onAddClick: () -> Unit = {},
     onDismissPlaceCard: () -> Unit = {},
-    onUpdateAvatar: () -> Unit = {},
-    onUpdateUsername: () -> Unit = {},
-    onUpdatePassword: () -> Unit = {},
-    onLogoutAll: () -> Unit = {},
-    onDeleteAccount: () -> Unit = {}
+    account: AccountOps = AccountOps(),
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val settingsVm: SettingsViewModel = viewModel()
@@ -191,13 +188,9 @@ fun MainPadUI(
             ) {
                 AccountContent(
                     modifier = Modifier.padding(16.dp),
+                    ops = account,
                     user = authState.session?.user,
-                    avatarVersion = authState.session?.avatarVersion ?: 0L,
-                    onUpdateAvatar = onUpdateAvatar,
-                    onUpdateUsername = onUpdateUsername,
-                    onUpdatePassword = onUpdatePassword,
-                    onExitLogin = onLogoutAll,
-                    onDeleteUser = onDeleteAccount
+                    avatarVersion = authState.session?.avatarVersion ?: 0L
                 )
             }
             PadPanel(

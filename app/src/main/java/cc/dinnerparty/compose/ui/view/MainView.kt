@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.data.cluster.ClusterClick
@@ -28,8 +29,15 @@ import cc.dinnerparty.compose.data.model.canManage
 import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
 import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
 import cc.dinnerparty.compose.ui.adaptive.currentWindowSizeClass
+import cc.dinnerparty.compose.ui.nav.AppNavHost
+import cc.dinnerparty.compose.ui.nav.AppPages
+import cc.dinnerparty.compose.ui.nav.AppRoutes
+import cc.dinnerparty.compose.ui.page.AvatarPageOps
+import cc.dinnerparty.compose.ui.page.AvatarPageUi
+import cc.dinnerparty.compose.ui.page.SettingsPageOps
+import cc.dinnerparty.compose.ui.page.SettingsPageUi
+import cc.dinnerparty.compose.ui.view.component.AccountOps
 import cc.dinnerparty.compose.ui.view.component.AmapView
-import cc.dinnerparty.compose.ui.view.component.AvatarUpdateFlow
 import cc.dinnerparty.compose.ui.view.component.EditPasswordDialog
 import cc.dinnerparty.compose.ui.view.component.EditUsernameDialog
 import cc.dinnerparty.compose.ui.view.component.LocalLiquidGlass
@@ -93,9 +101,6 @@ fun MainView(modifier: Modifier = Modifier) {
     // 待二次确认的账号操作
     var pendingAccountAction by remember { mutableStateOf<AccountAction?>(null) }
 
-    // 头像选择裁剪上传流程
-    var avatarUpdating by remember { mutableStateOf(false) }
-
     // 地图对象
     var amap by remember { mutableStateOf<AMap?>(null) }
 
@@ -111,6 +116,21 @@ fun MainView(modifier: Modifier = Modifier) {
 
     // 当前显示的浮层
     val overlay = rememberMapOverlayManager()
+
+    // 全屏页面导航
+    val nav = rememberNavController()
+
+    // 住民设置页的操作
+    val settingsOps = remember {
+        SettingsPageOps(
+            onBack = { nav.popBackStack() },
+            onAvatar = { nav.navigate(AppRoutes.Avatar) { launchSingleTop = true } },
+            onUsername = { editUsername = true },
+            onPassword = { editPassword = true },
+            onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
+            onDelete = { pendingAccountAction = AccountAction.DELETE_ACCOUNT },
+        )
+    }
 
     // 浮层玻璃的采样源，取自地图
     val haze = rememberHazeState()
@@ -454,11 +474,13 @@ fun MainView(modifier: Modifier = Modifier) {
                         searchPoi = null
                         viewModel.clearSelection()
                     },
-                    onUpdateAvatar = { avatarUpdating = true },
-                    onUpdateUsername = { editUsername = true },
-                    onUpdatePassword = { editPassword = true },
-                    onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
-                    onDeleteAccount = { pendingAccountAction = AccountAction.DELETE_ACCOUNT }
+                    account = AccountOps(
+                        onLogout = authViewModel::logout,
+                        onSettings = {
+                            overlay.hide()
+                            nav.navigate(AppRoutes.Settings) { launchSingleTop = true }
+                        },
+                    ),
                 )
 
                 WindowSizeClass.Medium, WindowSizeClass.Expanded -> MainPadUI(
@@ -481,13 +503,37 @@ fun MainView(modifier: Modifier = Modifier) {
                         searchPoi = null
                         viewModel.clearSelection()
                     },
-                    onUpdateAvatar = { avatarUpdating = true },
-                    onUpdateUsername = { editUsername = true },
-                    onUpdatePassword = { editPassword = true },
-                    onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
-                    onDeleteAccount = { pendingAccountAction = AccountAction.DELETE_ACCOUNT }
+                    account = AccountOps(
+                        onLogout = authViewModel::logout,
+                        onSettings = {
+                            overlay.hide()
+                            nav.navigate(AppRoutes.Settings) { launchSingleTop = true }
+                        },
+                    ),
                 )
             }
+
+            AppNavHost(
+                nav = nav,
+                pages = AppPages(
+                    settings = SettingsPageUi(
+                        user = authState.session?.user,
+                        avatarVersion = authState.session?.avatarVersion ?: 0L
+                    ),
+                    settingsOps = settingsOps,
+                    avatar = AvatarPageUi(
+                        user = authState.session?.user,
+                        avatarVersion = authState.session?.avatarVersion ?: 0L
+                    ),
+                    avatarOps = AvatarPageOps(
+                        onBack = { nav.popBackStack() },
+                        onMessage = { message ->
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        },
+                        onSave = { bytes -> authViewModel.uploadAvatar(bytes) },
+                    ),
+                ),
+            )
         }
     }
 
@@ -558,15 +604,6 @@ fun MainView(modifier: Modifier = Modifier) {
                 },
             )
         }
-
-        AvatarUpdateFlow(
-            visible = avatarUpdating,
-            onDismiss = { avatarUpdating = false },
-            authViewModel = authViewModel,
-            onMessage = { message ->
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            },
-        )
     }
 }
 

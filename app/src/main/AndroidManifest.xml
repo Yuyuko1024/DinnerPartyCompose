@@ -41,6 +41,17 @@
         <!-- 定位 SDK 常驻服务 -->
         <service android:name="com.amap.api.location.APSService"/>
 
+        <!-- 拍照临时文件共享 -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"

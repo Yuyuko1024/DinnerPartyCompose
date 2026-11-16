@@ -6,4 +6,30 @@
     <string name="settings_glass">Liquid Glass</string>
     <string name="settings_blur">高斯模糊</string>
     <string name="settings_glass_unsupported">不支持的操作系统版本，将使用模糊主题</string>
+    <!-- 住民设置页 -->
+    <string name="settings_page_title">住民设置</string>
+    <string name="settings_back">返回地图</string>
+    <string name="settings_page_path">设置 &gt;</string>
+    <string name="settings_avatar">头像：</string>
+    <string name="settings_name">当前住民名：%1$s</string>
+    <string name="settings_password">修改通行密码</string>
+    <string name="settings_theme">个性化主题</string>
+    <string name="settings_skin">主题皮肤</string>
+    <string name="settings_map">个性化地图</string>
+    <string name="settings_logout_all">退出全部设备</string>
+    <string name="settings_logout_all_hint">让所有已登录的设备（包括本机）重新登录。</string>
+    <string name="settings_logout_all_button">全部退出</string>
+    <string name="settings_delete">从幻想乡名册除名</string>
+    <string name="settings_delete_hint">删除账号和个人数据，无法恢复。</string>
+    <string name="settings_delete_button">确认除名</string>
+    <!-- 修改头像页 -->
+    <string name="avatar_back">返回设置</string>
+    <string name="avatar_page_path">设置 &gt; 修改头像</string>
+    <string name="avatar_pick">选择图片</string>
+    <string name="avatar_save">保存更改</string>
+    <string name="avatar_saving">正在保存…</string>
+    <string name="avatar_source_title">添加图片</string>
+    <string name="avatar_source_camera">拍照</string>
+    <string name="avatar_source_gallery">从相册选择</string>
+    <string name="avatar_shot_failed">无法启动相机</string>
 </resources>

@@ -1,99 +1,89 @@
 package cc.dinnerparty.compose.ui.view.component
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.User
 import com.moriafly.salt.ui.Item
-import com.moriafly.salt.ui.ItemArrow
 import com.moriafly.salt.ui.ItemArrowType
-import com.moriafly.salt.ui.RoundedColumn
+import com.moriafly.salt.ui.ItemDivider
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
-import com.moriafly.salt.ui.enabledAlpha
-import com.moriafly.salt.ui.innerPadding
 
+/** 住民菜单的操作 */
+class AccountOps(
+    val onLogout: () -> Unit = {},
+    val onSettings: () -> Unit = {},
+)
+
+/** 已登录的住民菜单 */
 @UnstableSaltUiApi
 @Composable
 fun AccountContent(
     modifier: Modifier = Modifier,
-    onUpdateAvatar: () -> Unit,
-    onUpdateUsername: () -> Unit,
-    onUpdatePassword: () -> Unit,
-    onExitLogin: () -> Unit,
-    onDeleteUser: () -> Unit,
-    user: User?,
-    avatarVersion: Long = 0L
+    ops: AccountOps = AccountOps(),
+    user: User? = null,
+    avatarVersion: Long = 0L,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
-        // 头像
         Row(
-            modifier = Modifier.fillMaxWidth()
-                .heightIn(SaltTheme.dimens.item)
-                .enabledAlpha(true)
-                .clickable {
-                    onUpdateAvatar()
-                }
-                .innerPadding(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             user?.let {
                 UserAvatar(
                     user = it,
-                    size = 48.dp,
+                    size = HeaderAvatarSize,
                     avatarVersion = avatarVersion
                 )
             }
-            Text(
-                text = stringResource(R.string.account_change_avatar),
-                modifier = Modifier.weight(1f).padding(8.dp, 0.dp)
-            )
-            ItemArrow(ItemArrowType.Arrow)
+            Column(modifier = Modifier.padding(start = 12.dp)) {
+                Text(
+                    text = user?.username ?: "-",
+                    style = SaltTheme.textStyles.main
+                )
+                Text(
+                    text = stringResource(R.string.account_verified),
+                    color = SaltTheme.colors.subText,
+                    style = SaltTheme.textStyles.sub
+                )
+            }
         }
-
         Item(
-            text = stringResource(R.string.account_current_username, user?.username ?: "-"),
-            onClick = {
-                onUpdateUsername()
-            }
+            text = stringResource(R.string.account_my_places),
+            arrowType = ItemArrowType.None,
+            onClick = {},
         )
         Item(
-            text = stringResource(R.string.account_change_password),
-            onClick = {
-                onUpdatePassword()
-            }
+            text = stringResource(R.string.account_my_profile),
+            arrowType = ItemArrowType.None,
+            onClick = {},
         )
         Item(
-            text = stringResource(R.string.account_logout_title),
-            sub = stringResource(R.string.account_logout_sub),
-            onClick = {
-                onExitLogin()
-            }
+            text = stringResource(R.string.account_settings),
+            arrowType = ItemArrowType.None,
+            onClick = ops.onSettings,
         )
+        ItemDivider()
         Item(
-            textColor = ErrorColor,
-            text = stringResource(R.string.account_delete_title),
-            sub = stringResource(R.string.account_delete_sub),
-            onClick = {
-                onDeleteUser()
-            }
+            textColor = SaltTheme.colors.error,
+            text = stringResource(R.string.account_logout),
+            arrowType = ItemArrowType.None,
+            onClick = ops.onLogout,
         )
     }
 }
 
-private val ErrorColor = Color(0xFFD9534F)
+private val HeaderAvatarSize = 48.dp
