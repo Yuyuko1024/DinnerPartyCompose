@@ -62,7 +62,6 @@ internal fun padMenuActions(
     onRandomClick: () -> Unit,
     onDiningClick: () -> Unit,
     onExportPostClick: () -> Unit,
-    onSettingsClick: () -> Unit,
     onAboutClick: () -> Unit
 ): List<MapAction> = listOf(
     MapAction(
@@ -76,10 +75,6 @@ internal fun padMenuActions(
     MapAction(
         label = stringResource(R.string.menu_export_post),
         onClick = onExportPostClick,
-    ),
-    MapAction(
-        label = stringResource(R.string.menu_settings),
-        onClick = onSettingsClick
     ),
     MapAction(
         label = stringResource(R.string.menu_about),

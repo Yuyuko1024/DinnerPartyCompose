@@ -149,7 +149,6 @@ fun MainPadUI(
                     .align(Alignment.TopEnd)
                     .padding(top = FloatingActionTopPadding),
                 expanded = overlay.current == MapOverlay.Menu,
-                onSettingsClick = onSettingsClick,
                 onAboutClick = { overlay.show(MapOverlay.About) },
                 onDismissRequest = overlay::hide
             )

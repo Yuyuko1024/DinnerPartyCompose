@@ -26,7 +26,6 @@ internal fun MapMenuList(
     onRandomClick: () -> Unit = {},
     onDiningClick: () -> Unit = {},
     onExportPostClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {},
     onAboutClick: () -> Unit = {}
 ) {
     val actions = padMenuActions(
@@ -41,10 +40,6 @@ internal fun MapMenuList(
         onExportPostClick = {
             onClose()
             onExportPostClick()
-        },
-        onSettingsClick = {
-            onClose()
-            onSettingsClick()
         },
         onAboutClick = {
             onClose()

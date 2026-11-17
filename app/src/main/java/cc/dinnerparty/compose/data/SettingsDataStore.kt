@@ -36,9 +36,9 @@ class SettingsDataStore(context: Context) {
     val privacyAgreed: Flow<Boolean> = prefs
         .map { preferences -> preferences[PrivacyAgreedKey] ?: false }
 
-    /** 是否启用液态玻璃 默认开启 */
+    /** 是否启用液态玻璃 默认关闭 */
     val liquidGlass: Flow<Boolean> = prefs
-        .map { preferences -> preferences[LiquidGlassKey] ?: true }
+        .map { preferences -> preferences[LiquidGlassKey] ?: false }
 
     /** 亮暗是否跟随系统 默认跟随 */
     val followSystem: Flow<Boolean> = prefs

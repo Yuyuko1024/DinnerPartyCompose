@@ -187,7 +187,6 @@ fun MainPhoneUI(
             MapMenuList(
                 modifier = Modifier.padding(vertical = 8.dp),
                 onClose = overlay::hide,
-                onSettingsClick = onSettingsClick,
                 onAboutClick = { overlay.show(MapOverlay.About) }
             )
         }

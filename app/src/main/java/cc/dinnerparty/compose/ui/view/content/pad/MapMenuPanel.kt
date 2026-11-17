@@ -14,7 +14,6 @@ fun MapMenuPanel(
     onRandomClick: () -> Unit = {},
     onDiningClick: () -> Unit = {},
     onExportPostClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {},
     onAboutClick: () -> Unit = {},
     onDismissRequest: () -> Unit = {}
 ) {
@@ -25,7 +24,6 @@ fun MapMenuPanel(
             onRandomClick = onRandomClick,
             onDiningClick = onDiningClick,
             onExportPostClick = onExportPostClick,
-            onSettingsClick = onSettingsClick,
             onAboutClick = onAboutClick
         )
     }
