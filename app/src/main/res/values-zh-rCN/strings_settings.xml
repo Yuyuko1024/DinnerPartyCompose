@@ -32,4 +32,8 @@
     <string name="avatar_source_camera">拍照</string>
     <string name="avatar_source_gallery">从相册选择</string>
     <string name="avatar_shot_failed">无法启动相机</string>
+    <!-- 修改住民名与通行密码页 -->
+    <string name="back_to_settings">返回设置</string>
+    <string name="username_page_path">设置 &gt; 修改住民名</string>
+    <string name="password_page_path">设置 &gt; 修改通行密码</string>
 </resources>

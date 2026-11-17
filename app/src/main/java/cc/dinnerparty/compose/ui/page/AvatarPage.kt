@@ -11,18 +11,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.runtime.Composable
@@ -44,7 +37,6 @@ import androidx.core.content.FileProvider
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.ApiException
 import cc.dinnerparty.compose.api.model.User
-import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
 import cc.dinnerparty.compose.ui.view.component.AvatarCropDialog
 import cc.dinnerparty.compose.ui.view.component.PhoneSheet
 import cc.dinnerparty.compose.ui.view.component.UserAvatar
@@ -86,7 +78,6 @@ fun AvatarPage(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val isTablet = LocalIsTablet.current
 
     // 待裁剪的原图
     var source by remember { mutableStateOf<Bitmap?>(null) }
@@ -112,27 +103,14 @@ fun AvatarPage(
         scope.launch { source = readImage(context, uri, ops.onMessage) }
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SaltTheme.colors.background)
-    ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxHeight()
-                .fillMaxWidth(if (isTablet) PadWidthRatio else 1f)
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = PagePadding)
-        ) {
-            PageHeader(
-                title = stringResource(R.string.settings_page_title),
+    Box(modifier = modifier.fillMaxSize()) {
+        PageScaffold(
+            info = PageInfo(
+                path = stringResource(R.string.avatar_page_path),
                 backText = stringResource(R.string.avatar_back),
-                onBack = ops.onBack,
-            )
-            PagePath(text = stringResource(R.string.avatar_page_path))
+            ),
+            onBack = ops.onBack,
+        ) {
             RoundedColumn(
                 modifier = Modifier.padding(bottom = PagePadding),
                 paddingValues = PaddingValues(PagePadding),

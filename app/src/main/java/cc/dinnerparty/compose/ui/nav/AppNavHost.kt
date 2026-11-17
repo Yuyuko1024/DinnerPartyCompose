@@ -16,7 +16,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import cc.dinnerparty.compose.ui.page.AvatarPage
+import cc.dinnerparty.compose.ui.page.PasswordPage
 import cc.dinnerparty.compose.ui.page.SettingsPage
+import cc.dinnerparty.compose.ui.page.UsernamePage
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
 /** 页面转场时长 */
@@ -27,7 +29,8 @@ private const val PageMs = 260
 @Composable
 fun AppNavHost(
     nav: NavHostController,
-    pages: AppPages,
+    data: AppPageData,
+    ops: AppPageOps,
     modifier: Modifier = Modifier,
 ) {
     // 非预测性返回回调 让转场按固定时长跑满
@@ -62,12 +65,22 @@ fun AppNavHost(
 
         composable(route = AppRoutes.Settings) {
             BackHandler { pop() }
-            SettingsPage(ui = pages.settings, ops = pages.settingsOps)
+            SettingsPage(ui = data.settings, ops = ops.settings)
         }
 
         composable(route = AppRoutes.Avatar) {
             BackHandler { pop() }
-            AvatarPage(ui = pages.avatar, ops = pages.avatarOps)
+            AvatarPage(ui = data.avatar, ops = ops.avatar)
+        }
+
+        composable(route = AppRoutes.Username) {
+            BackHandler { pop() }
+            UsernamePage(ui = data.username, ops = ops.username)
+        }
+
+        composable(route = AppRoutes.Password) {
+            BackHandler { pop() }
+            PasswordPage(ops = ops.password)
         }
     }
 }

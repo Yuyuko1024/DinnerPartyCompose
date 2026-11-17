@@ -30,16 +30,18 @@ import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
 import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
 import cc.dinnerparty.compose.ui.adaptive.currentWindowSizeClass
 import cc.dinnerparty.compose.ui.nav.AppNavHost
-import cc.dinnerparty.compose.ui.nav.AppPages
+import cc.dinnerparty.compose.ui.nav.AppPageData
+import cc.dinnerparty.compose.ui.nav.AppPageOps
 import cc.dinnerparty.compose.ui.nav.AppRoutes
 import cc.dinnerparty.compose.ui.page.AvatarPageOps
 import cc.dinnerparty.compose.ui.page.AvatarPageUi
+import cc.dinnerparty.compose.ui.page.PasswordPageOps
 import cc.dinnerparty.compose.ui.page.SettingsPageOps
 import cc.dinnerparty.compose.ui.page.SettingsPageUi
+import cc.dinnerparty.compose.ui.page.UsernamePageOps
+import cc.dinnerparty.compose.ui.page.UsernamePageUi
 import cc.dinnerparty.compose.ui.view.component.AccountOps
 import cc.dinnerparty.compose.ui.view.component.AmapView
-import cc.dinnerparty.compose.ui.view.component.EditPasswordDialog
-import cc.dinnerparty.compose.ui.view.component.EditUsernameDialog
 import cc.dinnerparty.compose.ui.view.component.LocalLiquidGlass
 import cc.dinnerparty.compose.ui.view.component.LocalMapHaze
 import cc.dinnerparty.compose.ui.view.component.PlaceCardOps
@@ -94,10 +96,6 @@ fun MainView(modifier: Modifier = Modifier) {
     val dismiss = rememberDismiss()
     var showLocationPermissionGuide by remember { mutableStateOf(false) }
 
-    // 账号编辑弹框开关
-    var editUsername by remember { mutableStateOf(false) }
-    var editPassword by remember { mutableStateOf(false) }
-
     // 待二次确认的账号操作
     var pendingAccountAction by remember { mutableStateOf<AccountAction?>(null) }
 
@@ -120,15 +118,37 @@ fun MainView(modifier: Modifier = Modifier) {
     // 全屏页面导航
     val nav = rememberNavController()
 
-    // 住民设置页的操作
-    val settingsOps = remember {
-        SettingsPageOps(
-            onBack = { nav.popBackStack() },
-            onAvatar = { nav.navigate(AppRoutes.Avatar) { launchSingleTop = true } },
-            onUsername = { editUsername = true },
-            onPassword = { editPassword = true },
-            onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
-            onDelete = { pendingAccountAction = AccountAction.DELETE_ACCOUNT },
+    // 页面提示
+    val toast: (String) -> Unit = { message ->
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
+    // 全屏页面的操作
+    val pageOps = remember {
+        AppPageOps(
+            settings = SettingsPageOps(
+                onBack = { nav.popBackStack() },
+                onAvatar = { nav.navigate(AppRoutes.Avatar) { launchSingleTop = true } },
+                onUsername = { nav.navigate(AppRoutes.Username) { launchSingleTop = true } },
+                onPassword = { nav.navigate(AppRoutes.Password) { launchSingleTop = true } },
+                onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
+                onDelete = { pendingAccountAction = AccountAction.DELETE_ACCOUNT },
+            ),
+            avatar = AvatarPageOps(
+                onBack = { nav.popBackStack() },
+                onMessage = toast,
+                onSave = { bytes -> authViewModel.uploadAvatar(bytes) },
+            ),
+            username = UsernamePageOps(
+                onBack = { nav.popBackStack() },
+                onMessage = toast,
+                onSave = { name -> authViewModel.updateUsername(name) },
+            ),
+            password = PasswordPageOps(
+                onBack = { nav.popBackStack() },
+                onMessage = toast,
+                onSave = { current, next -> authViewModel.updatePassword(current, next) },
+            ),
         )
     }
 
@@ -515,24 +535,20 @@ fun MainView(modifier: Modifier = Modifier) {
 
             AppNavHost(
                 nav = nav,
-                pages = AppPages(
+                data = AppPageData(
                     settings = SettingsPageUi(
                         user = authState.session?.user,
                         avatarVersion = authState.session?.avatarVersion ?: 0L
                     ),
-                    settingsOps = settingsOps,
                     avatar = AvatarPageUi(
                         user = authState.session?.user,
                         avatarVersion = authState.session?.avatarVersion ?: 0L
                     ),
-                    avatarOps = AvatarPageOps(
-                        onBack = { nav.popBackStack() },
-                        onMessage = { message ->
-                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                        },
-                        onSave = { bytes -> authViewModel.uploadAvatar(bytes) },
+                    username = UsernamePageUi(
+                        currentName = authState.session?.user?.username.orEmpty()
                     ),
                 ),
+                ops = pageOps,
             )
         }
     }
@@ -552,27 +568,6 @@ fun MainView(modifier: Modifier = Modifier) {
                 cancelText = stringResource(R.string.action_cancel),
                 confirmText = stringResource(R.string.action_go_to_settings),
                 content = { Text(text = stringResource(R.string.location_permission_guide)) },
-            )
-        }
-
-        if (editUsername) {
-            EditUsernameDialog(
-                currentUsername = authState.session?.user?.username.orEmpty(),
-                onDismiss = { editUsername = false },
-                authViewModel = authViewModel,
-                onMessage = { message ->
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                },
-            )
-        }
-
-        if (editPassword) {
-            EditPasswordDialog(
-                onDismiss = { editPassword = false },
-                authViewModel = authViewModel,
-                onMessage = { message ->
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                },
             )
         }
 

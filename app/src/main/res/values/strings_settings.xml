@@ -32,4 +32,8 @@
     <string name="avatar_source_camera">Take photo</string>
     <string name="avatar_source_gallery">Choose from gallery</string>
     <string name="avatar_shot_failed">Cannot start the camera</string>
+    <!-- Change resident name and passcode pages -->
+    <string name="back_to_settings">Back to settings</string>
+    <string name="username_page_path">Settings &gt; Change resident name</string>
+    <string name="password_page_path">Settings &gt; Change passcode</string>
 </resources>

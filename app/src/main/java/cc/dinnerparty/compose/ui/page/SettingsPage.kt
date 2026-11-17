@@ -1,24 +1,14 @@
 package cc.dinnerparty.compose.ui.page
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +16,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.User
-import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
 import cc.dinnerparty.compose.ui.view.component.UserAvatar
 import com.moriafly.salt.ui.Button
 import com.moriafly.salt.ui.ButtonAppearance
@@ -72,87 +61,71 @@ fun SettingsPage(
     ops: SettingsPageOps,
     modifier: Modifier = Modifier,
 ) {
-    val isTablet = LocalIsTablet.current
-
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SaltTheme.colors.background)
+    PageScaffold(
+        info = PageInfo(
+            path = stringResource(R.string.settings_page_path),
+            backText = stringResource(R.string.settings_back),
+        ),
+        onBack = ops.onBack,
+        modifier = modifier,
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxHeight()
-                .fillMaxWidth(if (isTablet) PadWidthRatio else 1f)
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = PagePadding)
+        RoundedColumn(
+            modifier = Modifier.padding(bottom = PagePadding),
+            paddingValues = PaddingValues(vertical = CardPadding),
         ) {
-            PageHeader(
-                title = stringResource(R.string.settings_page_title),
-                backText = stringResource(R.string.settings_back),
-                onBack = ops.onBack,
+            AvatarRow(ui = ui, onAvatar = ops.onAvatar)
+            ItemDivider()
+            Item(
+                text = stringResource(
+                    R.string.settings_name,
+                    ui.user?.username.orEmpty()
+                ),
+                arrowType = ItemArrowType.Arrow,
+                onClick = ops.onUsername,
             )
-            PagePath(text = stringResource(R.string.settings_page_path))
-            RoundedColumn(
-                modifier = Modifier.padding(bottom = PagePadding),
-                paddingValues = PaddingValues(vertical = CardPadding),
-            ) {
-                AvatarRow(ui = ui, onAvatar = ops.onAvatar)
-                ItemDivider()
-                Item(
-                    text = stringResource(
-                        R.string.settings_name,
-                        ui.user?.username.orEmpty()
-                    ),
-                    arrowType = ItemArrowType.Arrow,
-                    onClick = ops.onUsername,
-                )
-                ItemDivider()
-                Item(
-                    text = stringResource(R.string.settings_password),
-                    arrowType = ItemArrowType.Arrow,
-                    onClick = ops.onPassword,
-                )
-                ItemDivider()
-                Item(
-                    text = stringResource(R.string.settings_theme),
-                    arrowType = ItemArrowType.Arrow,
-                    onClick = {},
-                )
-                ItemDivider()
-                Item(
-                    text = stringResource(R.string.settings_skin),
-                    arrowType = ItemArrowType.Arrow,
-                    onClick = {},
-                )
-                ItemDivider()
-                Item(
-                    text = stringResource(R.string.settings_map),
-                    arrowType = ItemArrowType.Arrow,
-                    onClick = {},
-                )
-                ItemDivider()
-                ActionRow(
-                    spec = ActionSpec(
-                        text = stringResource(R.string.settings_logout_all),
-                        hint = stringResource(R.string.settings_logout_all_hint),
-                        button = stringResource(R.string.settings_logout_all_button),
-                    ),
-                    onClick = ops.onLogoutAll,
-                )
-                ItemDivider()
-                ActionRow(
-                    spec = ActionSpec(
-                        text = stringResource(R.string.settings_delete),
-                        hint = stringResource(R.string.settings_delete_hint),
-                        button = stringResource(R.string.settings_delete_button),
-                        danger = true,
-                    ),
-                    onClick = ops.onDelete,
-                )
-            }
+            ItemDivider()
+            Item(
+                text = stringResource(R.string.settings_password),
+                arrowType = ItemArrowType.Arrow,
+                onClick = ops.onPassword,
+            )
+            ItemDivider()
+            Item(
+                text = stringResource(R.string.settings_theme),
+                arrowType = ItemArrowType.Arrow,
+                onClick = {},
+            )
+            ItemDivider()
+            Item(
+                text = stringResource(R.string.settings_skin),
+                arrowType = ItemArrowType.Arrow,
+                onClick = {},
+            )
+            ItemDivider()
+            Item(
+                text = stringResource(R.string.settings_map),
+                arrowType = ItemArrowType.Arrow,
+                onClick = {},
+            )
+            ItemDivider()
+            ActionRow(
+                spec = ActionSpec(
+                    text = stringResource(R.string.settings_logout_all),
+                    hint = stringResource(R.string.settings_logout_all_hint),
+                    button = stringResource(R.string.settings_logout_all_button),
+                ),
+                onClick = ops.onLogoutAll,
+            )
+            ItemDivider()
+            ActionRow(
+                spec = ActionSpec(
+                    text = stringResource(R.string.settings_delete),
+                    hint = stringResource(R.string.settings_delete_hint),
+                    button = stringResource(R.string.settings_delete_button),
+                    danger = true,
+                ),
+                onClick = ops.onDelete,
+            )
         }
     }
 }

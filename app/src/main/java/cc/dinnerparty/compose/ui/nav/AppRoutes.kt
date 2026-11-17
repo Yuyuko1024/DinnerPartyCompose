@@ -10,4 +10,10 @@ object AppRoutes {
 
     /** 修改头像 */
     const val Avatar = "avatar"
+
+    /** 修改住民名 */
+    const val Username = "username"
+
+    /** 修改通行密码 */
+    const val Password = "password"
 }
