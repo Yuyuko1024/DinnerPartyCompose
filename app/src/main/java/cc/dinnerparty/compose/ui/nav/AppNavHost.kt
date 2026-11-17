@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import cc.dinnerparty.compose.ui.view.screen.AvatarPage
 import cc.dinnerparty.compose.ui.view.screen.PasswordPage
 import cc.dinnerparty.compose.ui.view.screen.SettingsPage
+import cc.dinnerparty.compose.ui.view.screen.ThemePage
 import cc.dinnerparty.compose.ui.view.screen.UsernamePage
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
@@ -66,6 +67,11 @@ fun AppNavHost(
         composable(route = AppRoutes.Settings) {
             BackHandler { pop() }
             SettingsPage(ui = data.settings, ops = ops.settings)
+        }
+
+        composable(route = AppRoutes.Theme) {
+            BackHandler { pop() }
+            ThemePage(ui = data.theme, ops = ops.theme)
         }
 
         composable(route = AppRoutes.Avatar) {

@@ -38,6 +38,9 @@ import cc.dinnerparty.compose.ui.view.screen.AvatarPageUi
 import cc.dinnerparty.compose.ui.view.screen.PasswordPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageUi
+import cc.dinnerparty.compose.ui.view.screen.ThemePageOps
+import cc.dinnerparty.compose.ui.view.screen.ThemeSwitch
+import cc.dinnerparty.compose.ui.view.screen.ThemePageUi
 import cc.dinnerparty.compose.ui.view.screen.UsernamePageOps
 import cc.dinnerparty.compose.ui.view.screen.UsernamePageUi
 import cc.dinnerparty.compose.ui.view.content.AccountOps
@@ -123,6 +126,11 @@ fun MainView(modifier: Modifier = Modifier) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
+    // 主题与玻璃设置
+    val settingsVm: SettingsViewModel = viewModel()
+    val settingsState by settingsVm.uiState.collectAsStateWithLifecycle()
+    val liquidGlass = settingsState.liquidGlass
+
     // 全屏页面的操作
     val pageOps = remember {
         AppPageOps(
@@ -131,6 +139,7 @@ fun MainView(modifier: Modifier = Modifier) {
                 onAvatar = { nav.navigate(AppRoutes.Avatar) { launchSingleTop = true } },
                 onUsername = { nav.navigate(AppRoutes.Username) { launchSingleTop = true } },
                 onPassword = { nav.navigate(AppRoutes.Password) { launchSingleTop = true } },
+                onTheme = { nav.navigate(AppRoutes.Theme) { launchSingleTop = true } },
                 onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
                 onDelete = { pendingAccountAction = AccountAction.DELETE_ACCOUNT },
             ),
@@ -149,16 +158,23 @@ fun MainView(modifier: Modifier = Modifier) {
                 onMessage = toast,
                 onSave = { current, next -> authViewModel.updatePassword(current, next) },
             ),
+            theme = ThemePageOps(
+                onBack = { nav.popBackStack() },
+                onSwitch = { which, enabled ->
+                    when (which) {
+                        ThemeSwitch.Dark -> settingsVm.setDarkTheme(enabled)
+                        ThemeSwitch.FollowSystem -> settingsVm.setFollowSystem(enabled)
+                        ThemeSwitch.Glass -> settingsVm.setGlass(enabled)
+                    }
+                },
+                onPrimary = settingsVm::setPrimary,
+                onSecondary = settingsVm::setSecondary,
+            ),
         )
     }
 
     // 浮层玻璃的采样源，取自地图
     val haze = rememberHazeState()
-
-    // 浮层玻璃是否走液态玻璃
-    val settingsVm: SettingsViewModel = viewModel()
-    val settingsState by settingsVm.uiState.collectAsStateWithLifecycle()
-    val liquidGlass = settingsState.liquidGlass
 
     // 添加模式 此时点地图或高德 POI 取点
     var addMode by remember { mutableStateOf(false) }
@@ -494,6 +510,10 @@ fun MainView(modifier: Modifier = Modifier) {
                         searchPoi = null
                         viewModel.clearSelection()
                     },
+                    onSettingsClick = {
+                        overlay.hide()
+                        nav.navigate(AppRoutes.Settings) { launchSingleTop = true }
+                    },
                     account = AccountOps(
                         onLogout = authViewModel::logout,
                         onSettings = {
@@ -523,6 +543,10 @@ fun MainView(modifier: Modifier = Modifier) {
                         searchPoi = null
                         viewModel.clearSelection()
                     },
+                    onSettingsClick = {
+                        overlay.hide()
+                        nav.navigate(AppRoutes.Settings) { launchSingleTop = true }
+                    },
                     account = AccountOps(
                         onLogout = authViewModel::logout,
                         onSettings = {
@@ -546,6 +570,11 @@ fun MainView(modifier: Modifier = Modifier) {
                     ),
                     username = UsernamePageUi(
                         currentName = authState.session?.user?.username.orEmpty()
+                    ),
+                    theme = ThemePageUi(
+                        darkTheme = settingsState.darkTheme,
+                        followSystem = settingsState.followSystem,
+                        liquidGlass = liquidGlass,
                     ),
                 ),
                 ops = pageOps,

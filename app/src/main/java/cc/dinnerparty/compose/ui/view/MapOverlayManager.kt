@@ -23,9 +23,6 @@ enum class MapOverlay {
     /** 更多菜单 */
     Menu,
 
-    /** 设置 */
-    Settings,
-
     /** 关于 */
     About,
 

@@ -82,6 +82,8 @@ dependencies {
     implementation(files("libs/AMap3DMap_11.3.100_AMapSearch_9.8.1_AMapLocation_11.3.101_20260924.aar"))
     // 自定义分段按钮
     implementation(libs.segmented.control)
+    // 强调色取色器
+    implementation(libs.colorpicker.compose)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

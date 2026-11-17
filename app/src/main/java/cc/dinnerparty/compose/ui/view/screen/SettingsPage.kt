@@ -41,6 +41,7 @@ class SettingsPageOps(
     val onAvatar: () -> Unit = {},
     val onUsername: () -> Unit = {},
     val onPassword: () -> Unit = {},
+    val onTheme: () -> Unit = {},
     val onLogoutAll: () -> Unit = {},
     val onDelete: () -> Unit = {},
 )
@@ -93,7 +94,7 @@ fun SettingsPage(
             Item(
                 text = stringResource(R.string.settings_theme),
                 arrowType = ItemArrowType.Arrow,
-                onClick = {},
+                onClick = ops.onTheme,
             )
             ItemDivider()
             Item(

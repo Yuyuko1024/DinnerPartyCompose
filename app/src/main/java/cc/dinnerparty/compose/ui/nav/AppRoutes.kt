@@ -8,6 +8,9 @@ object AppRoutes {
     /** 住民设置 */
     const val Settings = "settings"
 
+    /** 个性化主题 */
+    const val Theme = "theme"
+
     /** 修改头像 */
     const val Avatar = "avatar"
 

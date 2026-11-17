@@ -12,13 +12,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.dinnerparty.compose.data.SettingsDataStore
 import cc.dinnerparty.compose.ui.view.component.PrivacyConsentDialog
 import cc.dinnerparty.compose.ui.theme.DinnerPartyTheme
 import cc.dinnerparty.compose.ui.view.MainView
 import cc.dinnerparty.compose.ui.view.component.agreeAmapPrivacy
+import cc.dinnerparty.compose.ui.viewmodel.SettingsViewModel
 import com.moriafly.salt.ui.UnstableSaltUiApi
 import kotlinx.coroutines.launch
 
@@ -32,8 +36,21 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            DinnerPartyTheme {
-                StatusBarAppearance(window)
+            val settingsVm: SettingsViewModel = viewModel()
+            val settingsState by settingsVm.uiState.collectAsStateWithLifecycle()
+            val darkTheme = if (settingsState.followSystem) {
+                isSystemInDarkTheme()
+            } else {
+                settingsState.darkTheme
+            }
+            val primary = settingsState.primary?.let { argb -> Color(argb) }
+            val secondary = settingsState.secondary?.let { argb -> Color(argb) }
+            DinnerPartyTheme(
+                isDarkTheme = darkTheme,
+                primary = primary,
+                secondary = secondary
+            ) {
+                StatusBarAppearance(window = window, isDark = darkTheme)
                 AppRoot(
                     settings = settings,
                     onDeclinePrivacy = { finish() }
@@ -43,13 +60,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/** 状态栏图标亮暗跟随系统主题。 */
+/** 状态栏图标亮暗与当前主题一致。 */
 @Composable
-private fun StatusBarAppearance(window: Window) {
-    val isDarkTheme = isSystemInDarkTheme()
-    LaunchedEffect(isDarkTheme) {
+private fun StatusBarAppearance(window: Window, isDark: Boolean) {
+    LaunchedEffect(isDark) {
         WindowCompat.getInsetsController(window, window.decorView)
-            .isAppearanceLightStatusBars = !isDarkTheme
+            .isAppearanceLightStatusBars = !isDark
     }
 }
 

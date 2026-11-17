@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.ApiClient
 import cc.dinnerparty.compose.data.model.RatingTier
+import cc.dinnerparty.compose.ui.theme.dinnerPartyAccents
 import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
 import cc.dinnerparty.compose.ui.viewmodel.PlaceFormMode
 import cc.dinnerparty.compose.ui.viewmodel.PlaceFormState
@@ -359,19 +360,22 @@ private fun TagSection(state: PlaceFormState, events: PlaceFormEvents) {
     }
 }
 
-/** 已选分类，尾部可删除。 */
+/** 已选分类 按辅色着色 尾部可删除 */
 @Composable
 private fun TagChip(text: String, onRemove: () -> Unit) {
+    val tone = dinnerPartyAccents().secondary
+
     Row(
         modifier = Modifier
             .clip(TagShape)
-            .border(1.dp, SaltTheme.colors.stroke, TagShape)
+            .background(tone.copy(alpha = TagToneAlpha))
+            .border(1.dp, tone, TagShape)
             .padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = text,
-            color = SaltTheme.colors.text,
+            color = tone,
             fontSize = 13.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -387,7 +391,7 @@ private fun TagChip(text: String, onRemove: () -> Unit) {
                 imageVector = Icons.Outlined.Close,
                 contentDescription = stringResource(R.string.place_form_remove_tag),
                 modifier = Modifier.size(14.dp),
-                tint = SaltTheme.colors.subText,
+                tint = tone,
             )
         }
     }
@@ -636,4 +640,5 @@ private val CloseSize = 24.dp
 private val TileSize = 76.dp
 private val TagShape = RoundedCornerShape(50)
 private val ErrorColor = Color(0xFFD9534F)
+private const val TagToneAlpha = 0.16f
 private const val TagWeightLimit = 16

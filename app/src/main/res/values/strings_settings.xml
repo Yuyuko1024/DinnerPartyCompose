@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Settings -->
-    <string name="settings_title">Settings</string>
-    <string name="settings_close">Close</string>
     <string name="settings_glass">Liquid Glass</string>
     <string name="settings_blur">Blur</string>
     <string name="settings_glass_unsupported">Unsupported OS version, the blur theme will be used</string>
@@ -36,4 +34,11 @@
     <string name="back_to_settings">Back to settings</string>
     <string name="username_page_path">Settings &gt; Change resident name</string>
     <string name="password_page_path">Settings &gt; Change passcode</string>
+    <string name="theme_page_path">Settings &gt; Personalised theme</string>
+    <string name="theme_dark">Dark mode</string>
+    <string name="theme_follow_system">Follow the system style</string>
+    <string name="theme_primary">Primary colour</string>
+    <string name="theme_secondary">Secondary colour</string>
+    <string name="theme_color_hint">#RRGGBB</string>
+    <string name="theme_color_reset">Reset to default</string>
 </resources>

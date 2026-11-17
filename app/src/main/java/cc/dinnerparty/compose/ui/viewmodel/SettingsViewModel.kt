@@ -14,6 +14,14 @@ import kotlinx.coroutines.launch
 data class SettingsUiState(
     /** 是否启用液态玻璃 */
     val liquidGlass: Boolean = true,
+    /** 亮暗是否跟随系统 */
+    val followSystem: Boolean = true,
+    /** 是否强制暗色 仅在未跟随系统时生效 */
+    val darkTheme: Boolean = false,
+    /** 主色 ARGB 为空表示使用品牌色 */
+    val primary: Int? = null,
+    /** 辅色 ARGB 为空表示使用品牌色 */
+    val secondary: Int? = null,
 )
 
 /** 读取并写入本地设置 */
@@ -30,10 +38,50 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 _uiState.update { it.copy(liquidGlass = enabled) }
             }
         }
+        viewModelScope.launch {
+            store.followSystem.collect { enabled ->
+                _uiState.update { it.copy(followSystem = enabled) }
+            }
+        }
+        viewModelScope.launch {
+            store.darkTheme.collect { enabled ->
+                _uiState.update { it.copy(darkTheme = enabled) }
+            }
+        }
+        viewModelScope.launch {
+            store.primary.collect { argb ->
+                _uiState.update { it.copy(primary = argb) }
+            }
+        }
+        viewModelScope.launch {
+            store.secondary.collect { argb ->
+                _uiState.update { it.copy(secondary = argb) }
+            }
+        }
     }
 
     /** 写入液态玻璃开关 */
     fun setGlass(enabled: Boolean) {
         viewModelScope.launch { store.setLiquidGlass(enabled) }
+    }
+
+    /** 写入跟随系统开关 */
+    fun setFollowSystem(enabled: Boolean) {
+        viewModelScope.launch { store.setFollowSystem(enabled) }
+    }
+
+    /** 写入强制暗色开关 */
+    fun setDarkTheme(enabled: Boolean) {
+        viewModelScope.launch { store.setDarkTheme(enabled) }
+    }
+
+    /** 写入主色 */
+    fun setPrimary(argb: Int?) {
+        viewModelScope.launch { store.setPrimary(argb) }
+    }
+
+    /** 写入辅色 */
+    fun setSecondary(argb: Int?) {
+        viewModelScope.launch { store.setSecondary(argb) }
     }
 }

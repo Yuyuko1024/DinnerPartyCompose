@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.ui.view.content.AboutContent
 import cc.dinnerparty.compose.ui.view.content.ClusterMembersContent
@@ -34,9 +33,7 @@ import cc.dinnerparty.compose.ui.view.content.PlaceCardOps
 import cc.dinnerparty.compose.ui.view.content.PlaceFormContent
 import cc.dinnerparty.compose.ui.view.content.PlaceFormUi
 import cc.dinnerparty.compose.ui.view.content.SearchPanel
-import cc.dinnerparty.compose.ui.view.content.SettingsContent
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
-import cc.dinnerparty.compose.ui.viewmodel.SettingsViewModel
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
 /** 手机端浮层总高。 */
@@ -62,10 +59,9 @@ fun MainPhoneUI(
     onAddClick: () -> Unit = {},
     onDismissPlaceCard: () -> Unit = {},
     account: AccountOps = AccountOps(),
+    onSettingsClick: () -> Unit = {},
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
-    val settingsVm: SettingsViewModel = viewModel()
-    val settingsState by settingsVm.uiState.collectAsStateWithLifecycle()
 
     // 登录成功或退出登录后收起对应面板
     LaunchedEffect(authState.session, overlay.current) {
@@ -191,21 +187,8 @@ fun MainPhoneUI(
             MapMenuList(
                 modifier = Modifier.padding(vertical = 8.dp),
                 onClose = overlay::hide,
-                onSettingsClick = { overlay.show(MapOverlay.Settings) },
+                onSettingsClick = onSettingsClick,
                 onAboutClick = { overlay.show(MapOverlay.About) }
-            )
-        }
-
-        // 设置对话框
-        PhoneSheet(
-            visible = overlay.current == MapOverlay.Settings,
-            onDismissRequest = overlay::hide,
-            modal = true
-        ) {
-            SettingsContent(
-                liquidGlass = settingsState.liquidGlass,
-                onGlassChange = settingsVm::setGlass,
-                onClose = overlay::hide
             )
         }
 
