@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.view.component
+package cc.dinnerparty.compose.ui.view.content
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box

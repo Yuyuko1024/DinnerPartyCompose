@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.view.component
+package cc.dinnerparty.compose.ui.view.content
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.data.model.SearchItem
+import cc.dinnerparty.compose.ui.view.component.MapSearchActions
+import cc.dinnerparty.compose.ui.view.component.mapGlass
+import cc.dinnerparty.compose.ui.view.component.rememberDismiss
 import cc.dinnerparty.compose.ui.viewmodel.SearchUiState
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme

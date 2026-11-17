@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.view.component
+package cc.dinnerparty.compose.ui.view.content
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cc.dinnerparty.compose.R
+import cc.dinnerparty.compose.ui.view.component.isGlassOn
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.RoundedColumn

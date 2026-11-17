@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.page
+package cc.dinnerparty.compose.ui.view.screen
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -38,7 +38,7 @@ import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.ApiException
 import cc.dinnerparty.compose.api.model.User
 import cc.dinnerparty.compose.ui.view.component.AvatarCropDialog
-import cc.dinnerparty.compose.ui.view.component.PhoneSheet
+import cc.dinnerparty.compose.ui.view.content.phone.PhoneSheet
 import cc.dinnerparty.compose.ui.view.component.UserAvatar
 import cc.dinnerparty.compose.utils.decodeImage
 import cc.dinnerparty.compose.utils.toJpegBytes

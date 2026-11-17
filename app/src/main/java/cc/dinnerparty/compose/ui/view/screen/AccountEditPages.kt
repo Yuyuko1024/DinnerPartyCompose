@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.page
+package cc.dinnerparty.compose.ui.view.screen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope

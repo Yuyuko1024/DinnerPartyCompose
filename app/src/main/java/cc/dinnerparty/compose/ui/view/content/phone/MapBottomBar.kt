@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.view.component
+package cc.dinnerparty.compose.ui.view.content.phone
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +30,11 @@ import androidx.compose.ui.unit.sp
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.User
 import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
+import cc.dinnerparty.compose.ui.view.component.MapAction
+import cc.dinnerparty.compose.ui.view.component.OverlayEdgeGap
+import cc.dinnerparty.compose.ui.view.component.UserAvatar
+import cc.dinnerparty.compose.ui.view.component.mapGlass
+import cc.dinnerparty.compose.ui.view.component.phoneMapActions
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text

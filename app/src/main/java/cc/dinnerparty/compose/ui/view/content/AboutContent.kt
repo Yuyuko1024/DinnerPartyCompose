@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.view.component
+package cc.dinnerparty.compose.ui.view.content
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -27,6 +27,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cc.dinnerparty.compose.BuildConfig
 import cc.dinnerparty.compose.R
+import cc.dinnerparty.compose.ui.view.component.PRIVACY_POLICY_AMAP_URL
+import cc.dinnerparty.compose.ui.view.component.PRIVACY_POLICY_URL
+import cc.dinnerparty.compose.ui.view.component.PolicyLink
+import cc.dinnerparty.compose.ui.view.component.openUriSafely
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text

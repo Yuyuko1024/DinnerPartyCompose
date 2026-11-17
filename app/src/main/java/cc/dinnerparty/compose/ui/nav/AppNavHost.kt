@@ -15,10 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import cc.dinnerparty.compose.ui.page.AvatarPage
-import cc.dinnerparty.compose.ui.page.PasswordPage
-import cc.dinnerparty.compose.ui.page.SettingsPage
-import cc.dinnerparty.compose.ui.page.UsernamePage
+import cc.dinnerparty.compose.ui.view.screen.AvatarPage
+import cc.dinnerparty.compose.ui.view.screen.PasswordPage
+import cc.dinnerparty.compose.ui.view.screen.SettingsPage
+import cc.dinnerparty.compose.ui.view.screen.UsernamePage
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
 /** 页面转场时长 */

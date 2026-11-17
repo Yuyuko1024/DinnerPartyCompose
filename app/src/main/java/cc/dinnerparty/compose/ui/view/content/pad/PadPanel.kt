@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.view.component
+package cc.dinnerparty.compose.ui.view.content.pad
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
@@ -12,6 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import cc.dinnerparty.compose.ui.view.component.blockTouch
+import cc.dinnerparty.compose.ui.view.component.mapGlass
+import cc.dinnerparty.compose.ui.view.component.rememberLastNonNull
 import com.moriafly.salt.ui.SaltTheme
 
 /** Pad 端右侧浮层面板，从右侧滑入滑出。 */

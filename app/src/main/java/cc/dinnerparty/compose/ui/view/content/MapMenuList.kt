@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.view.component
+package cc.dinnerparty.compose.ui.view.content
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,34 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cc.dinnerparty.compose.ui.view.component.MapAction
+import cc.dinnerparty.compose.ui.view.component.padMenuActions
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
-
-/** 菜单面板，内容为菜单项列表。 */
-@Composable
-fun MapMenuPanel(
-    modifier: Modifier = Modifier,
-    expanded: Boolean = false,
-    onRandomClick: () -> Unit = {},
-    onDiningClick: () -> Unit = {},
-    onExportPostClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {},
-    onAboutClick: () -> Unit = {},
-    onDismissRequest: () -> Unit = {}
-) {
-    PadPanel(visible = expanded, modifier = modifier) {
-        MapMenuList(
-            modifier = Modifier.padding(vertical = 8.dp),
-            onClose = onDismissRequest,
-            onRandomClick = onRandomClick,
-            onDiningClick = onDiningClick,
-            onExportPostClick = onExportPostClick,
-            onSettingsClick = onSettingsClick,
-            onAboutClick = onAboutClick
-        )
-    }
-}
 
 /** 菜单项列表，点任一项先收起再执行对应操作。 */
 @Composable

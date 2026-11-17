@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.view.component
+package cc.dinnerparty.compose.ui.view.content
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -65,24 +65,6 @@ class PlaceCardOps(
     val onEdit: () -> Unit = {},
 )
 
-/** 地点卡片浮层，从底部滑入滑出。 */
-@Composable
-fun PlaceCardDialog(
-    modifier: Modifier = Modifier,
-    place: Place?,
-    onDismissRequest: () -> Unit,
-    ops: PlaceCardOps = PlaceCardOps(),
-) {
-    PhoneSheet(
-        value = place,
-        onDismissRequest = onDismissRequest,
-        modifier = modifier
-    ) { shown ->
-        PlaceCardContent(place = shown, onClose = onDismissRequest, ops = ops)
-    }
-}
-
-/** 卡片内容。 */
 @Composable
 internal fun PlaceCardContent(
     place: Place,

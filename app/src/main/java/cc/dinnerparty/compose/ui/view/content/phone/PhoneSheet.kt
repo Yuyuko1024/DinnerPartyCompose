@@ -1,4 +1,4 @@
-package cc.dinnerparty.compose.ui.view.component
+package cc.dinnerparty.compose.ui.view.content.phone
 
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -42,6 +42,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
+import cc.dinnerparty.compose.ui.view.component.OverlayEdgeGap
+import cc.dinnerparty.compose.ui.view.component.blockTouch
+import cc.dinnerparty.compose.ui.view.component.mapGlass
+import cc.dinnerparty.compose.ui.view.component.rememberLastNonNull
 import com.moriafly.salt.ui.SaltTheme
 import kotlinx.coroutines.launch
 import java.util.concurrent.CancellationException
