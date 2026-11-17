@@ -41,4 +41,16 @@
     <string name="theme_secondary">辅色</string>
     <string name="theme_color_hint">#RRGGBB</string>
     <string name="theme_color_reset">恢复默认</string>
+    <!-- 主题皮肤页 -->
+    <string name="skin_page_path">设置 &gt; 主题皮肤</string>
+    <string name="skin_intro">输入兑换码解锁新皮肤</string>
+    <string name="skin_mine">我的皮肤</string>
+    <string name="skin_default_name">默认样式</string>
+    <string name="skin_default_desc">地图原本的样子</string>
+    <string name="skin_in_use">使用中</string>
+    <string name="skin_redeem_title">兑换皮肤</string>
+    <string name="skin_redeem_hint">不区分大小写 连字符可省略</string>
+    <string name="skin_code_hint">例如 ABCD-EFGH-JKMN</string>
+    <string name="skin_redeem">兑换</string>
+    <string name="skin_redeem_later">该功能之后再开放</string>
 </resources>

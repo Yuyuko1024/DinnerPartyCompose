@@ -11,6 +11,9 @@ object AppRoutes {
     /** 个性化主题 */
     const val Theme = "theme"
 
+    /** 主题皮肤 */
+    const val Skin = "skin"
+
     /** 修改头像 */
     const val Avatar = "avatar"
 

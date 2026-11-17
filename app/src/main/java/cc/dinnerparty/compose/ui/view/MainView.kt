@@ -38,6 +38,7 @@ import cc.dinnerparty.compose.ui.view.screen.AvatarPageUi
 import cc.dinnerparty.compose.ui.view.screen.PasswordPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageUi
+import cc.dinnerparty.compose.ui.view.screen.SkinPageOps
 import cc.dinnerparty.compose.ui.view.screen.ThemePageOps
 import cc.dinnerparty.compose.ui.view.screen.ThemeSwitch
 import cc.dinnerparty.compose.ui.view.screen.ThemePageUi
@@ -126,6 +127,9 @@ fun MainView(modifier: Modifier = Modifier) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
+    // 皮肤兑换尚未开放
+    val skinLater = context.getString(R.string.skin_redeem_later)
+
     // 主题与玻璃设置
     val settingsVm: SettingsViewModel = viewModel()
     val settingsState by settingsVm.uiState.collectAsStateWithLifecycle()
@@ -140,6 +144,7 @@ fun MainView(modifier: Modifier = Modifier) {
                 onUsername = { nav.navigate(AppRoutes.Username) { launchSingleTop = true } },
                 onPassword = { nav.navigate(AppRoutes.Password) { launchSingleTop = true } },
                 onTheme = { nav.navigate(AppRoutes.Theme) { launchSingleTop = true } },
+                onSkin = { nav.navigate(AppRoutes.Skin) { launchSingleTop = true } },
                 onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
                 onDelete = { pendingAccountAction = AccountAction.DELETE_ACCOUNT },
             ),
@@ -169,6 +174,10 @@ fun MainView(modifier: Modifier = Modifier) {
                 },
                 onPrimary = settingsVm::setPrimary,
                 onSecondary = settingsVm::setSecondary,
+            ),
+            skin = SkinPageOps(
+                onBack = { nav.popBackStack() },
+                onRedeem = { toast(skinLater) },
             ),
         )
     }

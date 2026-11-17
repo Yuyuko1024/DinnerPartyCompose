@@ -5,6 +5,7 @@ import cc.dinnerparty.compose.ui.view.screen.AvatarPageUi
 import cc.dinnerparty.compose.ui.view.screen.PasswordPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageUi
+import cc.dinnerparty.compose.ui.view.screen.SkinPageOps
 import cc.dinnerparty.compose.ui.view.screen.ThemePageOps
 import cc.dinnerparty.compose.ui.view.screen.ThemePageUi
 import cc.dinnerparty.compose.ui.view.screen.UsernamePageOps
@@ -22,6 +23,7 @@ class AppPageData(
 class AppPageOps(
     val settings: SettingsPageOps = SettingsPageOps(),
     val theme: ThemePageOps = ThemePageOps(),
+    val skin: SkinPageOps = SkinPageOps(),
     val avatar: AvatarPageOps = AvatarPageOps(),
     val username: UsernamePageOps = UsernamePageOps(),
     val password: PasswordPageOps = PasswordPageOps(),

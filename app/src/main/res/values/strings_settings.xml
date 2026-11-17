@@ -41,4 +41,16 @@
     <string name="theme_secondary">Secondary colour</string>
     <string name="theme_color_hint">#RRGGBB</string>
     <string name="theme_color_reset">Reset to default</string>
+    <!-- Theme skins page -->
+    <string name="skin_page_path">Settings &gt; Theme skins</string>
+    <string name="skin_intro">Enter a redeem code to unlock new skins</string>
+    <string name="skin_mine">My skins</string>
+    <string name="skin_default_name">Default style</string>
+    <string name="skin_default_desc">The map as it is</string>
+    <string name="skin_in_use">In use</string>
+    <string name="skin_redeem_title">Redeem a skin</string>
+    <string name="skin_redeem_hint">Case insensitive, hyphens optional</string>
+    <string name="skin_code_hint">e.g. ABCD-EFGH-JKMN</string>
+    <string name="skin_redeem">Redeem</string>
+    <string name="skin_redeem_later">This feature is not available yet</string>
 </resources>
