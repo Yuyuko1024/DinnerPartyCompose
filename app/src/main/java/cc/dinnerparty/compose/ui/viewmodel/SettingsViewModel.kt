@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cc.dinnerparty.compose.data.SettingsDataStore
+import cc.dinnerparty.compose.data.model.MapCamera
+import cc.dinnerparty.compose.data.model.MapDefaults
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +24,16 @@ data class SettingsUiState(
     val primary: Int? = null,
     /** 辅色 ARGB 为空表示使用品牌色 */
     val secondary: Int? = null,
+    /** 默认中心纬度 */
+    val centerLat: Double = MapDefaults.Latitude,
+    /** 默认中心经度 */
+    val centerLng: Double = MapDefaults.Longitude,
+    /** 默认缩放等级 */
+    val mapZoom: Float = MapDefaults.Zoom,
+    /** 是否启用聚合标记动效 */
+    val clusterMotion: Boolean = true,
+    /** 是否启用弹窗与页面动效 */
+    val overlayMotion: Boolean = true,
 )
 
 /** 读取并写入本地设置 */
@@ -58,6 +70,31 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 _uiState.update { it.copy(secondary = argb) }
             }
         }
+        viewModelScope.launch {
+            store.centerLat.collect { value ->
+                _uiState.update { it.copy(centerLat = value) }
+            }
+        }
+        viewModelScope.launch {
+            store.centerLng.collect { value ->
+                _uiState.update { it.copy(centerLng = value) }
+            }
+        }
+        viewModelScope.launch {
+            store.mapZoom.collect { value ->
+                _uiState.update { it.copy(mapZoom = value) }
+            }
+        }
+        viewModelScope.launch {
+            store.clusterMotion.collect { enabled ->
+                _uiState.update { it.copy(clusterMotion = enabled) }
+            }
+        }
+        viewModelScope.launch {
+            store.overlayMotion.collect { enabled ->
+                _uiState.update { it.copy(overlayMotion = enabled) }
+            }
+        }
     }
 
     /** 写入液态玻璃开关 */
@@ -83,5 +120,23 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     /** 写入辅色 */
     fun setSecondary(argb: Int?) {
         viewModelScope.launch { store.setSecondary(argb) }
+    }
+
+    /** 写入地图默认视角 */
+    fun setMapView(camera: MapCamera) {
+        viewModelScope.launch { store.setMapView(camera) }
+    }
+
+    /** 读取地图默认视角 */
+    suspend fun mapCamera(): MapCamera = store.mapCamera()
+
+    /** 写入聚合标记动效开关 */
+    fun setClusterMotion(enabled: Boolean) {
+        viewModelScope.launch { store.setClusterMotion(enabled) }
+    }
+
+    /** 写入弹窗与页面动效开关 */
+    fun setOverlayMotion(enabled: Boolean) {
+        viewModelScope.launch { store.setOverlayMotion(enabled) }
     }
 }

@@ -43,6 +43,7 @@ class SettingsPageOps(
     val onPassword: () -> Unit = {},
     val onTheme: () -> Unit = {},
     val onSkin: () -> Unit = {},
+    val onMap: () -> Unit = {},
     val onLogoutAll: () -> Unit = {},
     val onDelete: () -> Unit = {},
 )
@@ -107,7 +108,7 @@ fun SettingsPage(
             Item(
                 text = stringResource(R.string.settings_map),
                 arrowType = ItemArrowType.Arrow,
-                onClick = {},
+                onClick = ops.onMap,
             )
             ItemDivider()
             ActionRow(

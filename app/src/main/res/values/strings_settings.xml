@@ -53,4 +53,24 @@
     <string name="skin_code_hint">e.g. ABCD-EFGH-JKMN</string>
     <string name="skin_redeem">Redeem</string>
     <string name="skin_redeem_later">This feature is not available yet</string>
+    <!-- Personalised map page -->
+    <string name="map_page_path">Settings &gt; Personalised map</string>
+    <string name="map_style">Map style</string>
+    <string name="map_style_standard">Standard</string>
+    <string name="map_style_satellite">Satellite</string>
+    <string name="map_style_street">Street view</string>
+    <string name="map_style_later">Not available yet</string>
+    <string name="map_center_lat">Default centre latitude</string>
+    <string name="map_center_lng">Default centre longitude</string>
+    <string name="map_zoom">Default zoom level</string>
+    <string name="map_pick">Pick on the map</string>
+    <string name="map_pick_confirm">OK</string>
+    <string name="map_save">Save</string>
+    <string name="map_saved">Saved</string>
+    <string name="map_invalid">The latitude or longitude is not valid</string>
+    <string name="map_motion">Motion</string>
+    <string name="map_motion_cluster">Map clustering motion</string>
+    <string name="map_motion_cluster_hint">Marker shifts while merging and splitting on zoom</string>
+    <string name="map_motion_overlay">Sheet and page motion</string>
+    <string name="map_motion_overlay_hint">Enter and exit transitions of sheets, menus, panels and pages</string>
 </resources>

@@ -1,6 +1,8 @@
 package cc.dinnerparty.compose.ui.view.content.pad
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
@@ -12,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import cc.dinnerparty.compose.ui.view.component.LocalMotion
 import cc.dinnerparty.compose.ui.view.component.blockTouch
 import cc.dinnerparty.compose.ui.view.component.mapGlass
 import cc.dinnerparty.compose.ui.view.component.rememberLastNonNull
@@ -27,11 +30,13 @@ fun <T : Any> PadPanel(
 ) {
     // 滑入滑出动画期间保留内容
     val shown = rememberLastNonNull(value)
+    // 关闭动效时只淡入淡出
+    val motion = LocalMotion.current
 
     AnimatedVisibility(
         visible = value != null,
-        enter = slideInHorizontally { it },
-        exit = slideOutHorizontally { it },
+        enter = if (motion) slideInHorizontally { it } else fadeIn(),
+        exit = if (motion) slideOutHorizontally { it } else fadeOut(),
         modifier = modifier
     ) {
         shown?.let {

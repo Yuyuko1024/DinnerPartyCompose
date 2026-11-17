@@ -4,12 +4,17 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import cc.dinnerparty.compose.data.model.MapCamera
+import cc.dinnerparty.compose.data.model.MapDefaults
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
@@ -50,6 +55,26 @@ class SettingsDataStore(context: Context) {
     /** 辅色 ARGB 为空表示使用品牌色 */
     val secondary: Flow<Int?> = prefs
         .map { preferences -> preferences[SecondaryKey] }
+
+    /** 默认中心纬度 */
+    val centerLat: Flow<Double> = prefs
+        .map { preferences -> preferences[CenterLatKey] ?: MapDefaults.Latitude }
+
+    /** 默认中心经度 */
+    val centerLng: Flow<Double> = prefs
+        .map { preferences -> preferences[CenterLngKey] ?: MapDefaults.Longitude }
+
+    /** 默认缩放等级 */
+    val mapZoom: Flow<Float> = prefs
+        .map { preferences -> preferences[MapZoomKey] ?: MapDefaults.Zoom }
+
+    /** 聚合标记动效 默认开启 */
+    val clusterMotion: Flow<Boolean> = prefs
+        .map { preferences -> preferences[ClusterMotionKey] ?: true }
+
+    /** 弹窗与页面动效 默认开启 */
+    val overlayMotion: Flow<Boolean> = prefs
+        .map { preferences -> preferences[OverlayMotionKey] ?: true }
 
     /** 记录用户已同意隐私政策 */
     suspend fun agreePrivacy() {
@@ -93,6 +118,35 @@ class SettingsDataStore(context: Context) {
         }
     }
 
+    /** 记录默认视角 三项一起写 */
+    suspend fun setMapView(camera: MapCamera) {
+        dataStore.edit { preferences ->
+            preferences[CenterLatKey] = camera.latitude
+            preferences[CenterLngKey] = camera.longitude
+            preferences[MapZoomKey] = camera.zoom
+        }
+    }
+
+    /** 记录聚合标记动效开关 */
+    suspend fun setClusterMotion(enabled: Boolean) {
+        dataStore.edit { preferences -> preferences[ClusterMotionKey] = enabled }
+    }
+
+    /** 记录弹窗与页面动效开关 */
+    suspend fun setOverlayMotion(enabled: Boolean) {
+        dataStore.edit { preferences -> preferences[OverlayMotionKey] = enabled }
+    }
+
+    /** 一次性读取已保存的视角 */
+    suspend fun mapCamera(): MapCamera {
+        val values = prefs.first()
+        return MapCamera(
+            latitude = values[CenterLatKey] ?: MapDefaults.Latitude,
+            longitude = values[CenterLngKey] ?: MapDefaults.Longitude,
+            zoom = values[MapZoomKey] ?: MapDefaults.Zoom,
+        )
+    }
+
     private companion object {
         val PrivacyAgreedKey = booleanPreferencesKey("privacy_agreed")
         val LiquidGlassKey = booleanPreferencesKey("liquid_glass")
@@ -100,5 +154,10 @@ class SettingsDataStore(context: Context) {
         val DarkThemeKey = booleanPreferencesKey("dark_theme")
         val PrimaryKey = intPreferencesKey("theme_primary")
         val SecondaryKey = intPreferencesKey("theme_secondary")
+        val CenterLatKey = doublePreferencesKey("center_lat")
+        val CenterLngKey = doublePreferencesKey("center_lng")
+        val MapZoomKey = floatPreferencesKey("map_zoom")
+        val ClusterMotionKey = booleanPreferencesKey("cluster_motion")
+        val OverlayMotionKey = booleanPreferencesKey("overlay_motion")
     }
 }

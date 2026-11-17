@@ -53,4 +53,24 @@
     <string name="skin_code_hint">例如 ABCD-EFGH-JKMN</string>
     <string name="skin_redeem">兑换</string>
     <string name="skin_redeem_later">该功能之后再开放</string>
+    <!-- 个性化地图页 -->
+    <string name="map_page_path">设置 &gt; 个性化地图</string>
+    <string name="map_style">地图样式</string>
+    <string name="map_style_standard">标准</string>
+    <string name="map_style_satellite">卫星</string>
+    <string name="map_style_street">街景</string>
+    <string name="map_style_later">暂不可用</string>
+    <string name="map_center_lat">默认中心纬度</string>
+    <string name="map_center_lng">默认中心经度</string>
+    <string name="map_zoom">默认缩放等级</string>
+    <string name="map_pick">地图选点</string>
+    <string name="map_pick_confirm">确定</string>
+    <string name="map_save">保存</string>
+    <string name="map_saved">已保存</string>
+    <string name="map_invalid">经纬度格式不正确</string>
+    <string name="map_motion">动效</string>
+    <string name="map_motion_cluster">地图聚合吸附动效</string>
+    <string name="map_motion_cluster_hint">缩放时标记合并与拆分的位移</string>
+    <string name="map_motion_overlay">弹窗与页面动效</string>
+    <string name="map_motion_overlay_hint">弹窗 菜单 侧栏与页面的进出场过渡</string>
 </resources>

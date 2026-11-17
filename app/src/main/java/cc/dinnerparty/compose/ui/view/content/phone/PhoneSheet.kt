@@ -42,6 +42,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
+import cc.dinnerparty.compose.ui.view.component.LocalMotion
 import cc.dinnerparty.compose.ui.view.component.OverlayEdgeGap
 import cc.dinnerparty.compose.ui.view.component.blockTouch
 import cc.dinnerparty.compose.ui.view.component.mapGlass
@@ -61,6 +62,8 @@ fun <T : Any> PhoneSheet(
 ) {
     // 滑入滑出动画期间保留内容
     val shown = rememberLastNonNull(value)
+    // 关闭动效时只淡入淡出
+    val motion = LocalMotion.current
     val sheetShape = SaltTheme.shapes.large
 
     // 返回手势的拖动位移，0 为原位、1 为完全移出屏幕
@@ -112,8 +115,8 @@ fun <T : Any> PhoneSheet(
 
         AnimatedVisibility(
             visible = value != null,
-            enter = slideInVertically { it },
-            exit = slideOutVertically { it },
+            enter = if (motion) slideInVertically { it } else fadeIn(),
+            exit = if (motion) slideOutVertically { it } else fadeOut(),
             modifier = modifier
                 .onSizeChanged { sheetHeight = it.height.toFloat() }
                 .graphicsLayer {

@@ -35,6 +35,9 @@ import cc.dinnerparty.compose.ui.nav.AppPageOps
 import cc.dinnerparty.compose.ui.nav.AppRoutes
 import cc.dinnerparty.compose.ui.view.screen.AvatarPageOps
 import cc.dinnerparty.compose.ui.view.screen.AvatarPageUi
+import cc.dinnerparty.compose.ui.view.screen.MapMotion
+import cc.dinnerparty.compose.ui.view.screen.MapSettingsPageOps
+import cc.dinnerparty.compose.ui.view.screen.MapSettingsPageUi
 import cc.dinnerparty.compose.ui.view.screen.PasswordPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageUi
@@ -48,6 +51,7 @@ import cc.dinnerparty.compose.ui.view.content.AccountOps
 import cc.dinnerparty.compose.ui.view.component.AmapView
 import cc.dinnerparty.compose.ui.view.component.LocalLiquidGlass
 import cc.dinnerparty.compose.ui.view.component.LocalMapHaze
+import cc.dinnerparty.compose.ui.view.component.LocalMotion
 import cc.dinnerparty.compose.ui.view.content.PlaceCardOps
 import cc.dinnerparty.compose.ui.view.content.PlaceFormEvents
 import cc.dinnerparty.compose.ui.view.content.PlaceFormUi
@@ -130,10 +134,25 @@ fun MainView(modifier: Modifier = Modifier) {
     // 皮肤兑换尚未开放
     val skinLater = context.getString(R.string.skin_redeem_later)
 
+    // 地图视角已保存
+    val mapSaved = context.getString(R.string.map_saved)
+
     // 主题与玻璃设置
     val settingsVm: SettingsViewModel = viewModel()
     val settingsState by settingsVm.uiState.collectAsStateWithLifecycle()
     val liquidGlass = settingsState.liquidGlass
+
+    // 地图就绪后按已保存的视角定位一次
+    LaunchedEffect(amap) {
+        val map = amap ?: return@LaunchedEffect
+        val camera = settingsVm.mapCamera()
+        map.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(camera.latitude, camera.longitude),
+                camera.zoom,
+            )
+        )
+    }
 
     // 全屏页面的操作
     val pageOps = remember {
@@ -145,6 +164,7 @@ fun MainView(modifier: Modifier = Modifier) {
                 onPassword = { nav.navigate(AppRoutes.Password) { launchSingleTop = true } },
                 onTheme = { nav.navigate(AppRoutes.Theme) { launchSingleTop = true } },
                 onSkin = { nav.navigate(AppRoutes.Skin) { launchSingleTop = true } },
+                onMap = { nav.navigate(AppRoutes.MapSettings) { launchSingleTop = true } },
                 onLogoutAll = { pendingAccountAction = AccountAction.LOGOUT_ALL },
                 onDelete = { pendingAccountAction = AccountAction.DELETE_ACCOUNT },
             ),
@@ -178,6 +198,19 @@ fun MainView(modifier: Modifier = Modifier) {
             skin = SkinPageOps(
                 onBack = { nav.popBackStack() },
                 onRedeem = { toast(skinLater) },
+            ),
+            mapSettings = MapSettingsPageOps(
+                onBack = { nav.popBackStack() },
+                onSave = { camera ->
+                    settingsVm.setMapView(camera)
+                    toast(mapSaved)
+                },
+                onSwitch = { which, enabled ->
+                    when (which) {
+                        MapMotion.Cluster -> settingsVm.setClusterMotion(enabled)
+                        MapMotion.Overlay -> settingsVm.setOverlayMotion(enabled)
+                    }
+                },
             ),
         )
     }
@@ -382,6 +415,7 @@ fun MainView(modifier: Modifier = Modifier) {
             userLocation = userLocation,
             searchPoi = searchPoi,
             selectedMarkerId = selectedPlace?.id,
+            clusterMotion = settingsState.clusterMotion,
             onMarkerClick = clickMarker@ { marker ->
                 // 取点态下不响应站点标记
                 if (addMode) return@clickMarker
@@ -433,7 +467,6 @@ fun MainView(modifier: Modifier = Modifier) {
             },
             onMapReady = { map ->
                 amap = map
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(DefaultCenter, DefaultZoom))
 
                 // 地图加载完再取一次视野
                 map.setOnMapLoadedListener { publishViewport(map) }
@@ -497,6 +530,7 @@ fun MainView(modifier: Modifier = Modifier) {
             LocalIsTablet provides (windowSizeClass != WindowSizeClass.Compact),
             LocalMapHaze provides haze,
             LocalLiquidGlass provides liquidGlass,
+            LocalMotion provides settingsState.overlayMotion,
         ) {
             when (windowSizeClass) {
                 WindowSizeClass.Compact -> MainPhoneUI(
@@ -585,6 +619,13 @@ fun MainView(modifier: Modifier = Modifier) {
                         followSystem = settingsState.followSystem,
                         liquidGlass = liquidGlass,
                     ),
+                    mapSettings = MapSettingsPageUi(
+                        centerLat = settingsState.centerLat,
+                        centerLng = settingsState.centerLng,
+                        zoom = settingsState.mapZoom,
+                        clusterMotion = settingsState.clusterMotion,
+                        overlayMotion = settingsState.overlayMotion,
+                    ),
                 ),
                 ops = pageOps,
             )
@@ -653,17 +694,11 @@ private val LocationPermissions = arrayOf(
     Manifest.permission.ACCESS_COARSE_LOCATION,
 )
 
-/** 默认中心点：广州 */
-private val DefaultCenter = LatLng(23.016485, 113.394405)
-
 /** 聚合半径单位为 dp */
 private const val ClusterRadius = 50.0
 
 /** 点开聚合气泡时的相机动画时长。 */
 private const val ClusterExpandDurationMs = 300L
-
-/** 初始缩放级别。 */
-private const val DefaultZoom = 15f
 
 /** 定位成功后至少放到这一级。 */
 private const val LocateZoom = 18f

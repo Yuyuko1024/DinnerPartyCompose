@@ -14,6 +14,9 @@ object AppRoutes {
     /** 主题皮肤 */
     const val Skin = "skin"
 
+    /** 个性化地图 */
+    const val MapSettings = "map_settings"
+
     /** 修改头像 */
     const val Avatar = "avatar"
 

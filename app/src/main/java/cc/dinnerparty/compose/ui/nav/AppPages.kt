@@ -2,6 +2,8 @@ package cc.dinnerparty.compose.ui.nav
 
 import cc.dinnerparty.compose.ui.view.screen.AvatarPageOps
 import cc.dinnerparty.compose.ui.view.screen.AvatarPageUi
+import cc.dinnerparty.compose.ui.view.screen.MapSettingsPageOps
+import cc.dinnerparty.compose.ui.view.screen.MapSettingsPageUi
 import cc.dinnerparty.compose.ui.view.screen.PasswordPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageUi
@@ -15,6 +17,7 @@ import cc.dinnerparty.compose.ui.view.screen.UsernamePageUi
 class AppPageData(
     val settings: SettingsPageUi = SettingsPageUi(),
     val theme: ThemePageUi = ThemePageUi(),
+    val mapSettings: MapSettingsPageUi = MapSettingsPageUi(),
     val avatar: AvatarPageUi = AvatarPageUi(),
     val username: UsernamePageUi = UsernamePageUi(),
 )
@@ -24,6 +27,7 @@ class AppPageOps(
     val settings: SettingsPageOps = SettingsPageOps(),
     val theme: ThemePageOps = ThemePageOps(),
     val skin: SkinPageOps = SkinPageOps(),
+    val mapSettings: MapSettingsPageOps = MapSettingsPageOps(),
     val avatar: AvatarPageOps = AvatarPageOps(),
     val username: UsernamePageOps = UsernamePageOps(),
     val password: PasswordPageOps = PasswordPageOps(),

@@ -15,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import cc.dinnerparty.compose.ui.view.component.LocalMotion
 import cc.dinnerparty.compose.ui.view.screen.AvatarPage
+import cc.dinnerparty.compose.ui.view.screen.MapSettingsPage
 import cc.dinnerparty.compose.ui.view.screen.PasswordPage
 import cc.dinnerparty.compose.ui.view.screen.SettingsPage
 import cc.dinnerparty.compose.ui.view.screen.SkinPage
@@ -38,21 +40,40 @@ fun AppNavHost(
     // 非预测性返回回调 让转场按固定时长跑满
     val pop: () -> Unit = { nav.popBackStack() }
 
+    // 关闭动效时页面只淡入淡出
+    val motion = LocalMotion.current
+
     NavHost(
         navController = nav,
         startDestination = AppRoutes.Map,
         modifier = modifier.fillMaxSize(),
         enterTransition = {
-            slideInHorizontally(tween(PageMs)) { it } + fadeIn(tween(PageMs))
+            if (motion) {
+                slideInHorizontally(tween(PageMs)) { it } + fadeIn(tween(PageMs))
+            } else {
+                fadeIn(tween(PageMs))
+            }
         },
         exitTransition = {
-            slideOutHorizontally(tween(PageMs)) { -it } + fadeOut(tween(PageMs))
+            if (motion) {
+                slideOutHorizontally(tween(PageMs)) { -it } + fadeOut(tween(PageMs))
+            } else {
+                fadeOut(tween(PageMs))
+            }
         },
         popEnterTransition = {
-            slideInHorizontally(tween(PageMs)) { -it } + fadeIn(tween(PageMs))
+            if (motion) {
+                slideInHorizontally(tween(PageMs)) { -it } + fadeIn(tween(PageMs))
+            } else {
+                fadeIn(tween(PageMs))
+            }
         },
         popExitTransition = {
-            slideOutHorizontally(tween(PageMs)) { it } + fadeOut(tween(PageMs))
+            if (motion) {
+                slideOutHorizontally(tween(PageMs)) { it } + fadeOut(tween(PageMs))
+            } else {
+                fadeOut(tween(PageMs))
+            }
         },
     ) {
         composable(
@@ -78,6 +99,11 @@ fun AppNavHost(
         composable(route = AppRoutes.Skin) {
             BackHandler { pop() }
             SkinPage(ops = ops.skin)
+        }
+
+        composable(route = AppRoutes.MapSettings) {
+            BackHandler { pop() }
+            MapSettingsPage(ui = data.mapSettings, ops = ops.mapSettings)
         }
 
         composable(route = AppRoutes.Avatar) {

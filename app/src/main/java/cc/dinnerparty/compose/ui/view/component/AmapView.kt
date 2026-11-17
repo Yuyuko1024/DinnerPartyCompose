@@ -54,6 +54,7 @@ import com.moriafly.salt.ui.SaltTheme
  * @param onMarkerClick 标记点击回调。
  * @param onMapClick 地图空白处点击回调，回传点击坐标。
  * @param onPoiClick 高德自带 POI 点击回调，回传名称与坐标。
+ * @param clusterMotion 聚合标记是否播放合并拆分动效。
  * @param onMapReady 地图就绪回调。
  */
 @Composable
@@ -65,6 +66,7 @@ fun AmapView(
     userLocation: LatLng? = null,
     searchPoi: SearchPoi? = null,
     selectedMarkerId: Long? = null,
+    clusterMotion: Boolean = true,
     onMarkerClick: (MapMarker) -> Unit = {},
     onMapClick: (LatLng) -> Unit = {},
     onPoiClick: (String, LatLng) -> Unit = { _, _ -> },
@@ -179,6 +181,11 @@ fun AmapView(
 
         LaunchedEffect(markerLayer, markers, clusterSnapshot, selectedMarkerId, renderer) {
             markerLayer?.update(MarkerLayerUpdate(markers, clusterSnapshot, selectedMarkerId, renderer))
+        }
+
+        // 动效开关变化时让聚合层直接到位
+        LaunchedEffect(markerLayer, clusterMotion) {
+            markerLayer?.setMotion(clusterMotion)
         }
 
         // 「我的位置」蓝点，与 POI 标记分开管理

@@ -40,6 +40,7 @@ internal class MarkerLayer(private val map: AMap, private val host: TextureMapVi
     private var closed = false
     private var canvasOwns = false
     private var skipAnimation = false
+    private var motionEnabled = true
     private var durationScale = 1f
     private val margin = 80f * host.resources.displayMetrics.density
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
@@ -81,7 +82,7 @@ internal class MarkerLayer(private val map: AMap, private val host: TextureMapVi
         }
         val next = request.snapshot
         val plan = next?.let { planTransition(snapshot, it) }
-        val animate = snapshot != null && plan?.initial != true && !skipAnimation &&
+        val animate = motionEnabled && snapshot != null && plan?.initial != true && !skipAnimation &&
             ValueAnimator.areAnimatorsEnabled()
         skipAnimation = false
         durationScale = Settings.Global.getFloat(host.context.contentResolver,
@@ -169,6 +170,13 @@ internal class MarkerLayer(private val map: AMap, private val host: TextureMapVi
             entries.values.forEach { it.hideLabel = false; reveal(it) }
         }
         canvasLayer.invalidate()
+    }
+
+    /** 动效开关 关闭时清掉在途的动画 */
+    fun setMotion(enabled: Boolean) {
+        if (motionEnabled == enabled) return
+        motionEnabled = enabled
+        if (!enabled) finish()
     }
 
     fun close() {
