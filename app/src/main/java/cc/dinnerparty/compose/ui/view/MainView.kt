@@ -574,6 +574,7 @@ fun MainView(modifier: Modifier = Modifier) {
         pendingAccountAction?.let { action ->
             val isLogout = action == AccountAction.LOGOUT_ALL
             YesNoContentDialog(
+                useLiquidGlass = false,
                 title = stringResource(
                     if (isLogout) R.string.account_logout_title else R.string.account_delete_title
                 ),
