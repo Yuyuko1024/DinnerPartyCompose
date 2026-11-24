@@ -3,6 +3,7 @@ package cc.dinnerparty.compose.data.cluster
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.data.model.MapBounds
 import cc.dinnerparty.compose.data.repo.MapClusterRepo
+import cc.dinnerparty.compose.data.tiles.TileBatch
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
@@ -19,20 +20,20 @@ class MapClusterRepoTest {
     )
 
     @Test
-    fun covered_camera_updates_reuse_index_and_skip_network() = runBlocking {
+    fun camera_updates_reuse_unchanged_index() = runBlocking {
         var calls = 0
-        val repo = MapClusterRepo({ calls++; places })
+        val repo = MapClusterRepo({ _, _ -> calls++; TileBatch(places) })
         repo.update(view)
         val group = repo.query(view).single() as MapClusterNode.Group
         repo.update(view.copy(zoom = 11f))
-        assertEquals(1, calls)
+        assertEquals(2, calls)
         assertEquals(group.id, (repo.query(view).single() as MapClusterNode.Group).id)
     }
 
     @Test
     fun changed_radius_or_map_limit_rebuilds_even_with_cached_data() = runBlocking {
         var calls = 0
-        val repo = MapClusterRepo({ calls++; places })
+        val repo = MapClusterRepo({ _, _ -> calls++; TileBatch(places) })
         repo.update(view)
         val old = repo.query(view).single() as MapClusterNode.Group
         repo.update(view.copy(radiusPx = 150.0))
@@ -43,13 +44,13 @@ class MapClusterRepoTest {
         val terminal = repo.query(limited).single() as MapClusterNode.Group
         assertEquals(11, repo.expansionZoom(terminal.id))
         assertEquals(ClusterClick.Members(places), repo.clusterClick(terminal.id, 10f, 10f))
-        assertEquals(1, calls)
+        assertEquals(3, calls)
     }
 
     @Test
     fun forced_reload_updates_appearance_without_changing_topology() = runBlocking {
         var response = places
-        val repo = MapClusterRepo({ response })
+        val repo = MapClusterRepo({ _, _ -> TileBatch(response) })
         repo.update(view)
         val group = repo.query(view).single() as MapClusterNode.Group
         response = places.map { it.copy(name = "updated") }
@@ -63,7 +64,7 @@ class MapClusterRepoTest {
     @Test
     fun terminal_cluster_opens_all_members_without_a_zoom_jump() = runBlocking {
         val overlap = places.map { it.copy(longitude = 113.0) }
-        val repo = MapClusterRepo({ overlap })
+        val repo = MapClusterRepo({ _, _ -> TileBatch(overlap) })
         repo.update(view)
         val group = repo.query(view).single() as MapClusterNode.Group
         assertEquals(21, repo.expansionZoom(group.id))
@@ -74,7 +75,7 @@ class MapClusterRepoTest {
     @Test
     fun non_terminal_cluster_zooms_to_its_next_real_split() = runBlocking {
         val spread = listOf(places[0], places[1].copy(longitude = 113.01))
-        val repo = MapClusterRepo({ spread })
+        val repo = MapClusterRepo({ _, _ -> TileBatch(spread) })
         repo.update(view)
         val group = repo.query(view).single() as MapClusterNode.Group
         val expansion = repo.expansionZoom(group.id)!!
@@ -86,7 +87,7 @@ class MapClusterRepoTest {
     @Test
     fun fractional_map_maximum_is_used_when_deciding_whether_to_show_members() = runBlocking {
         val overlap = places.map { it.copy(longitude = 113.0) }
-        val repo = MapClusterRepo({ overlap })
+        val repo = MapClusterRepo({ _, _ -> TileBatch(overlap) })
         repo.update(view.copy(mapMaxZoom = 21))
         val group = repo.query(view).single() as MapClusterNode.Group
         assertEquals(22, repo.expansionZoom(group.id))
@@ -98,7 +99,7 @@ class MapClusterRepoTest {
     fun terminal_members_are_deduplicated_and_sorted_by_web_place_keys() = runBlocking {
         val overlap = listOf(places[0].copy(id = 2), places[0].copy(id = 10),
             places[0], places[0].copy(id = 2, name = "duplicate"))
-        val repo = MapClusterRepo({ overlap })
+        val repo = MapClusterRepo({ _, _ -> TileBatch(overlap) })
         repo.update(view)
         val group = repo.query(view).single() as MapClusterNode.Group
         val action = repo.clusterClick(group.id, 20f, 20f) as ClusterClick.Members
@@ -110,7 +111,7 @@ class MapClusterRepoTest {
     fun late_response_cannot_replace_newer_viewport() = runBlocking {
         val delayed = CompletableDeferred<List<Place>>()
         var calls = 0
-        val repo = MapClusterRepo({ calls++; if (calls == 1) delayed.await() else places })
+        val repo = MapClusterRepo({ _, _ -> calls++; TileBatch(if (calls == 1) delayed.await() else places) })
         val old = async(start = CoroutineStart.UNDISPATCHED) { repo.update(view) }
         repo.update(view)
         val group = repo.query(view).single() as MapClusterNode.Group
@@ -123,7 +124,7 @@ class MapClusterRepoTest {
     @Test
     fun failed_request_keeps_last_successful_markers_and_can_retry() = runBlocking {
         var fail = false
-        val repo = MapClusterRepo({ if (fail) error("network failure") else places })
+        val repo = MapClusterRepo({ _, _ -> if (fail) error("network failure") else TileBatch(places) })
         repo.update(view)
         val previous = repo.query(view)
         fail = true

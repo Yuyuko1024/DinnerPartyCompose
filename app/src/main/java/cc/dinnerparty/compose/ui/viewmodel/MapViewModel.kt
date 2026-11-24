@@ -1,6 +1,7 @@
 package cc.dinnerparty.compose.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.data.cluster.MapClusterNode
@@ -11,6 +12,7 @@ import cc.dinnerparty.compose.data.cluster.logicalZoom
 import cc.dinnerparty.compose.data.model.MapBounds
 import cc.dinnerparty.compose.data.repo.PlaceRepo
 import cc.dinnerparty.compose.data.repo.MapClusterRepo
+import cc.dinnerparty.compose.data.repo.MapTileRepo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -36,17 +38,20 @@ data class MapUiState(
 )
 
 /** 维护地图页的地点、聚合节点与选中状态。 */
-class MapViewModel(
-    private val placeRepo: PlaceRepo = PlaceRepo(),
-) : ViewModel() {
+class MapViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val placeRepo = PlaceRepo()
+    private val tileRepo = MapTileRepo(application.cacheDir)
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
-    private val clusterRepo = MapClusterRepo(placeRepo::getNearbyPlaces)
+    private val clusterRepo = MapClusterRepo(tileRepo::update)
     private var viewport: ClusterViewport? = null
     private var loadJob: Job? = null
     private var logicalLevel: Int? = null
+    private var detailJob: Job? = null
+    private var selectionId: Long? = null
 
     fun updateViewport(
         bounds: MapBounds,
@@ -63,35 +68,43 @@ class MapViewModel(
         loadPlaces(next)
     }
 
-    /** 选中某个地点。 */
     fun selectPlace(placeId: Long) {
-        _uiState.update { state ->
-            state.copy(selectedPlace = state.places.firstOrNull { it.id == placeId }, clusterPlaces = null)
-        }
+        val place = _uiState.value.places.first { it.id == placeId }
+        check(place.aggregateZoom == null)
+        _uiState.update { it.copy(selectedPlace = place, clusterPlaces = null) }
+        openPlace(placeId)
     }
 
     /** 收起卡片。 */
     fun clearSelection() {
+        selectionId = null
+        detailJob?.cancel()
         _uiState.update { it.copy(selectedPlace = null, clusterPlaces = null) }
     }
 
-    /** 打开视野外的地点详情 */
     fun openPlace(placeId: Long) {
-        viewModelScope.launch {
-            runCatching { placeRepo.getPlace(placeId) }
-                .onSuccess { place ->
+        selectionId = placeId
+        detailJob?.cancel()
+        detailJob = viewModelScope.launch {
+            try {
+                val place = placeRepo.getPlace(placeId)
+                if (selectionId == placeId) {
                     _uiState.update { it.copy(selectedPlace = place, clusterPlaces = null) }
                 }
-                .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message) }
-                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                currentCoroutineContext().ensureActive()
+                _uiState.update { it.copy(errorMessage = error.message) }
+            }
         }
     }
 
     fun clusterClick(clusterId: Long, zoom: Float, maxZoom: Float): ClusterClick? {
         val action = clusterRepo.clusterClick(clusterId, zoom, maxZoom) ?: return null
         val members = (action as? ClusterClick.Members)?.places
-        _uiState.update { it.copy(selectedPlace = null, clusterPlaces = members) }
+        clearSelection()
+        _uiState.update { it.copy(clusterPlaces = members) }
         return action
     }
 
@@ -102,10 +115,12 @@ class MapViewModel(
     fun selectMember(placeId: Long): Place? {
         val place = _uiState.value.clusterPlaces?.firstOrNull { it.id == placeId } ?: return null
         _uiState.update { it.copy(selectedPlace = place, clusterPlaces = null) }
+        openPlace(placeId)
         return place
     }
 
-    fun reload() {
+    fun reload(place: Place) {
+        tileRepo.patch(place)
         val current = viewport ?: return
         loadPlaces(current, force = true)
     }
@@ -117,7 +132,7 @@ class MapViewModel(
             try {
                 val places = clusterRepo.update(view, force)
                 _uiState.update {
-                    it.copy(places = places, isLoading = false, errorMessage = null)
+                    it.copy(places = places, isLoading = false, errorMessage = clusterRepo.warning)
                 }
                 publishNodes()
             } catch (error: CancellationException) {

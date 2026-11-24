@@ -42,6 +42,7 @@ data class PlaceFormState(
     val busy: Boolean = false,
     val error: String? = null,
     val done: Boolean = false,
+    val savedPlace: Place? = null,
 )
 
 /** 维护地点表单的字段、分类建议与提交。 */
@@ -185,8 +186,8 @@ class PlaceFormViewModel(
                     )
                 }
             }
-                .onSuccess {
-                    _uiState.update { it.copy(busy = false, done = true) }
+                .onSuccess { place ->
+                    _uiState.update { it.copy(busy = false, done = true, savedPlace = place) }
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(busy = false, error = error.message) }

@@ -37,4 +37,8 @@ data class Place(
     @SerializedName("rating_average") val ratingAverage: Double? = null,
     // 搜索接口带出的与地图中心距离 单位公里
     @SerializedName("distance_km") val distanceKm: Double? = null,
+    @Transient val aggregateZoom: Int? = null,
+    @Transient val aggregateCell: List<Int>? = null,
+    @Transient val glyph: Int? = null,
+    @Transient val markerOnly: Boolean = false,
 )

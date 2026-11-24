@@ -7,6 +7,9 @@ import okhttp3.Response
 internal class AuthInterceptor : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
+        if (chain.request().url.encodedPath.contains("/places/tiles/")) {
+            return chain.proceed(chain.request())
+        }
         val token = AuthTokenHolder.token ?: return chain.proceed(chain.request())
         val request = chain.request()
             .newBuilder()

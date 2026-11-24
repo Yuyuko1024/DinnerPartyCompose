@@ -131,6 +131,10 @@ fun MainView(modifier: Modifier = Modifier) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let(toast)
+    }
+
     // 皮肤兑换尚未开放
     val skinLater = context.getString(R.string.skin_redeem_later)
 
@@ -287,7 +291,7 @@ fun MainView(modifier: Modifier = Modifier) {
         Toast.makeText(context, R.string.place_form_saved, Toast.LENGTH_SHORT).show()
         closeForm()
         formViewModel.close()
-        viewModel.reload()
+        viewModel.reload(checkNotNull(formState.savedPlace))
     }
 
     val locationClient = remember(context) { LocationClient(context) }
@@ -421,7 +425,7 @@ fun MainView(modifier: Modifier = Modifier) {
                 if (addMode) return@clickMarker
                 searchPoi = null
                 amapPlace = null
-                if (marker.clusterCount == null) {
+                if (marker.clusterCount == null && marker.aggregateZoom == null) {
                     overlay.show(MapOverlay.Place)
                     viewModel.selectPlace(marker.id)
                     // 把点中的地点移到地图中心

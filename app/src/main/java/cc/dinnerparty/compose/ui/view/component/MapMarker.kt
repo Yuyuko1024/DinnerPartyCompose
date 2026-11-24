@@ -15,6 +15,7 @@ data class MapMarker(
     val isAvoided: Boolean,
     /** 这个气泡里聚合了多少个地点；null 表示这就是一个地点。 */
     val clusterCount: Int? = null,
+    val aggregateZoom: Int? = null,
 )
 
 /** 聚合节点转标记，单点没有地点 id 时返回 null。 */
@@ -25,7 +26,8 @@ fun MapClusterNode.toMapMarker(): MapMarker? = when (this) {
             id = placeId,
             position = LatLng(latitude, longitude),
             name = place.name.orEmpty(),
-            isAvoided = place.isAvoided(),
+            isAvoided = place.glyph?.let { it == 1 } ?: place.isAvoided(),
+            aggregateZoom = place.aggregateZoom,
         )
     }
 
