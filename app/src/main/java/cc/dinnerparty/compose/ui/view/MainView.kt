@@ -52,6 +52,7 @@ import cc.dinnerparty.compose.ui.view.screen.ThemePageUi
 import cc.dinnerparty.compose.ui.view.screen.UsernamePageOps
 import cc.dinnerparty.compose.ui.view.screen.UsernamePageUi
 import cc.dinnerparty.compose.ui.view.content.AccountOps
+import cc.dinnerparty.compose.ui.view.content.FavoritesOps
 import cc.dinnerparty.compose.ui.view.component.AmapView
 import cc.dinnerparty.compose.ui.view.component.LocalLiquidGlass
 import cc.dinnerparty.compose.ui.view.component.LocalMapHaze
@@ -66,6 +67,7 @@ import cc.dinnerparty.compose.ui.view.component.rememberDismiss
 import cc.dinnerparty.compose.ui.view.component.rememberSearch
 import cc.dinnerparty.compose.ui.view.component.toMapMarker
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
+import cc.dinnerparty.compose.ui.viewmodel.FavoritesViewModel
 import cc.dinnerparty.compose.ui.viewmodel.MapViewModel
 import cc.dinnerparty.compose.ui.viewmodel.PlaceFormViewModel
 import cc.dinnerparty.compose.ui.viewmodel.ProfileViewModel
@@ -107,11 +109,13 @@ fun MainView(modifier: Modifier = Modifier) {
     val formViewModel: PlaceFormViewModel = viewModel()
     val profileViewModel: ProfileViewModel = viewModel()
     val userPlacesViewModel: UserPlacesViewModel = viewModel()
+    val favoritesViewModel: FavoritesViewModel = viewModel()
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val formState by formViewModel.uiState.collectAsStateWithLifecycle()
     val profileState by profileViewModel.uiState.collectAsStateWithLifecycle()
     val userPlacesState by userPlacesViewModel.uiState.collectAsStateWithLifecycle()
+    val favoritesState by favoritesViewModel.uiState.collectAsStateWithLifecycle()
     val searchBinding = rememberSearch(searchViewModel)
     val dismiss = rememberDismiss()
     var showLocationPermissionGuide by remember { mutableStateOf(false) }
@@ -631,6 +635,21 @@ fun MainView(modifier: Modifier = Modifier) {
         val chipVisible =
             userPlacesState.active && overlay.current != MapOverlay.UserPlaces
 
+        // 收藏夹的操作 未登录时先弹登录窗
+        val favoritesOps = FavoritesOps(
+            onOpen = {
+                val userId = authState.session?.user?.id
+                if (userId == null) {
+                    overlay.show(MapOverlay.Login)
+                } else {
+                    overlay.show(MapOverlay.Favorites)
+                    favoritesViewModel.open(userId)
+                }
+            },
+            onOpenPlace = openPlace,
+            onRetry = favoritesViewModel::retry,
+        )
+
         val selectMember: (Place) -> Unit = { member ->
             if (overlay.current == MapOverlay.ClusterMembers) {
                 viewModel.selectMember(member.id!!)?.let { place ->
@@ -690,6 +709,8 @@ fun MainView(modifier: Modifier = Modifier) {
                     userPlaces = userPlacesState,
                     userPlacesOps = userPlacesOps,
                     chipVisible = chipVisible,
+                    favorites = favoritesState,
+                    favoritesOps = favoritesOps,
                     account = AccountOps(
                         onLogout = authViewModel::logout,
                         onSettings = {

@@ -198,4 +198,9 @@
     <string name="user_places_collapse">收起地点列表</string>
     <string name="user_places_chip">我的 %1$d 个地点</string>
     <string name="user_places_chip_loading">正在加载我的地点</string>
+
+    <string name="favorites_loading">正在加载…</string>
+    <string name="favorites_failed">收藏加载失败</string>
+    <string name="favorites_retry">重试</string>
+    <string name="favorites_close">关闭收藏夹</string>
 </resources>

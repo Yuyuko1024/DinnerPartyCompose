@@ -197,4 +197,9 @@
     <string name="user_places_collapse">Collapse the list</string>
     <string name="user_places_chip">My %1$d places</string>
     <string name="user_places_chip_loading">Loading my places</string>
+
+    <string name="favorites_loading">Loading…</string>
+    <string name="favorites_failed">Could not load your favorites</string>
+    <string name="favorites_retry">Retry</string>
+    <string name="favorites_close">Close favorites</string>
 </resources>

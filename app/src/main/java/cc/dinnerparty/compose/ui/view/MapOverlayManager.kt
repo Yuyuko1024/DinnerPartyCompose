@@ -23,6 +23,9 @@ enum class MapOverlay {
     /** 住民创建的地点列表 收起后筛选仍保留 */
     UserPlaces,
 
+    /** 收藏夹 */
+    Favorites,
+
     /** 更多菜单 */
     Menu,
 

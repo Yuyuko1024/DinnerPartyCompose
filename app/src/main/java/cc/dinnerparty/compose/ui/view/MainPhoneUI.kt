@@ -20,6 +20,8 @@ import cc.dinnerparty.compose.ui.view.content.AboutContent
 import cc.dinnerparty.compose.ui.view.content.ClusterMembersContent
 import cc.dinnerparty.compose.ui.view.content.AccountContent
 import cc.dinnerparty.compose.ui.view.content.AccountOps
+import cc.dinnerparty.compose.ui.view.content.FavoritesContent
+import cc.dinnerparty.compose.ui.view.content.FavoritesOps
 import cc.dinnerparty.compose.ui.view.content.LoginContent
 import cc.dinnerparty.compose.ui.view.content.phone.MapBottomBar
 import cc.dinnerparty.compose.ui.view.component.MapFloatingActions
@@ -37,6 +39,7 @@ import cc.dinnerparty.compose.ui.view.content.UserPlacesContent
 import cc.dinnerparty.compose.ui.view.content.UserPlacesChip
 import cc.dinnerparty.compose.ui.view.content.UserPlacesOps
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
+import cc.dinnerparty.compose.ui.viewmodel.FavoritesUiState
 import cc.dinnerparty.compose.ui.viewmodel.UserPlacesUiState
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
@@ -67,6 +70,8 @@ fun MainPhoneUI(
     userPlaces: UserPlacesUiState = UserPlacesUiState(),
     userPlacesOps: UserPlacesOps = UserPlacesOps(),
     chipVisible: Boolean = false,
+    favorites: FavoritesUiState = FavoritesUiState(),
+    favoritesOps: FavoritesOps = FavoritesOps(),
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -123,6 +128,7 @@ fun MainPhoneUI(
                 user = authState.session?.user,
                 avatarVersion = authState.session?.avatarVersion ?: 0L,
                 onMoreClick = { overlay.show(MapOverlay.Menu) },
+                onFavoritesClick = favoritesOps.onOpen,
                 onAddClick = onAddClick,
                 adding = addMode,
                 onAccountClick = {
@@ -203,6 +209,19 @@ fun MainPhoneUI(
             UserPlacesContent(
                 state = userPlaces,
                 ops = userPlacesOps,
+                onClose = overlay::hide,
+            )
+        }
+
+        // 收藏夹
+        PhoneSheet(
+            visible = overlay.current == MapOverlay.Favorites,
+            onDismissRequest = overlay::hide,
+            modal = true
+        ) {
+            FavoritesContent(
+                state = favorites,
+                ops = favoritesOps,
                 onClose = overlay::hide,
             )
         }
