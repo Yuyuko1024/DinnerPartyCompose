@@ -19,6 +19,7 @@ import cc.dinnerparty.compose.ui.view.component.LocalMotion
 import cc.dinnerparty.compose.ui.view.screen.AvatarPage
 import cc.dinnerparty.compose.ui.view.screen.MapSettingsPage
 import cc.dinnerparty.compose.ui.view.screen.PasswordPage
+import cc.dinnerparty.compose.ui.view.screen.ProfilePage
 import cc.dinnerparty.compose.ui.view.screen.SettingsPage
 import cc.dinnerparty.compose.ui.view.screen.SkinPage
 import cc.dinnerparty.compose.ui.view.screen.ThemePage
@@ -119,6 +120,11 @@ fun AppNavHost(
         composable(route = AppRoutes.Password) {
             BackHandler { pop() }
             PasswordPage(ops = ops.password)
+        }
+
+        composable(route = AppRoutes.Profile) {
+            BackHandler { pop() }
+            ProfilePage(ui = data.profile, ops = ops.profile)
         }
     }
 }

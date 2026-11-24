@@ -42,8 +42,12 @@ internal val RowPadY = 10.dp
 
 private val BackIconSize = 18.dp
 
-/** 全屏页标题下的路径与返回文案 */
-internal class PageInfo(val path: String, val backText: String)
+/** 全屏页标题 标题下的路径与返回文案 */
+internal class PageInfo(
+    val path: String,
+    val backText: String,
+    val title: String? = null,
+)
 
 /** 全屏页骨架 手机占满宽 Pad 居中占六成 */
 @UnstableSaltUiApi
@@ -78,7 +82,7 @@ internal fun PageScaffold(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.settings_page_title),
+                    text = info.title ?: stringResource(R.string.settings_page_title),
                     modifier = Modifier.weight(1f),
                     color = SaltTheme.colors.text,
                     style = SaltTheme.textStyles.largeTitle,
@@ -96,12 +100,14 @@ internal fun PageScaffold(
                     },
                 )
             }
-            Text(
-                text = info.path,
-                modifier = Modifier.padding(bottom = PagePadding),
-                color = SaltTheme.colors.subText,
-                style = SaltTheme.textStyles.sub,
-            )
+            if (info.path.isNotEmpty()) {
+                Text(
+                    text = info.path,
+                    modifier = Modifier.padding(bottom = PagePadding),
+                    color = SaltTheme.colors.subText,
+                    style = SaltTheme.textStyles.sub,
+                )
+            }
             content()
         }
     }

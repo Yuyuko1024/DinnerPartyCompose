@@ -5,6 +5,9 @@ object AppRoutes {
     /** 地图主页 栈底且内容为空 触摸穿透到地图 */
     const val Map = "map"
 
+    /** 住民主页 */
+    const val Profile = "profile"
+
     /** 住民设置 */
     const val Settings = "settings"
 

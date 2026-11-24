@@ -5,6 +5,8 @@ import cc.dinnerparty.compose.ui.view.screen.AvatarPageUi
 import cc.dinnerparty.compose.ui.view.screen.MapSettingsPageOps
 import cc.dinnerparty.compose.ui.view.screen.MapSettingsPageUi
 import cc.dinnerparty.compose.ui.view.screen.PasswordPageOps
+import cc.dinnerparty.compose.ui.view.screen.ProfilePageOps
+import cc.dinnerparty.compose.ui.view.screen.ProfilePageUi
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageUi
 import cc.dinnerparty.compose.ui.view.screen.SkinPageOps
@@ -20,6 +22,7 @@ class AppPageData(
     val mapSettings: MapSettingsPageUi = MapSettingsPageUi(),
     val avatar: AvatarPageUi = AvatarPageUi(),
     val username: UsernamePageUi = UsernamePageUi(),
+    val profile: ProfilePageUi = ProfilePageUi(),
 )
 
 /** 全屏页面所需的操作 */
@@ -31,4 +34,5 @@ class AppPageOps(
     val avatar: AvatarPageOps = AvatarPageOps(),
     val username: UsernamePageOps = UsernamePageOps(),
     val password: PasswordPageOps = PasswordPageOps(),
+    val profile: ProfilePageOps = ProfilePageOps(),
 )

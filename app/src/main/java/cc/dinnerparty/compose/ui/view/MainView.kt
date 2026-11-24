@@ -39,6 +39,9 @@ import cc.dinnerparty.compose.ui.view.screen.MapMotion
 import cc.dinnerparty.compose.ui.view.screen.MapSettingsPageOps
 import cc.dinnerparty.compose.ui.view.screen.MapSettingsPageUi
 import cc.dinnerparty.compose.ui.view.screen.PasswordPageOps
+import cc.dinnerparty.compose.ui.view.screen.ProfileEditOps
+import cc.dinnerparty.compose.ui.view.screen.ProfilePageOps
+import cc.dinnerparty.compose.ui.view.screen.ProfilePageUi
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageOps
 import cc.dinnerparty.compose.ui.view.screen.SettingsPageUi
 import cc.dinnerparty.compose.ui.view.screen.SkinPageOps
@@ -63,6 +66,7 @@ import cc.dinnerparty.compose.ui.view.component.toMapMarker
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
 import cc.dinnerparty.compose.ui.viewmodel.MapViewModel
 import cc.dinnerparty.compose.ui.viewmodel.PlaceFormViewModel
+import cc.dinnerparty.compose.ui.viewmodel.ProfileViewModel
 import cc.dinnerparty.compose.ui.viewmodel.SearchViewModel
 import cc.dinnerparty.compose.ui.viewmodel.SettingsViewModel
 import cc.dinnerparty.compose.utils.LocationClient
@@ -97,9 +101,11 @@ fun MainView(modifier: Modifier = Modifier) {
     val authViewModel: AuthViewModel = viewModel()
     val searchViewModel: SearchViewModel = viewModel()
     val formViewModel: PlaceFormViewModel = viewModel()
+    val profileViewModel: ProfileViewModel = viewModel()
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val formState by formViewModel.uiState.collectAsStateWithLifecycle()
+    val profileState by profileViewModel.uiState.collectAsStateWithLifecycle()
     val searchBinding = rememberSearch(searchViewModel)
     val dismiss = rememberDismiss()
     var showLocationPermissionGuide by remember { mutableStateOf(false) }
@@ -120,6 +126,9 @@ fun MainView(modifier: Modifier = Modifier) {
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var locating by remember { mutableStateOf(false) }
 
+    // 从其他页面点开的地点 详情到位后再移地图
+    var focusPlaceId by remember { mutableStateOf<Long?>(null) }
+
     // 当前显示的浮层
     val overlay = rememberMapOverlayManager()
 
@@ -133,6 +142,13 @@ fun MainView(modifier: Modifier = Modifier) {
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let(toast)
+    }
+
+    LaunchedEffect(profileState.message) {
+        profileState.message?.let { message ->
+            toast(message)
+            profileViewModel.clearMessage()
+        }
     }
 
     // 皮肤兑换尚未开放
@@ -187,6 +203,22 @@ fun MainView(modifier: Modifier = Modifier) {
                 onMessage = toast,
                 onSave = { current, next -> authViewModel.updatePassword(current, next) },
             ),
+            profile = ProfilePageOps(
+                onBack = { nav.popBackStack() },
+                onRetry = profileViewModel::retry,
+                onOpenPlace = { id ->
+                    overlay.hide()
+                    nav.popBackStack()
+                    focusPlaceId = id
+                    viewModel.openPlace(id)
+                    overlay.show(MapOverlay.Place)
+                },
+                edit = ProfileEditOps(
+                    onTaste = profileViewModel::saveTasteLevel,
+                    onWidgets = profileViewModel::saveHiddenWidgets,
+                    onVisibility = profileViewModel::saveVisibility,
+                ),
+            ),
             theme = ThemePageOps(
                 onBack = { nav.popBackStack() },
                 onSwitch = { which, enabled ->
@@ -221,6 +253,22 @@ fun MainView(modifier: Modifier = Modifier) {
 
     // 浮层玻璃的采样源，取自地图
     val haze = rememberHazeState()
+
+    // 主页点开地点后 详情到位再移地图
+    LaunchedEffect(focusPlaceId, uiState.selectedPlace, amap) {
+        val id = focusPlaceId ?: return@LaunchedEffect
+        val map = amap ?: return@LaunchedEffect
+        val place = uiState.selectedPlace ?: return@LaunchedEffect
+        if (place.id != id) return@LaunchedEffect
+        focusPlaceId = null
+        val latitude = place.latitude ?: return@LaunchedEffect
+        val longitude = place.longitude ?: return@LaunchedEffect
+        map.animateCamera(
+            CameraUpdateFactory.newLatLng(LatLng(latitude, longitude)),
+            MarkerCenterDurationMs,
+            null,
+        )
+    }
 
     // 添加模式 此时点地图或高德 POI 取点
     var addMode by remember { mutableStateOf(false) }
@@ -567,6 +615,11 @@ fun MainView(modifier: Modifier = Modifier) {
                             overlay.hide()
                             nav.navigate(AppRoutes.Settings) { launchSingleTop = true }
                         },
+                        onProfile = {
+                            overlay.hide()
+                            profileViewModel.load(authState.session?.user?.id.orEmpty())
+                            nav.navigate(AppRoutes.Profile) { launchSingleTop = true }
+                        },
                     ),
                 )
 
@@ -600,6 +653,11 @@ fun MainView(modifier: Modifier = Modifier) {
                             overlay.hide()
                             nav.navigate(AppRoutes.Settings) { launchSingleTop = true }
                         },
+                        onProfile = {
+                            overlay.hide()
+                            profileViewModel.load(authState.session?.user?.id.orEmpty())
+                            nav.navigate(AppRoutes.Profile) { launchSingleTop = true }
+                        },
                     ),
                 )
             }
@@ -629,6 +687,12 @@ fun MainView(modifier: Modifier = Modifier) {
                         zoom = settingsState.mapZoom,
                         clusterMotion = settingsState.clusterMotion,
                         overlayMotion = settingsState.overlayMotion,
+                    ),
+                    profile = ProfilePageUi(
+                        profile = profileState.profile,
+                        avatarVersion = authState.session?.avatarVersion ?: 0L,
+                        busy = profileState.busy,
+                        error = profileState.error,
                     ),
                 ),
                 ops = pageOps,

@@ -23,6 +23,7 @@ import com.moriafly.salt.ui.UnstableSaltUiApi
 class AccountOps(
     val onLogout: () -> Unit = {},
     val onSettings: () -> Unit = {},
+    val onProfile: () -> Unit = {},
 )
 
 /** 已登录的住民菜单 */
@@ -70,7 +71,7 @@ fun AccountContent(
         Item(
             text = stringResource(R.string.account_my_profile),
             arrowType = ItemArrowType.None,
-            onClick = {},
+            onClick = ops.onProfile,
         )
         Item(
             text = stringResource(R.string.account_settings),
