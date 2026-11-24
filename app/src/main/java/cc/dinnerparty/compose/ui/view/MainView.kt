@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.data.cluster.ClusterClick
+import cc.dinnerparty.compose.data.cluster.MapClusterNode
 import cc.dinnerparty.compose.data.model.MapBounds
 import cc.dinnerparty.compose.data.model.canManage
 import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
@@ -58,6 +59,7 @@ import cc.dinnerparty.compose.ui.view.component.LocalMotion
 import cc.dinnerparty.compose.ui.view.content.PlaceCardOps
 import cc.dinnerparty.compose.ui.view.content.PlaceFormEvents
 import cc.dinnerparty.compose.ui.view.content.PlaceFormUi
+import cc.dinnerparty.compose.ui.view.content.UserPlacesOps
 import cc.dinnerparty.compose.ui.view.component.SearchPoi
 import cc.dinnerparty.compose.ui.view.component.YesNoContentDialog
 import cc.dinnerparty.compose.ui.view.component.rememberDismiss
@@ -69,6 +71,7 @@ import cc.dinnerparty.compose.ui.viewmodel.PlaceFormViewModel
 import cc.dinnerparty.compose.ui.viewmodel.ProfileViewModel
 import cc.dinnerparty.compose.ui.viewmodel.SearchViewModel
 import cc.dinnerparty.compose.ui.viewmodel.SettingsViewModel
+import cc.dinnerparty.compose.ui.viewmodel.UserPlacesViewModel
 import cc.dinnerparty.compose.utils.LocationClient
 import cc.dinnerparty.compose.utils.LocationFailure
 import cc.dinnerparty.compose.utils.LocationResult
@@ -80,6 +83,7 @@ import com.amap.api.maps.AMap
 import com.amap.api.maps.CameraUpdateFactory
 import com.amap.api.maps.model.CameraPosition
 import com.amap.api.maps.model.LatLng
+import com.amap.api.maps.model.LatLngBounds
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
@@ -102,10 +106,12 @@ fun MainView(modifier: Modifier = Modifier) {
     val searchViewModel: SearchViewModel = viewModel()
     val formViewModel: PlaceFormViewModel = viewModel()
     val profileViewModel: ProfileViewModel = viewModel()
+    val userPlacesViewModel: UserPlacesViewModel = viewModel()
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val formState by formViewModel.uiState.collectAsStateWithLifecycle()
     val profileState by profileViewModel.uiState.collectAsStateWithLifecycle()
+    val userPlacesState by userPlacesViewModel.uiState.collectAsStateWithLifecycle()
     val searchBinding = rememberSearch(searchViewModel)
     val dismiss = rememberDismiss()
     var showLocationPermissionGuide by remember { mutableStateOf(false) }
@@ -174,6 +180,17 @@ fun MainView(modifier: Modifier = Modifier) {
         )
     }
 
+    // 统一的打开地点入口 住民主页与本地点列表共用
+    val openPlace: (Long) -> Unit = { placeId ->
+        overlay.hide()
+        if (nav.currentDestination?.route != AppRoutes.Map) nav.popBackStack()
+        amapPlace = null
+        searchPoi = null
+        focusPlaceId = placeId
+        viewModel.openPlace(placeId)
+        overlay.show(MapOverlay.Place)
+    }
+
     // 全屏页面的操作
     val pageOps = remember {
         AppPageOps(
@@ -206,13 +223,7 @@ fun MainView(modifier: Modifier = Modifier) {
             profile = ProfilePageOps(
                 onBack = { nav.popBackStack() },
                 onRetry = profileViewModel::retry,
-                onOpenPlace = { id ->
-                    overlay.hide()
-                    nav.popBackStack()
-                    focusPlaceId = id
-                    viewModel.openPlace(id)
-                    overlay.show(MapOverlay.Place)
-                },
+                onOpenPlace = openPlace,
                 edit = ProfileEditOps(
                     onTaste = profileViewModel::saveTasteLevel,
                     onWidgets = profileViewModel::saveHiddenWidgets,
@@ -268,6 +279,33 @@ fun MainView(modifier: Modifier = Modifier) {
             MarkerCenterDurationMs,
             null,
         )
+    }
+
+    // 筛选生效后把视野套到自己的地点上
+    LaunchedEffect(userPlacesState.ready, userPlacesState.places, amap) {
+        if (!userPlacesState.ready) return@LaunchedEffect
+        val map = amap ?: return@LaunchedEffect
+        val points = userPlacesState.places.orEmpty().mapNotNull { place ->
+            val latitude = place.latitude ?: return@mapNotNull null
+            val longitude = place.longitude ?: return@mapNotNull null
+            LatLng(latitude, longitude)
+        }
+        if (points.isEmpty()) return@LaunchedEffect
+        if (points.size == 1) {
+            map.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(points.first(), UserPlacesZoom),
+                UserPlacesFitDurationMs,
+                null,
+            )
+        } else {
+            val builder = LatLngBounds.builder()
+            points.forEach { builder.include(it) }
+            map.animateCamera(
+                CameraUpdateFactory.newLatLngBounds(builder.build(), UserPlacesFitPad),
+                UserPlacesFitDurationMs,
+                null,
+            )
+        }
     }
 
     // 添加模式 此时点地图或高德 POI 取点
@@ -437,15 +475,28 @@ fun MainView(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .background(SaltTheme.colors.background)
     ) {
+        val filtering = userPlacesState.ready
         val nodes = uiState.visibleNodes
-        val markers = remember(nodes) { nodes.mapNotNull { it.toMapMarker() } }
+        val markers = remember(nodes, filtering, userPlacesState.places) {
+            if (filtering) {
+                userPlacesState.places.orEmpty().mapNotNull { place ->
+                    val latitude = place.latitude ?: return@mapNotNull null
+                    val longitude = place.longitude ?: return@mapNotNull null
+                    MapClusterNode.Single(place, longitude, latitude).toMapMarker()
+                }
+            } else {
+                nodes.mapNotNull { it.toMapMarker() }
+            }
+        }
         val selectedPlace = uiState.selectedPlace
 
         val density = LocalDensity.current.density
         val publishViewport: (AMap) -> Unit = { map ->
             val bounds = map.visibleBounds()
             val zoom = map.cameraPosition?.zoom
-            if (bounds != null && zoom != null) {
+            // 筛选期间不按视野拉取附近地点
+            val frozen = userPlacesViewModel.uiState.value.ready
+            if (bounds != null && zoom != null && !frozen) {
                 viewModel.updateViewport(
                     bounds = bounds,
                     zoom = zoom,
@@ -463,7 +514,7 @@ fun MainView(modifier: Modifier = Modifier) {
             // 手机端底栏常驻，地图 Logo 需要抬升
             logoBottomMargin = if (windowSizeClass == WindowSizeClass.Compact) PhoneOverlayHeight else 0.dp,
             markers = markers,
-            clusterSnapshot = uiState.clusterSnapshot,
+            clusterSnapshot = if (filtering) null else uiState.clusterSnapshot,
             userLocation = userLocation,
             searchPoi = searchPoi,
             selectedMarkerId = selectedPlace?.id,
@@ -475,7 +526,12 @@ fun MainView(modifier: Modifier = Modifier) {
                 amapPlace = null
                 if (marker.clusterCount == null && marker.aggregateZoom == null) {
                     overlay.show(MapOverlay.Place)
-                    viewModel.selectPlace(marker.id)
+                    // 筛选态的地点不在聚合数据里
+                    if (filtering) {
+                        viewModel.openPlace(marker.id)
+                    } else {
+                        viewModel.selectPlace(marker.id)
+                    }
                     // 把点中的地点移到地图中心
                     amap?.animateCamera(
                         CameraUpdateFactory.newLatLng(marker.position),
@@ -553,6 +609,28 @@ fun MainView(modifier: Modifier = Modifier) {
         )
         val formUi = PlaceFormUi(state = formState, events = formEvents)
 
+        // 住民地点筛选的操作
+        val userPlacesOps = UserPlacesOps(
+            onOpenPlace = openPlace,
+            onProfile = {
+                overlay.hide()
+                profileViewModel.load(authState.session?.user?.id.orEmpty())
+                nav.navigate(AppRoutes.Profile) { launchSingleTop = true }
+            },
+            onExit = {
+                userPlacesViewModel.exit()
+                overlay.hide()
+                // 恢复后立即按当前视野重拉附近地点
+                amap?.let(publishViewport)
+            },
+            onRetry = userPlacesViewModel::retry,
+            onOpenList = { overlay.show(MapOverlay.UserPlaces) },
+        )
+
+        // 列表收起后筛选仍生效 用横条提示
+        val chipVisible =
+            userPlacesState.active && overlay.current != MapOverlay.UserPlaces
+
         val selectMember: (Place) -> Unit = { member ->
             if (overlay.current == MapOverlay.ClusterMembers) {
                 viewModel.selectMember(member.id!!)?.let { place ->
@@ -609,6 +687,9 @@ fun MainView(modifier: Modifier = Modifier) {
                         overlay.hide()
                         nav.navigate(AppRoutes.Settings) { launchSingleTop = true }
                     },
+                    userPlaces = userPlacesState,
+                    userPlacesOps = userPlacesOps,
+                    chipVisible = chipVisible,
                     account = AccountOps(
                         onLogout = authViewModel::logout,
                         onSettings = {
@@ -619,6 +700,10 @@ fun MainView(modifier: Modifier = Modifier) {
                             overlay.hide()
                             profileViewModel.load(authState.session?.user?.id.orEmpty())
                             nav.navigate(AppRoutes.Profile) { launchSingleTop = true }
+                        },
+                        onMyPlaces = {
+                            overlay.show(MapOverlay.UserPlaces)
+                            userPlacesViewModel.open(authState.session?.user?.id.orEmpty())
                         },
                     ),
                 )
@@ -647,6 +732,9 @@ fun MainView(modifier: Modifier = Modifier) {
                         overlay.hide()
                         nav.navigate(AppRoutes.Settings) { launchSingleTop = true }
                     },
+                    userPlaces = userPlacesState,
+                    userPlacesOps = userPlacesOps,
+                    chipVisible = chipVisible,
                     account = AccountOps(
                         onLogout = authViewModel::logout,
                         onSettings = {
@@ -657,6 +745,10 @@ fun MainView(modifier: Modifier = Modifier) {
                             overlay.hide()
                             profileViewModel.load(authState.session?.user?.id.orEmpty())
                             nav.navigate(AppRoutes.Profile) { launchSingleTop = true }
+                        },
+                        onMyPlaces = {
+                            overlay.show(MapOverlay.UserPlaces)
+                            userPlacesViewModel.open(authState.session?.user?.id.orEmpty())
                         },
                     ),
                 )
@@ -779,6 +871,15 @@ private const val MarkerCenterDurationMs = 300L
 
 /** 搜索结果定位的相机动画时长。 */
 private const val SearchDurationMs = 300L
+
+/** 筛选后只有一个地点时的缩放级别。 */
+private const val UserPlacesZoom = 16f
+
+/** 筛选后套住全部地点的边缘留白 单位像素。 */
+private const val UserPlacesFitPad = 96
+
+/** 筛选后套视野的相机动画时长。 */
+private const val UserPlacesFitDurationMs = 400L
 
 /** 相机飞到目标点 动画结束后返回 */
 private suspend fun AMap.flyTo(target: LatLng, zoom: Float, duration: Long) {

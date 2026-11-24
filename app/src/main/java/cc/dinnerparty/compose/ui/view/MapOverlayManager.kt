@@ -20,6 +20,9 @@ enum class MapOverlay {
     /** 管理账户 */
     Account,
 
+    /** 住民创建的地点列表 收起后筛选仍保留 */
+    UserPlaces,
+
     /** 更多菜单 */
     Menu,
 

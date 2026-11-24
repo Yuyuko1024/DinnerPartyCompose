@@ -181,4 +181,20 @@
     <string name="cluster_unnamed">Unnamed place</string>
     <string name="cluster_uncategorized">Uncategorized</string>
     <string name="cluster_member_cost">%1$s · ¥%2$d per person</string>
+
+    <string name="user_places_title">Places I added</string>
+    <string name="user_places_summary">%1$d places</string>
+    <string name="user_places_summary_limited">%1$d places, showing the newest %2$d</string>
+    <string name="user_places_loading">Loading…</string>
+    <string name="user_places_failed">Could not load these places</string>
+    <string name="user_places_retry">Retry</string>
+    <string name="user_places_empty">You have not added any place yet</string>
+    <string name="user_places_reviewing">In review</string>
+    <string name="user_places_rejected">Rejected</string>
+    <string name="user_places_created">Added %1$s</string>
+    <string name="user_places_profile">My profile</string>
+    <string name="user_places_exit">Show all places</string>
+    <string name="user_places_collapse">Collapse the list</string>
+    <string name="user_places_chip">My %1$d places</string>
+    <string name="user_places_chip_loading">Loading my places</string>
 </resources>

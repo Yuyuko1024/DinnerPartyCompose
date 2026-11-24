@@ -33,7 +33,11 @@ import cc.dinnerparty.compose.ui.view.content.PlaceCardOps
 import cc.dinnerparty.compose.ui.view.content.PlaceFormContent
 import cc.dinnerparty.compose.ui.view.content.PlaceFormUi
 import cc.dinnerparty.compose.ui.view.content.SearchPanel
+import cc.dinnerparty.compose.ui.view.content.UserPlacesContent
+import cc.dinnerparty.compose.ui.view.content.UserPlacesChip
+import cc.dinnerparty.compose.ui.view.content.UserPlacesOps
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
+import cc.dinnerparty.compose.ui.viewmodel.UserPlacesUiState
 import com.moriafly.salt.ui.UnstableSaltUiApi
 
 /** 手机端浮层总高。 */
@@ -60,6 +64,9 @@ fun MainPhoneUI(
     onDismissPlaceCard: () -> Unit = {},
     account: AccountOps = AccountOps(),
     onSettingsClick: () -> Unit = {},
+    userPlaces: UserPlacesUiState = UserPlacesUiState(),
+    userPlacesOps: UserPlacesOps = UserPlacesOps(),
+    chipVisible: Boolean = false,
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -96,6 +103,15 @@ fun MainPhoneUI(
                         .padding(horizontal = 12.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+            if (chipVisible) {
+                UserPlacesChip(
+                    state = userPlaces,
+                    ops = userPlacesOps,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(start = 12.dp, bottom = 8.dp)
+                )
             }
             MapSearchBar(
                 state = search.state,
@@ -175,6 +191,19 @@ fun MainPhoneUI(
                 ops = account,
                 user = authState.session?.user,
                 avatarVersion = authState.session?.avatarVersion ?: 0L
+            )
+        }
+
+        // 住民创建的地点
+        PhoneSheet(
+            visible = overlay.current == MapOverlay.UserPlaces,
+            onDismissRequest = overlay::hide,
+            modal = true
+        ) {
+            UserPlacesContent(
+                state = userPlaces,
+                ops = userPlacesOps,
+                onClose = overlay::hide,
             )
         }
 

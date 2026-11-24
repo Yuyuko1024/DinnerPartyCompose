@@ -53,7 +53,11 @@ import cc.dinnerparty.compose.ui.view.content.pad.PlaceDetailPanel
 import cc.dinnerparty.compose.ui.view.content.PlaceFormContent
 import cc.dinnerparty.compose.ui.view.content.PlaceFormUi
 import cc.dinnerparty.compose.ui.view.content.SearchPanel
+import cc.dinnerparty.compose.ui.view.content.UserPlacesChip
+import cc.dinnerparty.compose.ui.view.content.UserPlacesContent
+import cc.dinnerparty.compose.ui.view.content.UserPlacesOps
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
+import cc.dinnerparty.compose.ui.viewmodel.UserPlacesUiState
 import com.moriafly.salt.ui.Button
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
@@ -77,6 +81,9 @@ private val FloatingActionTopPadding = 12.dp
 /** 悬浮钮横移时长。 */
 private const val FloatingActionDurationMs = 300
 
+/** 筛选条与地图底边的距离。 */
+private val ChipBottomPadding = 44.dp
+
 /** Pad 端地图浮层，顶部 Header，下方右侧依次是详情面板、菜单面板与悬浮钮。 */
 @UnstableSaltUiApi
 @Composable
@@ -98,6 +105,9 @@ fun MainPadUI(
     onDismissPlaceCard: () -> Unit = {},
     account: AccountOps = AccountOps(),
     onSettingsClick: () -> Unit = {},
+    userPlaces: UserPlacesUiState = UserPlacesUiState(),
+    userPlacesOps: UserPlacesOps = UserPlacesOps(),
+    chipVisible: Boolean = false,
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -210,6 +220,29 @@ fun MainPadUI(
                 addMode = addMode,
                 onAddClick = onAddClick
             )
+
+            PadPanel(
+                visible = overlay.current == MapOverlay.UserPlaces,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = FloatingActionTopPadding)
+            ) {
+                UserPlacesContent(
+                    state = userPlaces,
+                    ops = userPlacesOps,
+                    onClose = overlay::hide,
+                )
+            }
+
+            if (chipVisible) {
+                UserPlacesChip(
+                    state = userPlaces,
+                    ops = userPlacesOps,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = ChipBottomPadding)
+                )
+            }
 
             if (search.state.resultsVisible) {
                 SearchPanel(

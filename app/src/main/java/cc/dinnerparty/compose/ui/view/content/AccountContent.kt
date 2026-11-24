@@ -24,6 +24,7 @@ class AccountOps(
     val onLogout: () -> Unit = {},
     val onSettings: () -> Unit = {},
     val onProfile: () -> Unit = {},
+    val onMyPlaces: () -> Unit = {},
 )
 
 /** 已登录的住民菜单 */
@@ -66,7 +67,7 @@ fun AccountContent(
         Item(
             text = stringResource(R.string.account_my_places),
             arrowType = ItemArrowType.None,
-            onClick = {},
+            onClick = ops.onMyPlaces,
         )
         Item(
             text = stringResource(R.string.account_my_profile),

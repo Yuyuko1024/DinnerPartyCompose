@@ -35,6 +35,7 @@ data class Place(
     @SerializedName("updated_by_name") val updatedByName: String? = null,
     @SerializedName("rating_count") val ratingCount: Int? = null,
     @SerializedName("rating_average") val ratingAverage: Double? = null,
+    @SerializedName("moderation_status") val moderationStatus: String? = null,
     // 搜索接口带出的与地图中心距离 单位公里
     @SerializedName("distance_km") val distanceKm: Double? = null,
     @Transient val aggregateZoom: Int? = null,
