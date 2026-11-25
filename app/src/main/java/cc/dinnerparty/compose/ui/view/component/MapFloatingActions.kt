@@ -30,6 +30,7 @@ fun MapFloatingActions(
     onLocateClick: () -> Unit = {},
     addMode: Boolean = false,
     onAddClick: () -> Unit = {},
+    onFavoritesClick: () -> Unit = {},
 ) {
     val isTablet = LocalIsTablet.current
     val danger = dinnerPartySemanticColors().danger
@@ -59,7 +60,7 @@ fun MapFloatingActions(
             CircleIconButton(
                 painterRes = R.drawable.ic_heart_outline,
                 contentDescription = stringResource(R.string.action_favorites),
-                onClick = {  }
+                onClick = onFavoritesClick
             )
         }
         CircleIconButton(
