@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.ui.view.content.AboutContent
+import cc.dinnerparty.compose.ui.view.content.AlongRouteContent
+import cc.dinnerparty.compose.ui.view.content.AlongRouteOps
 import cc.dinnerparty.compose.ui.view.content.ClusterMembersContent
 import cc.dinnerparty.compose.ui.view.content.AccountContent
 import cc.dinnerparty.compose.ui.view.content.AccountOps
@@ -39,6 +41,7 @@ import cc.dinnerparty.compose.ui.view.content.UserPlacesContent
 import cc.dinnerparty.compose.ui.view.content.UserPlacesChip
 import cc.dinnerparty.compose.ui.view.content.UserPlacesOps
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
+import cc.dinnerparty.compose.ui.viewmodel.AlongRouteUiState
 import cc.dinnerparty.compose.ui.viewmodel.FavoritesUiState
 import cc.dinnerparty.compose.ui.viewmodel.UserPlacesUiState
 import com.moriafly.salt.ui.UnstableSaltUiApi
@@ -72,6 +75,9 @@ fun MainPhoneUI(
     chipVisible: Boolean = false,
     favorites: FavoritesUiState = FavoritesUiState(),
     favoritesOps: FavoritesOps = FavoritesOps(),
+    alongRoute: AlongRouteUiState = AlongRouteUiState(),
+    alongRouteOps: AlongRouteOps = AlongRouteOps(),
+    onAlongRouteClick: () -> Unit = {},
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -131,6 +137,7 @@ fun MainPhoneUI(
                 onFavoritesClick = favoritesOps.onOpen,
                 onAddClick = onAddClick,
                 adding = addMode,
+                onAlongRouteClick = onAlongRouteClick,
                 onAccountClick = {
                     if (authState.session == null) {
                         overlay.show(MapOverlay.Login)
@@ -246,6 +253,19 @@ fun MainPhoneUI(
             modal = true
         ) {
             AboutContent(onClose = overlay::hide)
+        }
+
+        // 顺路吃 不带遮罩 方便在地图上取点
+        PhoneSheet(
+            visible = overlay.current == MapOverlay.AlongRoute,
+            onDismissRequest = onAlongRouteClick,
+            modal = false
+        ) {
+            AlongRouteContent(
+                state = alongRoute,
+                ops = alongRouteOps,
+                onClose = onAlongRouteClick,
+            )
         }
     }
 }

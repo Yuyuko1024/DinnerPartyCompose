@@ -25,6 +25,7 @@ import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.api.model.Place
 import cc.dinnerparty.compose.data.cluster.ClusterClick
 import cc.dinnerparty.compose.data.cluster.MapClusterNode
+import cc.dinnerparty.compose.data.model.GeoPoint
 import cc.dinnerparty.compose.data.model.MapBounds
 import cc.dinnerparty.compose.data.model.canManage
 import cc.dinnerparty.compose.ui.adaptive.LocalIsTablet
@@ -52,11 +53,14 @@ import cc.dinnerparty.compose.ui.view.screen.ThemePageUi
 import cc.dinnerparty.compose.ui.view.screen.UsernamePageOps
 import cc.dinnerparty.compose.ui.view.screen.UsernamePageUi
 import cc.dinnerparty.compose.ui.view.content.AccountOps
+import cc.dinnerparty.compose.ui.view.content.AlongRouteOps
 import cc.dinnerparty.compose.ui.view.content.FavoritesOps
 import cc.dinnerparty.compose.ui.view.component.AmapView
 import cc.dinnerparty.compose.ui.view.component.LocalLiquidGlass
 import cc.dinnerparty.compose.ui.view.component.LocalMapHaze
 import cc.dinnerparty.compose.ui.view.component.LocalMotion
+import cc.dinnerparty.compose.ui.view.component.MapEndpoint
+import cc.dinnerparty.compose.ui.view.component.MapRoute
 import cc.dinnerparty.compose.ui.view.content.PlaceCardOps
 import cc.dinnerparty.compose.ui.view.content.PlaceFormEvents
 import cc.dinnerparty.compose.ui.view.content.PlaceFormUi
@@ -67,6 +71,8 @@ import cc.dinnerparty.compose.ui.view.component.rememberDismiss
 import cc.dinnerparty.compose.ui.view.component.rememberSearch
 import cc.dinnerparty.compose.ui.view.component.toMapMarker
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
+import cc.dinnerparty.compose.ui.viewmodel.AlongRouteStep
+import cc.dinnerparty.compose.ui.viewmodel.AlongRouteViewModel
 import cc.dinnerparty.compose.ui.viewmodel.FavoritesViewModel
 import cc.dinnerparty.compose.ui.viewmodel.MapViewModel
 import cc.dinnerparty.compose.ui.viewmodel.PlaceFormViewModel
@@ -91,6 +97,7 @@ import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.math.max
 import kotlin.math.ceil
@@ -110,12 +117,14 @@ fun MainView(modifier: Modifier = Modifier) {
     val profileViewModel: ProfileViewModel = viewModel()
     val userPlacesViewModel: UserPlacesViewModel = viewModel()
     val favoritesViewModel: FavoritesViewModel = viewModel()
+    val alongRouteViewModel: AlongRouteViewModel = viewModel()
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val formState by formViewModel.uiState.collectAsStateWithLifecycle()
     val profileState by profileViewModel.uiState.collectAsStateWithLifecycle()
     val userPlacesState by userPlacesViewModel.uiState.collectAsStateWithLifecycle()
     val favoritesState by favoritesViewModel.uiState.collectAsStateWithLifecycle()
+    val alongRouteState by alongRouteViewModel.uiState.collectAsStateWithLifecycle()
     val searchBinding = rememberSearch(searchViewModel)
     val dismiss = rememberDismiss()
     var showLocationPermissionGuide by remember { mutableStateOf(false) }
@@ -152,6 +161,11 @@ fun MainView(modifier: Modifier = Modifier) {
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let(toast)
+    }
+
+    // 顺路吃的规划或检索失败也叫一声
+    LaunchedEffect(alongRouteState.error) {
+        alongRouteState.error?.let(toast)
     }
 
     LaunchedEffect(profileState.message) {
@@ -193,6 +207,85 @@ fun MainView(modifier: Modifier = Modifier) {
         focusPlaceId = placeId
         viewModel.openPlace(placeId)
         overlay.show(MapOverlay.Place)
+    }
+
+    // 从顺路吃结果点开地点 卡片关掉后回到结果
+    var backToAlongRoute by remember { mutableStateOf(false) }
+
+    val openAlongRoutePlace: (Long) -> Unit = { placeId ->
+        amapPlace = null
+        searchPoi = null
+        focusPlaceId = placeId
+        viewModel.openPlace(placeId)
+        backToAlongRoute = true
+        overlay.show(MapOverlay.Place)
+    }
+
+    // 顺路吃里点地图或高德 POI 取点
+    val pickAlongRoutePoint: (LatLng, String?) -> Unit = { position, name ->
+        val label = name?.takeIf { it.isNotBlank() } ?: coordinateText(position)
+        alongRouteViewModel.pickAt(GeoPoint(position.latitude, position.longitude), label)
+    }
+
+    val alongRouteOps = AlongRouteOps(
+        onPick = alongRouteViewModel::pick,
+        onCancelPick = alongRouteViewModel::cancelPick,
+        onEdit = alongRouteViewModel::edit,
+        onStopEdit = alongRouteViewModel::stopEdit,
+        onInput = alongRouteViewModel::setInput,
+        onTip = alongRouteViewModel::chooseTip,
+        onNext = alongRouteViewModel::next,
+        onBack = alongRouteViewModel::back,
+        onMode = alongRouteViewModel::setMode,
+        onQuery = alongRouteViewModel::setQuery,
+        onTagInput = alongRouteViewModel::setTagInput,
+        onToggleCategory = alongRouteViewModel::toggleCategory,
+        onCorridor = alongRouteViewModel::setCorridor,
+        onPlan = alongRouteViewModel::plan,
+        onChooseRoute = alongRouteViewModel::choose,
+        onOpenPlace = openAlongRoutePlace,
+        onRetry = alongRouteViewModel::retry,
+    )
+
+    // 底栏与悬浮钮的顺路吃开关
+    val toggleAlongRoute: () -> Unit = {
+        if (overlay.current == MapOverlay.AlongRoute) {
+            alongRouteViewModel.close()
+            overlay.hide()
+        } else {
+            backToAlongRoute = false
+            alongRouteViewModel.open()
+            overlay.show(MapOverlay.AlongRoute)
+        }
+    }
+
+    // 地点卡片关掉后回到顺路吃结果
+    LaunchedEffect(overlay.current) {
+        if (overlay.current == null && backToAlongRoute) {
+            backToAlongRoute = false
+            overlay.show(MapOverlay.AlongRoute)
+        }
+    }
+
+    // 规划出路线后把视野套到所选方案上
+    LaunchedEffect(alongRouteState.routes, alongRouteState.chosenRoute, amap) {
+        val routes = alongRouteState.routes
+        if (routes.isEmpty()) return@LaunchedEffect
+        val map = amap ?: return@LaunchedEffect
+        val chosen = alongRouteState.chosenRoute
+        val route = if (chosen != null && chosen in routes.indices) {
+            routes[chosen]
+        } else {
+            routes.first()
+        }
+        if (route.points.size < MinRouteFitPoints) return@LaunchedEffect
+        val builder = LatLngBounds.builder()
+        route.points.forEach { builder.include(LatLng(it.latitude, it.longitude)) }
+        map.animateCamera(
+            CameraUpdateFactory.newLatLngBounds(builder.build(), AlongRouteFitPad),
+            AlongRouteFitDurationMs,
+            null,
+        )
     }
 
     // 全屏页面的操作
@@ -479,17 +572,34 @@ fun MainView(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .background(SaltTheme.colors.background)
     ) {
+        // 顺路吃的路线只有面板在时才画在地图上
+        val showAlongRoute =
+            overlay.current == MapOverlay.AlongRoute || backToAlongRoute
+        // 选定方案后地图只显示该方案检索到的地点
+        val routeOnly = showAlongRoute &&
+            alongRouteState.step == AlongRouteStep.Routes &&
+            alongRouteState.chosenRoute != null
         val filtering = userPlacesState.ready
         val nodes = uiState.visibleNodes
-        val markers = remember(nodes, filtering, userPlacesState.places) {
-            if (filtering) {
-                userPlacesState.places.orEmpty().mapNotNull { place ->
+        val markers = remember(
+            nodes,
+            filtering,
+            routeOnly,
+            alongRouteState.places,
+            userPlacesState.places,
+        ) {
+            when {
+                routeOnly -> alongRouteState.places.orEmpty().mapNotNull { place ->
                     val latitude = place.latitude ?: return@mapNotNull null
                     val longitude = place.longitude ?: return@mapNotNull null
                     MapClusterNode.Single(place, longitude, latitude).toMapMarker()
                 }
-            } else {
-                nodes.mapNotNull { it.toMapMarker() }
+                filtering -> userPlacesState.places.orEmpty().mapNotNull { place ->
+                    val latitude = place.latitude ?: return@mapNotNull null
+                    val longitude = place.longitude ?: return@mapNotNull null
+                    MapClusterNode.Single(place, longitude, latitude).toMapMarker()
+                }
+                else -> nodes.mapNotNull { it.toMapMarker() }
             }
         }
         val selectedPlace = uiState.selectedPlace
@@ -511,6 +621,30 @@ fun MainView(modifier: Modifier = Modifier) {
             map.cameraPosition?.target?.let(searchViewModel::updateCenter)
         }
 
+        val alongRoutes = remember(alongRouteState.routes, alongRouteState.chosenRoute) {
+            val chosen = alongRouteState.chosenRoute
+            alongRouteState.routes.mapIndexed { position, plan ->
+                MapRoute(
+                    points = plan.points.map { LatLng(it.latitude, it.longitude) },
+                    selected = if (chosen == null) position == 0 else chosen == position,
+                )
+            }
+        }
+        val alongEndpoints = remember(alongRouteState.origin, alongRouteState.destination) {
+            listOfNotNull(
+                alongRouteState.origin?.let { origin ->
+                    MapEndpoint(LatLng(origin.point.latitude, origin.point.longitude), true)
+                },
+                alongRouteState.destination?.let { target ->
+                    MapEndpoint(LatLng(target.point.latitude, target.point.longitude), false)
+                },
+            )
+        }
+
+        // 只有顺路吃面板在场时点地图才是取点
+        val pickingAlongRoute =
+            alongRouteState.picking != null && overlay.current == MapOverlay.AlongRoute
+
         AmapView(
             modifier = Modifier
                 .fillMaxSize()
@@ -518,20 +652,27 @@ fun MainView(modifier: Modifier = Modifier) {
             // 手机端底栏常驻，地图 Logo 需要抬升
             logoBottomMargin = if (windowSizeClass == WindowSizeClass.Compact) PhoneOverlayHeight else 0.dp,
             markers = markers,
-            clusterSnapshot = if (filtering) null else uiState.clusterSnapshot,
+            clusterSnapshot = if (filtering || routeOnly) null else uiState.clusterSnapshot,
             userLocation = userLocation,
             searchPoi = searchPoi,
+            routes = if (showAlongRoute) alongRoutes else emptyList(),
+            routeEndpoints = if (showAlongRoute) alongEndpoints else emptyList(),
             selectedMarkerId = selectedPlace?.id,
             clusterMotion = settingsState.clusterMotion,
             onMarkerClick = clickMarker@ { marker ->
+                // 顺路吃取点态下站点标记也算一个点
+                if (pickingAlongRoute) {
+                    pickAlongRoutePoint(marker.position, marker.name)
+                    return@clickMarker
+                }
                 // 取点态下不响应站点标记
                 if (addMode) return@clickMarker
                 searchPoi = null
                 amapPlace = null
                 if (marker.clusterCount == null && marker.aggregateZoom == null) {
                     overlay.show(MapOverlay.Place)
-                    // 筛选态的地点不在聚合数据里
-                    if (filtering) {
+                    // 筛选态与顺路吃结果的地点都不在聚合数据里
+                    if (filtering || routeOnly) {
                         viewModel.openPlace(marker.id)
                     } else {
                         viewModel.selectPlace(marker.id)
@@ -564,18 +705,26 @@ fun MainView(modifier: Modifier = Modifier) {
                 }
             },
             onMapClick = { position ->
-                if (addMode) {
-                    startCreate(position, "", "")
-                } else {
-                    dismiss()
-                    searchPoi = null
-                    amapPlace = null
-                    overlay.hide()
-                    viewModel.clearSelection()
+                when {
+                    pickingAlongRoute -> pickAlongRoutePoint(position, null)
+                    addMode -> startCreate(position, "", "")
+                    // 顺路吃面板不带遮罩 点地图不收起
+                    overlay.current == MapOverlay.AlongRoute -> Unit
+                    else -> {
+                        dismiss()
+                        searchPoi = null
+                        amapPlace = null
+                        overlay.hide()
+                        viewModel.clearSelection()
+                    }
                 }
             },
             onPoiClick = { name, position ->
-                if (addMode) startCreate(position, name, "")
+                when {
+                    pickingAlongRoute -> pickAlongRoutePoint(position, name)
+                    addMode -> startCreate(position, name, "")
+                    else -> Unit
+                }
             },
             onMapReady = { map ->
                 amap = map
@@ -711,6 +860,9 @@ fun MainView(modifier: Modifier = Modifier) {
                     chipVisible = chipVisible,
                     favorites = favoritesState,
                     favoritesOps = favoritesOps,
+                    alongRoute = alongRouteState,
+                    alongRouteOps = alongRouteOps,
+                    onAlongRouteClick = toggleAlongRoute,
                     account = AccountOps(
                         onLogout = authViewModel::logout,
                         onSettings = {
@@ -758,6 +910,9 @@ fun MainView(modifier: Modifier = Modifier) {
                     chipVisible = chipVisible,
                     favorites = favoritesState,
                     favoritesOps = favoritesOps,
+                    alongRoute = alongRouteState,
+                    alongRouteOps = alongRouteOps,
+                    onAlongRouteClick = toggleAlongRoute,
                     account = AccountOps(
                         onLogout = authViewModel::logout,
                         onSettings = {
@@ -903,6 +1058,19 @@ private const val UserPlacesFitPad = 96
 
 /** 筛选后套视野的相机动画时长。 */
 private const val UserPlacesFitDurationMs = 400L
+
+/** 顺路吃套视野时单条路线至少的点数。 */
+private const val MinRouteFitPoints = 2
+
+/** 顺路吃套视野的边缘留白 单位像素。 */
+private const val AlongRouteFitPad = 120
+
+/** 顺路吃套视野的相机动画时长。 */
+private const val AlongRouteFitDurationMs = 400L
+
+/** 地图取点的显示文案 保留五位小数。 */
+private fun coordinateText(position: LatLng): String =
+    String.format(Locale.US, "%.5f, %.5f", position.latitude, position.longitude)
 
 /** 相机飞到目标点 动画结束后返回 */
 private suspend fun AMap.flyTo(target: LatLng, zoom: Float, duration: Long) {

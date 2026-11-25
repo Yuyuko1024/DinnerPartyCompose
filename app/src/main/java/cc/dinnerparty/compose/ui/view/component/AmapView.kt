@@ -25,12 +25,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import cc.dinnerparty.compose.R
 import cc.dinnerparty.compose.data.cluster.ClusterSnapshot
 import cc.dinnerparty.compose.ui.theme.dinnerPartySemanticColors
 import com.amap.api.location.AMapLocationClient
@@ -51,6 +53,8 @@ import com.moriafly.salt.ui.SaltTheme
  * @param selectedMarkerId 选中标记的 id，选中的标记名字加粗并压在最上层。
  * @param userLocation 用户当前位置，非空时画「我的位置」蓝点。
  * @param searchPoi 高德检索命中的地点，单独画一个标记。
+ * @param routes 顺路吃的路线方案，选中方案实线加粗，其余虚线。
+ * @param routeEndpoints 顺路吃的起点与终点标记。
  * @param onMarkerClick 标记点击回调。
  * @param onMapClick 地图空白处点击回调，回传点击坐标。
  * @param onPoiClick 高德自带 POI 点击回调，回传名称与坐标。
@@ -65,6 +69,8 @@ fun AmapView(
     clusterSnapshot: ClusterSnapshot? = null,
     userLocation: LatLng? = null,
     searchPoi: SearchPoi? = null,
+    routes: List<MapRoute> = emptyList(),
+    routeEndpoints: List<MapEndpoint> = emptyList(),
     selectedMarkerId: Long? = null,
     clusterMotion: Boolean = true,
     onMarkerClick: (MapMarker) -> Unit = {},
@@ -75,6 +81,8 @@ fun AmapView(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val density = LocalDensity.current
+    val startLabel = stringResource(R.string.along_route_marker_start)
+    val endLabel = stringResource(R.string.along_route_marker_end)
 
     // Logo 抬升高度 = 调用方给的高度 + 导航栏高度。
     val logoMarginPx = with(density) { logoBottomMargin.roundToPx() } +
@@ -243,6 +251,43 @@ fun AmapView(
             holder.marker = overlay
             holder.shown = marker
         }
+
+        // 顺路吃的路线与起终点
+        val routeStyle = RouteStyle(
+            color = SaltTheme.colors.highlight.toArgb(),
+            selectedWidth = with(density) { SelectedRouteWidth.toPx() },
+            otherWidth = with(density) { OtherRouteWidth.toPx() },
+            selectedAlpha = SelectedRouteAlpha,
+            otherAlpha = OtherRouteAlpha,
+        )
+        val routeHolder = remember(aMap) { RouteHolder() }
+
+        LaunchedEffect(aMap, routes, routeStyle) {
+            val map = aMap ?: return@LaunchedEffect
+            routeHolder.render(map, routes, routeStyle)
+        }
+
+        val endpointFill = SaltTheme.colors.highlight.toArgb()
+        val endpointText = SaltTheme.colors.onHighlight.toArgb()
+        val endpointIcons = remember(density, startLabel, endLabel, endpointFill, endpointText) {
+            EndpointIcons(
+                start = endpointIcon(
+                    density = density.density,
+                    spec = EndpointIconSpec(startLabel, endpointFill, endpointText),
+                ),
+                end = endpointIcon(
+                    density = density.density,
+                    spec = EndpointIconSpec(endLabel, endpointFill, endpointText),
+                ),
+            )
+        }
+
+        val endpointHolder = remember(aMap) { EndpointHolder() }
+
+        LaunchedEffect(aMap, routeEndpoints, endpointIcons) {
+            val map = aMap ?: return@LaunchedEffect
+            endpointHolder.render(map, routeEndpoints, endpointIcons)
+        }
     }
 }
 
@@ -283,6 +328,18 @@ private const val SearchPoiId = -1L
 
 /** 高德检索点的层级。 */
 private const val SearchPoiZIndex = 1f
+
+/** 选中方案折线的线宽。 */
+private val SelectedRouteWidth = 5.dp
+
+/** 其余方案折线的线宽。 */
+private val OtherRouteWidth = 3.dp
+
+/** 选中方案折线的透明度 0 表示完全不透明。 */
+private const val SelectedRouteAlpha = 0.8f
+
+/** 其余方案折线的透明度。 */
+private const val OtherRouteAlpha = 0.36f
 
 /** 地图固定 60 帧渲染。 */
 private const val MapRenderFps = 60

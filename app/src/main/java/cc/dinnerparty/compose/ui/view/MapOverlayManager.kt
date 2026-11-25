@@ -34,6 +34,9 @@ enum class MapOverlay {
 
     /** 添加或修改地点 */
     AddPlace,
+
+    /** 顺路吃 */
+    AlongRoute,
 }
 
 /** 浮层状态，null 表示什么都不显示 */

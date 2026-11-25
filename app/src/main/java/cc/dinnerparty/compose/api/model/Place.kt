@@ -38,6 +38,8 @@ data class Place(
     @SerializedName("moderation_status") val moderationStatus: String? = null,
     // 搜索接口带出的与地图中心距离 单位公里
     @SerializedName("distance_km") val distanceKm: Double? = null,
+    // 顺路吃接口带出的与路线距离 单位米
+    @SerializedName("distance_to_route") val distanceToRoute: Double? = null,
     @Transient val aggregateZoom: Int? = null,
     @Transient val aggregateCell: List<Int>? = null,
     @Transient val glyph: Int? = null,

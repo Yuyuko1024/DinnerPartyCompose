@@ -31,6 +31,7 @@ fun MapFloatingActions(
     addMode: Boolean = false,
     onAddClick: () -> Unit = {},
     onFavoritesClick: () -> Unit = {},
+    onAlongRouteClick: () -> Unit = {},
 ) {
     val isTablet = LocalIsTablet.current
     val danger = dinnerPartySemanticColors().danger
@@ -44,7 +45,7 @@ fun MapFloatingActions(
             CircleIconButton(
                 painterRes = R.drawable.ic_route_track_outline,
                 contentDescription = stringResource(R.string.action_along_route),
-                onClick = {  }
+                onClick = onAlongRouteClick
             )
             CircleIconButton(
                 imageVector = if (addMode) Icons.Outlined.Close else Icons.Outlined.Add,

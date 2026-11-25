@@ -36,6 +36,8 @@ import cc.dinnerparty.compose.api.model.User
 import cc.dinnerparty.compose.ui.adaptive.WindowSizeClass
 import cc.dinnerparty.compose.ui.adaptive.currentWindowSizeClass
 import cc.dinnerparty.compose.ui.view.content.AboutContent
+import cc.dinnerparty.compose.ui.view.content.AlongRouteContent
+import cc.dinnerparty.compose.ui.view.content.AlongRouteOps
 import cc.dinnerparty.compose.ui.view.content.ClusterMembersContent
 import cc.dinnerparty.compose.ui.view.component.AccountChip
 import cc.dinnerparty.compose.ui.view.content.AccountContent
@@ -59,6 +61,7 @@ import cc.dinnerparty.compose.ui.view.content.UserPlacesChip
 import cc.dinnerparty.compose.ui.view.content.UserPlacesContent
 import cc.dinnerparty.compose.ui.view.content.UserPlacesOps
 import cc.dinnerparty.compose.ui.viewmodel.AuthViewModel
+import cc.dinnerparty.compose.ui.viewmodel.AlongRouteUiState
 import cc.dinnerparty.compose.ui.viewmodel.FavoritesUiState
 import cc.dinnerparty.compose.ui.viewmodel.UserPlacesUiState
 import com.moriafly.salt.ui.Button
@@ -113,6 +116,9 @@ fun MainPadUI(
     chipVisible: Boolean = false,
     favorites: FavoritesUiState = FavoritesUiState(),
     favoritesOps: FavoritesOps = FavoritesOps(),
+    alongRoute: AlongRouteUiState = AlongRouteUiState(),
+    alongRouteOps: AlongRouteOps = AlongRouteOps(),
+    onAlongRouteClick: () -> Unit = {},
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -224,7 +230,8 @@ fun MainPadUI(
                 onLocateClick = onLocateClick,
                 addMode = addMode,
                 onAddClick = onAddClick,
-                onFavoritesClick = favoritesOps.onOpen
+                onFavoritesClick = favoritesOps.onOpen,
+                onAlongRouteClick = onAlongRouteClick,
             )
 
             PadPanel(
@@ -250,6 +257,19 @@ fun MainPadUI(
                     state = favorites,
                     ops = favoritesOps,
                     onClose = overlay::hide,
+                )
+            }
+
+            PadPanel(
+                visible = overlay.current == MapOverlay.AlongRoute,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = FloatingActionTopPadding)
+            ) {
+                AlongRouteContent(
+                    state = alongRoute,
+                    ops = alongRouteOps,
+                    onClose = onAlongRouteClick,
                 )
             }
 
